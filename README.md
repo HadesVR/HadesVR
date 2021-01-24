@@ -1,5 +1,7 @@
 # DIYVR
  A DIY VR setup for tinkerers!
+ 
+ To download the compiled driver, go to the releases page over [Here][releases_page]
 
 #### Github TODO:
 - Write a basic guide and troubleshooting
@@ -15,3 +17,5 @@
 - Write support for different controller types (htc)
 - Fix the trackpad Y axis not working at all
 - Write a way to reset controller/headset yaw without having to press F8/F7
+
+[releases_page]: <https://github.com/LiquidCGS/DIYVR/releases>
