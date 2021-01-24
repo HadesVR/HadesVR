@@ -17,5 +17,6 @@
 - Write support for different controller types (htc)
 - Fix the trackpad Y axis not working at all
 - Write a way to reset controller/headset yaw without having to press F8/F7
+- add a proper checksum on the headset serial comm
 
 [releases_page]: <https://github.com/LiquidCGS/DIYVR/releases>
