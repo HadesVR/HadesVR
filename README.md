@@ -1,5 +1,7 @@
 # DIYVR
  A DIY VR setup for tinkerers!
+ 
+ ![Headset](https://github.com/LiquidCGS/DIYVR/blob/main/docs/img/Headset.png)
 
 #### Github TODO:
 - Write a basic guide and troubleshooting
