@@ -35,7 +35,7 @@ After selecting these settings, under tools, select "Burn Bootloader" the Led's 
 
 After burning the bootloader you can upload the firmware either using the current setup with the Arduino as ISP, or you can hook up an FTDI programmer to the debug port and the reset line and program it through serial.
 
-![Pinouts](Hardware/Controllers/Controller boards/Pinouts.png)
+![Pinouts](../Hardware/Controllers/Controller boards/Pinouts.png)
 
    [MiniCore]: <https://github.com/MCUdude/MiniCore>
    [installMiniCore]: <https://github.com/MCUdude/MiniCore#how-to-install>
