@@ -17,7 +17,7 @@ After soldering these components you'll be ready to flash the bootloader:
 
 The easiest way to flash the bootloader is using an Arduino as ISP. Connect the board like shown in the picture:
 
-![ArduinoAsISP](Guide/img/ArduinoasISP.png)
+![ArduinoAsISP](img/ArduinoasISP.png)
 
 Upload the Arduino as ISP sketch to the Arduino, under the tools menu, click boards, select Minicore and then use the following settings:
 
