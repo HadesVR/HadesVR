@@ -1,13 +1,13 @@
 # DIYVR
  A DIY VR setup for tinkerers!
 
-#Github TODO:
+#### Github TODO:
 - Write a basic guide and troubleshooting
 - Make a couple basic schematic diagrams
 - Write the joystick calibration sketches
 
 
-#Project TODO:
+#### Project TODO:
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
 - Implement hand bone finger tracking for games that use it
