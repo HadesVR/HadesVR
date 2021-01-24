@@ -1,5 +1,4 @@
 //============ Copyright (c) Valve Corporation, All rights reserved. ============
-//====================== True Open Virtual Reality bridge =======================
 
 #include <openvr_driver.h>
 #include "driverlog.h"
