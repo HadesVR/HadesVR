@@ -73,6 +73,7 @@ static const char * const k_pch_Sample_FOV_Float = "FOV";
 static const char * const k_pch_Sample_IPD_Float = "IPD";
 static const char * const k_pch_Sample_DistanceBetweenEyes_Int32 = "DistanceBetweenEyes";
 static const char * const k_pch_Sample_ScreenOffsetX_Int32 = "ScreenOffsetX";
+static const char * const k_pch_Sample_ScreenOffsetY_Int32 = "ScreenOffsetY";
 static const char * const k_pch_Sample_Stereo_Bool = "Stereo";
 static const char * const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char * const k_pch_Sample_DisplayReal = "IsDisplayReal";
@@ -199,6 +200,7 @@ public:
 		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
 		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
 		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetX_Int32);
+		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetY_Int32);
 		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Stereo_Bool);
 		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
@@ -348,17 +350,17 @@ public:
 
 		if (m_bStereoMode) {
 
-			*pnY = m_nScreenOffsetX;
+			*pnY = m_nScreenOffsetY;
 			*pnWidth = m_nWindowWidth / 2;
 			*pnHeight = m_nWindowHeight;
 
 			if (eEye == Eye_Left)
 			{
-				*pnX = m_nDistanceBetweenEyes;
+				*pnX = m_nDistanceBetweenEyes + m_nScreenOffsetX;
 			}
 			else
 			{
-				*pnX = (m_nWindowWidth / 2) - m_nDistanceBetweenEyes;
+				*pnX = (m_nWindowWidth / 2) - m_nDistanceBetweenEyes + m_nScreenOffsetX;
 			}
 		}
 		else { //Mono mode
@@ -500,6 +502,7 @@ private:
 	float m_fZoomHeight;
 	float m_fFOV;
 	int32_t m_nDistanceBetweenEyes;
+	int32_t m_nScreenOffsetY;
 	int32_t m_nScreenOffsetX;
 	bool m_bStereoMode = true;
 	bool m_bDebugMode;
