@@ -205,7 +205,8 @@ public:
 		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
-		
+
+
 		DriverLog( "driver_null: Serial Number: %s\n", m_sSerialNumber.c_str() );
 		DriverLog( "driver_null: Model Number: %s\n", m_sModelNumber.c_str() );
 		DriverLog( "driver_null: Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
@@ -238,7 +239,7 @@ public:
 		vr::VRProperties()->SetUint64Property( m_ulPropertyContainer, Prop_CurrentUniverseId_Uint64, 2 );
 
 		// avoid "not fullscreen" warnings from vrmonitor
-		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_IsOnDesktop_Bool, false );
+		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_IsOnDesktop_Bool, m_displayOnDesktop);
 
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
@@ -864,6 +865,11 @@ public:
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.f, 0); //grip force
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.f, 0); //grip value
 			}
+		}
+
+		if ((MyCtrl2.Buttons & IB_ThumbStickClick) != 0 && (MyCtrl.Buttons & IB_ThumbStickClick) != 0 && (MyCtrl2.Trigger == 1) && (MyCtrl.Trigger == 1))
+		{
+			SetCentering();
 		}
 
 	}

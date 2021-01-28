@@ -96,6 +96,7 @@ PSMVector3f hmdPos, ctrl1Pos, ctrl2Pos;
 
 int dataCOMPort;
 
+
 void SetCentering()
 {
 	Ctrl1Offset.W = ArduinoData[CTRL1QW];
@@ -103,10 +104,7 @@ void SetCentering()
 
 	Ctrl2Offset.W = ArduinoData[CTRL2QW];
 	Ctrl2Offset.Y = -ArduinoData[CTRL2QY];
-}
 
-void SetHMDCentering()
-{
 	HMDOffset.W = ArduinoData[HMDQW];
 	HMDOffset.Y = -ArduinoData[HMDQY];
 }
@@ -193,7 +191,6 @@ void ReadSerialData()
 		if (CtrlInitCentring == false)
 			if (ArduinoData[0] != 0 || ArduinoData[1] != 0 || ArduinoData[2] != 0) {
 				SetCentering();
-				SetHMDCentering();
 				CtrlInitCentring = true;
 			}
 	}
@@ -243,15 +240,9 @@ void PSMUpdate()
 
 void GetHMDData(THMD* HMD)
 {
-	
-	if ((GetAsyncKeyState(VK_F7) & 0x8000) != 0) {
-		SetHMDCentering();
-	}
-
 	if (SerialConnected) {
 
 		Quaternion HMDQuat = SetOffsetQuat(ArduinoData[HMDQW], ArduinoData[HMDQX], ArduinoData[HMDQY], ArduinoData[HMDQZ], HMDOffset);
-
 
 		HMD->X = hmdPos.x * k_fScalePSMoveAPIToMeters;
 		HMD->Y = hmdPos.z * k_fScalePSMoveAPIToMeters;
@@ -274,7 +265,7 @@ void GetControllersData(TController* FirstController, TController* SecondControl
 		Quaternion Ctrl1Quat = SetOffsetQuat(ArduinoData[CTRL1QW], ArduinoData[CTRL1QX], ArduinoData[CTRL1QY], ArduinoData[CTRL1QZ], Ctrl1Offset);
 		Quaternion Ctrl2Quat = SetOffsetQuat(ArduinoData[CTRL2QW], ArduinoData[CTRL2QX], ArduinoData[CTRL2QY], ArduinoData[CTRL2QZ], Ctrl2Offset);
 
-		FirstController->X = (ctrl1Pos.x * k_fScalePSMoveAPIToMeters) + 0.05;
+		FirstController->X = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
 		FirstController->Y = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
 		FirstController->Z = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
 
@@ -290,7 +281,7 @@ void GetControllersData(TController* FirstController, TController* SecondControl
 		FirstController->TrackpY = ArduinoData[CTRL1TRACKY];
 		FirstController->vBat = ArduinoData[CTRL1VBAT];
 
-		SecondController->X = (ctrl2Pos.x * k_fScalePSMoveAPIToMeters) - 0.05;
+		SecondController->X = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
 		SecondController->Y = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
 		SecondController->Z = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
 
