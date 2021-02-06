@@ -6,7 +6,7 @@ The setup includes 3d printable controllers with custom PCB's, capable of emulat
 The SteamVR driver used to be based off of [TrueOpenVR](https://github.com/TrueOpenVR) but it's modified so heavily I'm making it it's own thing.
 This driver also uses [PSMoveService](https://github.com/psmoveservice/PSMoveService) (for now at least) for the positional tracking of HMD and controllers, using ping pong balls and different colours of LED's.
 
-For more information on *everything*, check out the [docs](docs/Docsindex.md)!
+For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 
 # Building your own controllers
 Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
