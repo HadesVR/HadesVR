@@ -31,22 +31,30 @@ More cameras would allow for more redundancy, you can hook up as many as you wan
 
 Download and install [Zadig](https://zadig.akeo.ie/), we'll be using Zadig to install our libusb camera driver
 Plug in all your cameras and open up Device Manager, you'll probably see something similar to this:
+
 ![1](img/Tracking/DrvInstall/1.png)
+
 To install the drivers open up Zadig, select one of the USB cameras, select libusb-win32 as your driver and click install driver.
 ⚠️ You should only install the driver on the "Interface 0" cameras
+
 ![2](img/Tracking/DrvInstall/2.png)
+
 Once it is done installing, select the next camera and repeat the process untill you've installed the drivers for all cameras. If you've done everything correctly, your device manager should look something like this:
+
 ![3](img/Tracking/DrvInstall/3.png)
+
 
 # Installing and configuring PSMS
 
 Download and install [PSMoveService-Setup64.exe](https://github.com/psmoveservice/PSMoveService/releases/download/v0.9-alpha9.0.1/PSMoveService-Setup64.exe). Navigate to "C:\Program Files\PSMoveService\bin" and yo should see something like this:
-![4](img\PSMSInstall\1.png)
+
+![4](img/PSMSInstall/1.png)
 
 Open PSMoveServiceAdmin.exe and let it run for a couple of seconds for it to create all the config files, after it's done, close it and press  "windows key + R", type in "%appdata%\PSMoveService" (without quotation marks) and press Enter.
 
 You should now see something like this:
-![5](img\PSMSInstall\2.png)
+
+![5](img/PSMSInstall/2.png)
 
 * Open "ControllerManagerConfig.json" with notepad and change "virutal_controller_count" to 2, then save and exit
 This allows you to calibrate and use PSMoveService without PSMove controllers by creating virtual controllers.
@@ -55,7 +63,8 @@ This allows you to calibrate and use PSMoveService without PSMove controllers by
 
 After changing those files, run PSMoveServiceAdmin.exe once again for a couple of seconds and then exit.
 This should have created a couple new files on your config folder, we're interested in these three in particular:
-![6](img\PSMSInstall\3.png)
+
+![6](img/PSMSInstall/3.png)
 
 * Open each one and change "bulb_radius" to "2.0" in all of them
 This is necessary because PSMove Controllers use a 4.5cm diameter tracking blob, while we use Ping Pong balls, which are 4cm in diameter.
