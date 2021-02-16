@@ -17,12 +17,13 @@ TODO: Hyperlink everything and create the docs etc.
 
 TODO:LIST
 
-## Tracking
+## [Tracking](Tracking.md)
 
-- What you'll need
-- Installing and configuring PSMoveService **without PSMove Controllers**
-- Room Setup
-- PSMoveService calibration
+- [What you'll need](Tracking.md#what-youll-need)
+- [Installing the camera drivers](Tracking.md#installing-the-camera-drivers)
+- [Installing and configuring PSMoveService](Tracking.md#installing-and-configuring-psms)
+- [Room Setup](Tracking.md#room-setup)
+- [Controller calibration](Tracking.md#controller-calibration)
 
 ## Driver
 
