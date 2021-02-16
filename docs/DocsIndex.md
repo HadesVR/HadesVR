@@ -20,8 +20,9 @@ TODO:LIST
 ## Tracking
 
 - What you'll need
-- Room Setup
 - Installing and configuring PSMoveService **without PSMove Controllers**
+- Room Setup
+- PSMoveService calibration
 
 ## Driver
 

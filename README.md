@@ -15,7 +15,7 @@ Or maybe you want to design your own, check out the [pinouts](docs/img/Pinouts.p
 # To-do list:
 
 ### Github TODO:
-- Write a basic guide and troubleshooting
+- Write a basic guide and troubleshooting  **(WIP)**
 - Make a couple basic schematic diagrams
 - Write the joystick calibration sketches
 
@@ -27,4 +27,5 @@ Or maybe you want to design your own, check out the [pinouts](docs/img/Pinouts.p
 - Write support for different controller types (htc)
 - Fix the trackpad Y axis not working at all
 - NEW: Upgrade Serial to HID
+- NEW: Allow Driver to work as controllers only, that way people with a different HMD can use just the "controllers" part of the driver 
 - ~~Write a way to reset controller/headset yaw without having to press F8/F7~~
