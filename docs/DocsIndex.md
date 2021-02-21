@@ -7,11 +7,11 @@ TODO: Hyperlink everything and create the docs etc.
 
 ## Headset
 
-- Hardware needed
-    - Screen options
-- Circuit schematic
-- Uploading the firmware
-- Setting correct COMPort
+- [Hardware needed](Headset.md#hardware-needed)
+    - [Screen options](Headset.md#screen-options)
+- [Circuit schematic](Headset.md#circuit-schematic)
+- [Uploading the firmware](Headset.md#uploading-the-firmware)
+- [Setting correct COMPort](Headset.md#setting-correct-comport)
 
 ## Controllers
 
@@ -23,7 +23,7 @@ TODO:LIST
 - [Installing the camera drivers](Tracking.md#installing-the-camera-drivers)
 - [Installing and configuring PSMoveService](Tracking.md#installing-and-configuring-psms)
 - [Room Setup](Tracking.md#room-setup)
-- [Controller calibration](Tracking.md#controller-calibration)
+- [Controller calibration](Tracking.md#controller-calibration) (wip)
 
 ## Driver
 
