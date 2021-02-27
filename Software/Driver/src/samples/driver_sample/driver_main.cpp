@@ -78,6 +78,7 @@ static const char * const k_pch_Sample_Stereo_Bool = "Stereo";
 static const char * const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char * const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char * const k_pch_Sample_DebugMode_Bool = "DebugMode";
+static const char * const k_pch_Sample_EnableControllers = "EnableControllers";
 static const char * const k_pch_Sample_Controller_Type = "ControllerType";
 static const char * const k_pch_Sample_ComPort = "ComPort";
 
@@ -101,7 +102,7 @@ HMODULE hDll;
 THMD MyHMD;
 TController MyCtrl, MyCtrl2;
 
-bool HMDConnected = false, ctrlsConnected = false;
+bool HMDConnected = false, ctrlsConnected = false, ctrlsEnabled = false;
 
 double DegToRad(double f) {
 	return f * (3.14159265358979323846 / 180);
@@ -205,16 +206,15 @@ public:
 		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
+		ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_EnableControllers);
 
-
-		DriverLog( "driver_null: Serial Number: %s\n", m_sSerialNumber.c_str() );
-		DriverLog( "driver_null: Model Number: %s\n", m_sModelNumber.c_str() );
-		DriverLog( "driver_null: Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
-		DriverLog( "driver_null: Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
-		DriverLog( "driver_null: Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
-		DriverLog( "driver_null: Display Frequency: %f\n", m_flDisplayFrequency );
-		DriverLog( "driver_null: IPD: %f\n", m_flIPD );
-
+		
+		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
+		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
+		DriverLog( "Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
+		DriverLog( "Display Frequency: %f\n", m_flDisplayFrequency );
+		DriverLog( "IPD: %f\n", m_flIPD );
+		DriverLog("Controllers enabled: %d\n", ctrlsEnabled);
 	}
 
 	virtual ~C_HMDDeviceDriver()
@@ -943,19 +943,27 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 {
 	VR_INIT_SERVER_DRIVER_CONTEXT( pDriverContext );
 	InitDriverLog( vr::VRDriverLog() );
+
+	//this is stupid
 	comPort = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ComPort);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_EnableControllers);
+
 	StartData(comPort);
 	DriverLog("[DIYVR] Starting data stream on COMPort: =%d\n", comPort);
 
 	if (!PSMConnected)
 	{
+		DriverLog("[DIYVR] PSMoveService not connected!!!!");
 		return VRInitError_Driver_Failed;
 	}
 
 	if (SerialConnected)
 	{
 		HMDConnected = true;
-		ctrlsConnected = true;
+		if (ctrlsEnabled) {
+			ctrlsConnected = true;
+		}
+		
 	}
 	else 
 	{
