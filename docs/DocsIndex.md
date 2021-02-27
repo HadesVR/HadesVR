@@ -8,7 +8,9 @@ TODO: Hyperlink everything and create the docs etc.
 ## Headset
 
 - [Hardware needed](Headset.md#hardware-needed)
-    - [Screen options](Headset.md#screen-options)
+    - [Shell](Headset.md#shell)
+    - [Electronics](Headset.md#electronics)
+    - [Display(s)](Headset.md#displays)
 - [Circuit schematic](Headset.md#circuit-schematic)
 - [Uploading the firmware](Headset.md#uploading-the-firmware)
 - [Setting correct COMPort](Headset.md#setting-correct-comport)
