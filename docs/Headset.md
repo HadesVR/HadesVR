@@ -82,7 +82,7 @@ These go for around 180USD for the pair of screens and driver board, making them
 
 You can find these boards by searching with the terms "120Hz VR LCD"
 
-![8](img/Headset/8.png)
+![6](img/Headset/6.png)
 
 # Circuit schematic
 Circuit pins for the Arduino pro micro is as follows:
