@@ -89,6 +89,8 @@ Circuit pins for the Arduino pro micro is as follows:
 
 ![2](img/Headset/2.png)
 
+
+## ⚠️ IMPORTANT: YOU NEED A 5V TO 3.3V REGULATOR TO POWER THE NRF24 MODULE, ***THE PRO MICRO DOES NOT SUPPLY 3.3V ON ANY OF ITS PINS*** 
 # Uploading the firmware
 
 To upload the firmware you will need to have the [RF24 Arduino Library](https://github.com/nRF24/RF24) installed in your [Arduino IDE](https://www.arduino.cc/en/software). 
