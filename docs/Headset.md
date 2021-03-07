@@ -60,11 +60,12 @@ You can find these boards by searching with the terms "5.5 LCD MIPI"
 
 ![7](img/Headset/7.png)
 
-### Dual AMOLED H380BDN01.1
-These screens are 1080x1200 per eye (2560x1200) and they claim to run at 90Hz.
+### Dual AMOLED H381DLN01
+These screens are 1080x1200 per eye (2160x1200) and they claim to run at 90Hz.
 They use the Blue driver board and the screens are 3.81 inches each and use AMOLED displays.
 
 ⚠️ Make sure you're getting the correct refresh rate before buying
+
 ⚠️ Make sure the driver splits the image into the two displays and doesn't just display the same image across both displays before buying.
 
 These are a lot more expensive than the last one and can be found for around 170USD for the pair of screens + driver board

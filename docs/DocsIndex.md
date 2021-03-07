@@ -27,12 +27,11 @@ TODO:LIST
 - [Room Setup](Tracking.md#room-setup)
 - [Controller calibration](Tracking.md#controller-calibration) (wip)
 
-## Driver
+## [Driver](Driver.md)
 
-- Building the driver
-- Driver installation
-- Driver configuration
-- Usage and controller bindings
+- [Driver Installation](Driver.md#Driver-Installation)
+- [Driver Configuration](Driver.md#Driver-Configuration)
+- [Usage and controller bindings](Driver.md#Usage-and-controller-bindings)
 
 ## Troubleshooting
 
