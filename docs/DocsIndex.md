@@ -5,7 +5,7 @@ These docs are still in a very early work-in-progress stage so don't expect ever
 
 TODO: Hyperlink everything and create the docs etc.
 
-## Headset
+## [Headset](Headset.md)
 
 - [Hardware needed](Headset.md#hardware-needed)
     - [Shell](Headset.md#shell)
