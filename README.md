@@ -2,7 +2,7 @@
 ![name](docs/img/name.png)
 
 # HadesVR
-HadesVR, like the name implies, is a SteamVR compatible VR setup made for tinkerers. 
+HadesVR is a SteamVR compatible VR setup made for tinkerers. 
 
 The setup includes 3d printable controllers with custom PCB's, capable of emulating most aspects of the Valve Index Knuckles controllers (including finger tracking!) and tracking electronics for a Headset, including a wireless receiver to receive the controllers' data.
 

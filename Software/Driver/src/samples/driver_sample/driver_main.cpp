@@ -54,7 +54,7 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 
 
 // keys for use with the settings API
-static const char * const k_pch_Display_Section = "DiyVR";
+static const char * const k_pch_Display_Section = "HadesVR";
 static const char * const k_pch_Sample_SerialNumber_String = "serialNumber";
 static const char * const k_pch_Sample_ModelNumber_String = "modelNumber";
 static const char * const k_pch_Sample_WindowX_Int32 = "windowX";
@@ -539,7 +539,7 @@ public:
 
 	virtual EVRInitError Activate( vr::TrackedDeviceIndex_t unObjectId )
 	{
-		DriverLog("[DIYVR] Initializing controller %d",ControllerIndex);
+		DriverLog("[HadesVR] Initializing controller %d",ControllerIndex);
 		switch (ControllerIndex)
 		{
 		case 1:
@@ -949,11 +949,11 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_EnableControllers);
 
 	StartData(comPort);
-	DriverLog("[DIYVR] Starting data stream on COMPort: =%d\n", comPort);
+	DriverLog("[DataStram] Starting data stream on COMPort: =%d\n", comPort);
 
 	if (!PSMConnected)
 	{
-		DriverLog("[DIYVR] PSMoveService not connected!!!!");
+		DriverLog("[DataStream] PSMoveService not connected!!!!");
 		return VRInitError_Driver_Failed;
 	}
 

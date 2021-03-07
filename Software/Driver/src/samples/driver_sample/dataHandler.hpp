@@ -219,7 +219,7 @@ void SerialStreamStart() {
 				SerialConnected = true;
 				PurgeComm(hSerial, PURGE_TXCLEAR | PURGE_RXCLEAR);
 				pCtrlthread = new std::thread(ReadSerialData);
-				DriverLog("[DIYVR]: created ReadSerialData thread");
+				DriverLog("[DataStream]: created ReadSerialData thread");
 			}
 		}
 	}
@@ -336,10 +336,10 @@ void GetControllersData(TController* FirstController, TController* SecondControl
 
 bool connectToPSMOVE()
 {
-	DriverLog("[DIYVR] connecting to PSM, on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
+	DriverLog("[PsMoveData] connecting to PSM, on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
 	int PSMstatus = PSM_InitializeAsync(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
 	bool bSuccess = (PSMstatus != PSMResult_Error);
-	DriverLog("[DIYVR] PSM status: %d", PSMstatus);
+	DriverLog("[PsMoveData] PSM status: %d", PSMstatus);
 	PSMConnected = bSuccess;
 	
 	unsigned int data_stream_flags =
@@ -355,8 +355,8 @@ bool connectToPSMOVE()
 		memset(&controllerList, 0, sizeof(PSMControllerList));
 		PSM_GetControllerList(&controllerList, PSM_DEFAULT_TIMEOUT);
 
-		DriverLog("[DIYVR] PSM hmdCount: %d", hmdList.count);
-		DriverLog("[DIYVR] PSM ControllerCount: %d", controllerList.count);
+		DriverLog("[PsMoveData] PSM hmdCount: %d", hmdList.count);
+		DriverLog("[PsMoveData] PSM ControllerCount: %d", controllerList.count);
 	}
 
 	//hmd
