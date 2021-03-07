@@ -85,7 +85,7 @@ You can find these boards by searching with the terms "120Hz VR LCD"
 ![6](img/Headset/6.png)
 
 # Circuit schematic
-Circuit pins for the Arduino pro micro is as follows:
+Circuit pins for the Arduino pro micro are as follows:
 
 ![2](img/Headset/2.png)
 
