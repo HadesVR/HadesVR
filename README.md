@@ -1,5 +1,8 @@
-# DIYVR
-DIYVR, like the name implies, is a SteamVR compatible VR setup made for tinkerers. 
+
+![name](docs/img/name.png)
+
+# HadesVR
+HadesVR, like the name implies, is a SteamVR compatible VR setup made for tinkerers. 
 
 The setup includes 3d printable controllers with custom PCB's, capable of emulating most aspects of the Valve Index Knuckles controllers (including finger tracking!) and tracking electronics for a Headset, including a wireless receiver to receive the controllers' data.
 
@@ -15,7 +18,7 @@ Or maybe you want to design your own, check out the [pinouts](docs/img/Pinouts.p
 # To-do list:
 
 ### Github TODO:
-- Write a basic guide and troubleshooting  **(WIP)**
+- Write a basic guide and troubleshooting
 - Make a couple basic schematic diagrams
 - Write the joystick calibration sketches
 
@@ -27,5 +30,4 @@ Or maybe you want to design your own, check out the [pinouts](docs/img/Pinouts.p
 - Write support for different controller types (htc)
 - Fix the trackpad Y axis not working at all
 - NEW: Upgrade Serial to HID
-- NEW: Allow Driver to work as controllers only, that way people with a different HMD can use just the "controllers" part of the driver 
 - ~~Write a way to reset controller/headset yaw without having to press F8/F7~~
