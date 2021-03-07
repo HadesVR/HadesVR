@@ -70,22 +70,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\drivers\sample\bin\win32\</OutDir>
-    <TargetName>driver_diyvr</TargetName>
+    <TargetName>driver_hadesvr</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\drivers\sample\bin\win64\</OutDir>
-    <TargetName>driver_diyvr</TargetName>
+    <TargetName>driver_hadesvr</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\drivers\sample\bin\win32\</OutDir>
-    <TargetName>driver_diyvr</TargetName>
+    <TargetName>driver_hadesvr</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\win64\</OutDir>
-    <TargetName>driver_HadesVR</TargetName>
+    <TargetName>driver_hadesvr</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
