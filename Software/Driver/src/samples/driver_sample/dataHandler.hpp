@@ -10,6 +10,7 @@
 
 #include "Quaternion.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
+#include "driverlog.h"
 
 using namespace ATL;
 
@@ -253,13 +254,12 @@ void GetHMDData(THMD* HMD)
 		HMD->qY = HMDQuat.Y;
 		HMD->qZ = HMDQuat.Z;
 	}
+	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0)
+		SetCentering();
 }
 
 void GetControllersData(TController* FirstController, TController* SecondController)
 {
-	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0)
-		SetCentering();
-
 	if (SerialConnected) {
 
 		Quaternion Ctrl1Quat = SetOffsetQuat(ArduinoData[CTRL1QW], ArduinoData[CTRL1QX], ArduinoData[CTRL1QY], ArduinoData[CTRL1QZ], Ctrl1Offset);
