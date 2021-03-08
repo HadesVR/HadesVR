@@ -179,8 +179,8 @@ void loop() {
   data.qX = mympu.qX;
   data.BTN = btn;
   data.trigg = (trigger * 100);
-  data.axisX = (-axisXout * 100);
-  data.axisY = (-axisYout * 100);
+  data.axisX = (axisXout * 100);
+  data.axisY = (axisYout * 100);
   data.trackY = (trackoutput * 100);
   data.vBAT = (mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 1) * 100);
   radio.stopListening();
