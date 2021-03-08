@@ -1,6 +1,7 @@
 //============ Copyright (c) Valve Corporation, All rights reserved. ============
 
 #include <openvr_driver.h>
+#include "controllerBindings.hpp"
 #include "driverlog.h"
 
 
@@ -54,7 +55,8 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 
 
 // keys for use with the settings API
-static const char * const k_pch_Display_Section = "HadesVR";
+static const char * const k_pch_HMD_Section = "HMD";
+static const char * const k_pch_Controllers_Section = "Controllers";
 static const char * const k_pch_Sample_SerialNumber_String = "serialNumber";
 static const char * const k_pch_Sample_ModelNumber_String = "modelNumber";
 static const char * const k_pch_Sample_WindowX_Int32 = "windowX";
@@ -85,24 +87,13 @@ static const char * const k_pch_Sample_ComPort = "ComPort";
 #define SUCCESS 0
 #define FAILURE 1
 
-#define IB_AClick           0x0001
-#define IB_ATouch           0x0002
-#define IB_BClick           0x0004
-#define IB_BTouch           0x0008
-#define IB_SYSClick         0x0010
-#define IB_ThumbStickClick  0x0020
-#define IB_FingerIndex      0x0040
-#define IB_FingerMiddle     0x0080
-#define IB_FingerRing       0x0100
-#define IB_FingerPinky      0x0200
-#define IB_TrackpadTouch    0x0400
-#define IB_ThumbStickTouch  0x0800
+
 
 HMODULE hDll;
 THMD MyHMD;
-TController MyCtrl, MyCtrl2;
 
 bool HMDConnected = false, ctrlsConnected = false, ctrlsEnabled = false;
+int controllerType;
 
 double DegToRad(double f) {
 	return f * (3.14159265358979323846 / 180);
@@ -177,37 +168,37 @@ public:
 		m_ulPropertyContainer = vr::k_ulInvalidPropertyContainer;
 
 		//DriverLog( "Using settings values\n" );
-		m_flIPD = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_IPD_Float);
+		m_flIPD = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_IPD_Float);
 
 		char buf[1024];
-		vr::VRSettings()->GetString( k_pch_Display_Section, k_pch_Sample_SerialNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString( k_pch_HMD_Section, k_pch_Sample_SerialNumber_String, buf, sizeof( buf ) );
 		m_sSerialNumber = buf;
 
-		vr::VRSettings()->GetString( k_pch_Display_Section, k_pch_Sample_ModelNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString( k_pch_HMD_Section, k_pch_Sample_ModelNumber_String, buf, sizeof( buf ) );
 		m_sModelNumber = buf;
 
-		m_nWindowX = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowX_Int32 );
-		m_nWindowY = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowY_Int32 );
-		m_nWindowWidth = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowWidth_Int32 );
-		m_nWindowHeight = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowHeight_Int32 );
-		m_nRenderWidth = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_RenderWidth_Int32 );
-		m_nRenderHeight = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_RenderHeight_Int32 );
-		m_flSecondsFromVsyncToPhotons = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_SecondsFromVsyncToPhotons_Float );
-		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_DisplayFrequency_Float );
-		m_fDistortionK1 = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistortionK1_Float);
-		m_fDistortionK2 = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistortionK2_Float);
-		m_fZoomWidth = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomWidth_Float);
-		m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomHeight_Float);
-		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
-		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
-		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetX_Int32);
-		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetY_Int32);
-		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Stereo_Bool);
-		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
-		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
-		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
-		ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_EnableControllers);
+		m_nWindowX = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowX_Int32 );
+		m_nWindowY = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowY_Int32 );
+		m_nWindowWidth = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowWidth_Int32 );
+		m_nWindowHeight = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowHeight_Int32 );
+		m_nRenderWidth = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_RenderWidth_Int32 );
+		m_nRenderHeight = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_RenderHeight_Int32 );
+		m_flSecondsFromVsyncToPhotons = vr::VRSettings()->GetFloat( k_pch_HMD_Section, k_pch_Sample_SecondsFromVsyncToPhotons_Float );
+		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_HMD_Section, k_pch_Sample_DisplayFrequency_Float );
+		m_fDistortionK1 = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_DistortionK1_Float);
+		m_fDistortionK2 = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_DistortionK2_Float);
+		m_fZoomWidth = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_ZoomWidth_Float);
+		m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_ZoomHeight_Float);
+		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
+		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
+		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ScreenOffsetX_Int32);
+		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ScreenOffsetY_Int32);
+		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_Stereo_Bool);
+		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DebugMode_Bool);
+		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayOnDesktop);
+		m_displayReal = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayReal);
 
+		controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type);
 		
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
@@ -215,6 +206,7 @@ public:
 		DriverLog( "Display Frequency: %f\n", m_flDisplayFrequency );
 		DriverLog( "IPD: %f\n", m_flIPD );
 		DriverLog("Controllers enabled: %d\n", ctrlsEnabled);
+		DriverLog("Controller Type: %d\n", controllerType);
 	}
 
 	virtual ~C_HMDDeviceDriver()
@@ -223,8 +215,7 @@ public:
 
 
 	virtual EVRInitError Activate( vr::TrackedDeviceIndex_t unObjectId ) 
-	{
-		
+	{	
 		HMDIndex_t = unObjectId;
 		m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer( HMDIndex_t );
 
@@ -240,9 +231,10 @@ public:
 
 		// avoid "not fullscreen" warnings from vrmonitor
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_IsOnDesktop_Bool, m_displayOnDesktop);
-
+		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_HasDriverDirectModeComponent_Bool, false);
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
+
 
 		// Icons can be configured in code or automatically configured by an external file "drivername\resources\driver.vrresources".
 		// Icon properties NOT configured in code (post Activate) are then auto-configured by the optional presence of a driver's "drivername\resources\driver.vrresources".
@@ -544,112 +536,15 @@ public:
 		{
 		case 1:
 			Ctrl1Index_t = unObjectId;
-			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t);											
-			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerRoleHint_Int32, vr::TrackedControllerRole_RightHand);
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ModelNumber_String, "Knuckles Right");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RenderModelName_String, "{indexcontroller}valve_controller_knu_1_0_right");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_Firmware_ProgrammingTarget_String, "LHR-E217CD01");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RegisteredDeviceType_String, "valve/index_controllerLHR-E217CD01");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceOff_String, "{indexcontroller}/icons/right_controller_status_off.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearching_String, "{indexcontroller}/icons/right_controller_status_searching.gif");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{indexcontroller}/icons//right_controller_status_searching_alert.gif");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReady_String, "{indexcontroller}/icons//right_controller_status_ready.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{indexcontroller}/icons//right_controller_status_ready_alert.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceNotReady_String, "{indexcontroller}/icons//right_controller_status_error.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceStandby_String, "{indexcontroller}/icons//right_controller_status_off.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceAlertLow_String, "{indexcontroller}/icons//right_controller_status_ready_low.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_SerialNumber_String, "LHR-E217CD01");
-			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", vr::VRSkeletalTracking_Partial, nullptr, 0U, &m_skeletonHandle);
+			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t);		
 			break;
 		case 2:
 			Ctrl2Index_t = unObjectId;
 			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t);
-			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerRoleHint_Int32, vr::TrackedControllerRole_LeftHand);
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ModelNumber_String, "Knuckles Left");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RenderModelName_String, "{indexcontroller}valve_controller_knu_1_0_Left");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_Firmware_ProgrammingTarget_String, "LHR-E217CD00");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RegisteredDeviceType_String, "valve/index_controllerLHR-E217CD00");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceOff_String, "{indexcontroller}/icons/left_controller_status_off.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearching_String, "{indexcontroller}/icons/left_controller_status_searching.gif");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{indexcontroller}/icons//left_controller_status_searching_alert.gif");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReady_String, "{indexcontroller}/icons//left_controller_status_ready.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{indexcontroller}/icons//left_controller_status_ready_alert.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceNotReady_String, "{indexcontroller}/icons//left_controller_status_error.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceStandby_String, "{indexcontroller}/icons//left_controller_status_off.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceAlertLow_String, "{indexcontroller}/icons//left_controller_status_ready_low.png");
-			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_SerialNumber_String, "LHR-E217CD00");
-			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", vr::VRSkeletalTracking_Partial, nullptr, 0U, &m_skeletonHandle);
 			break;
 		}
 
-	
-
-		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_DeviceBatteryPercentage_Float, 1.f);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_UpdateAvailable_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_ManualUpdate_Bool, false);
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_Firmware_ManualUpdateURL_String, "https://developer.valvesoftware.com/wiki/SteamVR/HowTo_Update_Firmware");
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceProvidesBatteryStatus_Bool, true);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceCanPowerOff_Bool, true);
-		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_Controller);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_ForceUpdateRequired_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Identifiable_Bool, true);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_RemindUpdate_Bool, false);
-		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_Axis0Type_Int32, vr::k_eControllerAxis_TrackPad);
-		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_Axis1Type_Int32, vr::k_eControllerAxis_Trigger);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasDisplayComponent_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasCameraComponent_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasDriverDirectModeComponent_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasVirtualDisplayComponent_Bool, false);
-		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerHandSelectionPriority_Int32, 0);
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ManufacturerName_String, "Valve");
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_TrackingFirmwareVersion_String, "1562916277 watchman@ValveBuilder02 2019-07-12 FPGA 538(2.26/10/2) BL 0 VRC 1562916277 Radio 1562882729");
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_HardwareRevision_String, "product 17 rev 14.1.9 lot 2019/4/20 0");
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_HardwareRevision_Uint64, 286130441U);
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_FirmwareVersion_Uint64, 1562916277U);
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_FPGAVersion_Uint64, 538U);
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_VRCVersion_Uint64, 1562916277U);
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_RadioVersion_Uint64, 1562882729U);
-		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_DongleVersion_Uint64, 1558748372U);
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ResourceRoot_String, "indexcontroller");
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_InputProfilePath_String, "{indexcontroller}/input/index_controller_profile.json");
-		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_Axis2Type_Int32, vr::k_eControllerAxis_Trigger);
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "knuckles");
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_TrackingSystemName_String, "PS EYE");
-		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, vr::Prop_DeviceBatteryPercentage_Float, 1.f);
-
-		// avoid "not fullscreen" warnings from vrmonitor
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_IsOnDesktop_Bool, false);
-
-
-		vr::VRDriverInput()->CreateScalarComponent( m_ulPropertyContainer, "/input/thumbstick/x", &HAnalog[0], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/thumbstick/Y", &HAnalog[1], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trigger/value", &HAnalog[2], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/x", &HAnalog[3], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/y", &HAnalog[4], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/force", &HAnalog[5], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/finger/index", &HAnalog[6], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/finger/middle", &HAnalog[7], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/finger/ring", &HAnalog[8], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/finger/pinky", &HAnalog[9], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/grip/force", &HAnalog[10], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-		vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/grip/value", &HAnalog[11], vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
-
-		//  Buttons handles
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/a/click", &HButtons[0]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/a/touch", &HButtons[1]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/b/click", &HButtons[2]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/b/touch", &HButtons[3]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/system/click", &HButtons[4]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/system/touch", &HButtons[5]);
-
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/trackpad/touch", &HButtons[6]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/trigger/click", &HButtons[7]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/grip/touch", &HButtons[8]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/thumbstick/click", &HButtons[9]);
-		vr::VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/thumbstick/touch", &HButtons[10]);
-
-		// create our haptic component
-		vr::VRDriverInput()->CreateHapticComponent(m_ulPropertyContainer, "/output/haptic", &m_compHaptic);
+		initController(controllerType, ControllerIndex, m_ulPropertyContainer, m_skeletonHandle, m_compHaptic);
 
 		return VRInitError_None;
 	}
@@ -757,121 +652,8 @@ public:
 			break;
 		}
 		
-		if (ControllerIndex == 1) {
-
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[0], (MyCtrl.Buttons & IB_AClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[1], (MyCtrl.Buttons & IB_ATouch) != 0, 0);		//a button 
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[2], (MyCtrl.Buttons & IB_BClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[3], (MyCtrl.Buttons & IB_BTouch) != 0, 0);		//b button
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[4], (MyCtrl.Buttons & IB_SYSClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[5], (MyCtrl.Buttons & IB_SYSClick) != 0, 0);	//sys button
-
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[6], (MyCtrl.Buttons & IB_TrackpadTouch) != 0, 0);	//trackpad touch
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[7], (MyCtrl.Trigger), 0);							//trigger click
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[8], (MyCtrl.Buttons & IB_FingerMiddle) != 0, 0);	//grip touch
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[9], (MyCtrl.Buttons & IB_ThumbStickClick) != 0, 0);	
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[10], (MyCtrl.Buttons & IB_ThumbStickTouch) != 0, 0); //joy touch and click
-
-			//analog stuff
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[0], MyCtrl.JoyAxisX, 0); //joyx
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[1], MyCtrl.JoyAxisY, 0); //joyy
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[2], MyCtrl.Trigger, 0);	//Trigger
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[3], 0, 0); //Trackpad x
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[4], MyCtrl.TrackpY, 0); //Trackpad Y
-
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[6], ((MyCtrl.Buttons & IB_FingerIndex) != 0), 0); //Index
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[7], ((MyCtrl.Buttons & IB_FingerMiddle) != 0), 0); //middle
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[8], ((MyCtrl.Buttons & IB_FingerRing) != 0), 0); //Ring
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[9], ((MyCtrl.Buttons & IB_FingerPinky) != 0), 0); //Pinky
-			
-			if ((MyCtrl.Buttons & IB_TrackpadTouch) != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[5], 1.f, 0); //Trackpad force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[4], MyCtrl.TrackpY, 0); //Trackpad Y
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[3], 0.1f, 0); //Trackpad Y
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[5], 0.f, 0); //Trackpad force
-			}
-
-			if ((MyCtrl.Buttons & IB_FingerMiddle) != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.5f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.5f, 0); //grip value
-
-				if ((MyCtrl.Buttons & IB_FingerRing) != 0) {
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.75f, 2); //grip force
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.75f, 2); //grip value
-
-					if ((MyCtrl.Buttons & IB_FingerPinky) != 0) {
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 1.f, 5); //grip force
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 1.f, 5); //grip value
-					}
-				}
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.f, 0); //grip value
-			}
-
-		} else {
-			//Controller2
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[0], (MyCtrl2.Buttons & IB_AClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[1], (MyCtrl2.Buttons & IB_ATouch) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[2], (MyCtrl2.Buttons & IB_BClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[3], (MyCtrl2.Buttons & IB_BTouch) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[4], (MyCtrl2.Buttons & IB_SYSClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[5], (MyCtrl2.Buttons & IB_SYSClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[6], (MyCtrl2.Buttons & IB_TrackpadTouch) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[7], (MyCtrl2.Trigger), 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[8], (MyCtrl2.Buttons & IB_FingerMiddle) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[9], (MyCtrl2.Buttons & IB_ThumbStickClick) != 0, 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtons[10], (MyCtrl2.Buttons & IB_ThumbStickTouch) != 0, 0);
-
-			//analog stuff
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[0], MyCtrl2.JoyAxisX, 0); //joyx
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[1], MyCtrl2.JoyAxisY, 0); //joyy
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[2], MyCtrl2.Trigger, 0);	//Trigger
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[3], 0, 0); //Trackpad x
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[4], 0, 0); //Trackpad Y
-
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[6], ((MyCtrl2.Buttons& IB_FingerIndex) != 0), 0); //Index
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[7], ((MyCtrl2.Buttons& IB_FingerMiddle) != 0), 0); //middle
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[8], ((MyCtrl2.Buttons& IB_FingerRing) != 0), 0); //Ring
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalog[9], ((MyCtrl2.Buttons& IB_FingerPinky) != 0), 0); //Pinky
-
-			if ((MyCtrl2.Buttons & IB_TrackpadTouch) != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[5], 1.f, 0); //Trackpad force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[4], MyCtrl2.TrackpY, 0); //Trackpad Y
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[3], 0.1f, 0); //Trackpad Y
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[5], 0.f, 0); //Trackpad force
-			}
+		updateController(controllerType, ControllerIndex);
 		
-			if ((MyCtrl2.Buttons & IB_FingerMiddle) != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.5f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.5f, 0); //grip value
-
-				if ((MyCtrl2.Buttons & IB_FingerRing) != 0) {
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.75f, 2); //grip force
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.75f, 2); //grip value
-
-					if ((MyCtrl2.Buttons & IB_FingerPinky) != 0) {
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 1.f, 5); //grip force
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 1.f, 5); //grip value
-					}
-				}
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[10], 0.f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalog[11], 0.f, 0); //grip value
-			}
-		}
-
-		if ((MyCtrl2.Buttons & IB_ThumbStickClick) != 0 && (MyCtrl.Buttons & IB_ThumbStickClick) != 0 && (MyCtrl2.Trigger == 1) && (MyCtrl.Trigger == 1))
-		{
-			SetCentering();
-		}
-
 	}
 
 	void ProcessEvent( const vr::VREvent_t & vrEvent )
@@ -911,8 +693,6 @@ private:
 	//vr::VRInputComponentHandle_t m_compB;
 	//vr::VRInputComponentHandle_t m_compC;
 	vr::VRInputComponentHandle_t m_compHaptic;
-
-	vr::VRInputComponentHandle_t HButtons[11], HAnalog[12];
 	//std::string m_sSerialNumber;
 	//std::string m_sModelNumber;
 };
@@ -945,8 +725,10 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	InitDriverLog( vr::VRDriverLog() );
 
 	//this is stupid
-	comPort = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ComPort);
-	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_EnableControllers);
+	comPort = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ComPort);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers);
+	controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type);
 
 	StartData(comPort);
 	DriverLog("[DataStram] Starting data stream on COMPort: =%d\n", comPort);
