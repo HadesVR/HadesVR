@@ -51,9 +51,22 @@
 #define CTRLTRACKY    8
 #define CTRLVBAT      9
 
+
 //uint64_t Pipe = 0xF0F0F0F0E1LL; //right
 uint64_t Pipe = 0xF0F0F0F0D2LL; //left
 
+struct ctrlData{
+  float qW;
+  float qX;
+  float qY;
+  float qZ;
+  float BTN;
+  short  trigg;
+  short  axisX;
+  short  axisY;
+  short  trackY;
+  short  vBAT;
+};
 
 float trigger;
 float axisXout;
@@ -67,6 +80,8 @@ RF24 radio(9, 10);
 
 
 void setup() {
+  Serial.begin(9600);
+  
   pinMode(APin, INPUT_PULLUP);
   pinMode(BPin, INPUT_PULLUP);
   pinMode(SysPin, INPUT_PULLUP);
@@ -76,8 +91,9 @@ void setup() {
   Fastwire::setup(400, 0);
   mympu_open(200);
   radio.begin();
+  radio.setPayloadSize(40);
   radio.setPALevel(RF24_PA_HIGH);
-  radio.setDataRate(RF24_2MBPS);
+  radio.setDataRate(RF24_1MBPS);
   radio.openWritingPipe(Pipe);
   radio.startListening();
   radio.setAutoAck(false);
@@ -87,7 +103,7 @@ void setup() {
 void loop() {
   mympu_update();
 
-  float data[10];
+  ctrlData data;
   int btn = 0;
   tracky = analogRead(TrackpadPin);
   if (tracky > 560) {
@@ -157,18 +173,18 @@ void loop() {
     btn |= IB_FingerPinky;
   }
 
-  data[CTRLQW] = mympu.qW;
-  data[CTRLQX] = mympu.qY;
-  data[CTRLQY] = mympu.qZ;
-  data[CTRLQZ] = mympu.qX;
-  data[CTRLBTN] = btn;
-  data[CTRLTRIGG] = trigger;
-  data[CTRLAXISX] = -axisXout;
-  data[CTRLAXISY] = -axisYout;
-  data[CTRLTRACKY] = trackoutput;
-  data[CTRLVBAT] = mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 1);
+  data.qW = mympu.qW;
+  data.qY = mympu.qY;
+  data.qZ = mympu.qZ;
+  data.qX = mympu.qX;
+  data.BTN = btn;
+  data.trigg = (trigger * 100);
+  data.axisX = (-axisXout * 100);
+  data.axisY = (-axisYout * 100);
+  data.trackY = (trackoutput * 100);
+  data.vBAT = (mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 1) * 100);
   radio.stopListening();
-  radio.write(&data, sizeof(data));
+  radio.write(&data, sizeof(ctrlData));
   radio.startListening();
 }
 

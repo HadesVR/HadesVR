@@ -33,14 +33,30 @@
 #define CHECKSUM       24
 
 unsigned long lastDisplay = 0;
-float data[25]; float ctrl1Data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; float ctrl2Data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float data[25]; float ctrl2Data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 RF24 radio(9, 10);
 
 const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
 
+struct ctrlData{
+  float qW;
+  float qX;
+  float qY;
+  float qZ;
+  float BTN;
+  short  trigg;
+  short  axisX;
+  short  axisY;
+  short  trackY;
+  short  vBAT;
+};
+
+ctrlData Ctrl1Data,Ctrl2Data;
+
 void setup() {
+  
   Fastwire::setup(400, 0);
   Serial.begin(115200);
   mympu_open(200);
@@ -48,13 +64,16 @@ void setup() {
     mympu_update();
   }
   radio.begin();
+  radio.setPayloadSize(40);
   radio.openReadingPipe(2, leftCtrlPipe);
   radio.openReadingPipe(1, rightCtrlPipe);
   radio.setAutoAck(false);
-  radio.setDataRate(RF24_2MBPS);
+  radio.setDataRate(RF24_1MBPS);
   radio.setPALevel(RF24_PA_LOW);
   radio.startListening();
 }
+
+
 
 void loop() {
   uint8_t pipenum;
@@ -63,48 +82,48 @@ void loop() {
 
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
-      radio.read(&ctrl1Data, sizeof(ctrl1Data));
+      radio.read(&Ctrl1Data, sizeof(ctrlData));
     }
     if (pipenum == 2) {
-      radio.read(&ctrl2Data, sizeof(ctrl2Data));
+      radio.read(&Ctrl2Data, sizeof(ctrlData));
     }
   }
 
   if ((now - lastDisplay) >= DISPLAY_INTERVAL)
   {
     if (SerialDebug) {
-      Serial.print("W,X,Y,Z: ");
-      Serial.print(mympu.qW, 2);
-      Serial.print(", ");
-      Serial.print(mympu.qX, 2);
-      Serial.print(", ");
-      Serial.print(mympu.qY, 2);
-      Serial.print(", ");
-      Serial.println(mympu.qZ, 2);
-
-      Serial.print("pipenum: ");
-      Serial.println(pipenum);
+//      Serial.print("W,X,Y,Z: ");
+//      Serial.print(mympu.qW, 2);
+//      Serial.print(", ");
+//      Serial.print(mympu.qX, 2);
+//      Serial.print(", ");
+//      Serial.print(mympu.qY, 2);
+//      Serial.print(", ");
+//      Serial.println(mympu.qZ, 2);
+//
+//      Serial.print("pipenum: ");
+//      Serial.println(pipenum);
 
       Serial.print("Controller1Data: ");
-      Serial.print(ctrl1Data[0], 2);
+      Serial.print(Ctrl1Data.qW, 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[1], 2);
+      Serial.print(Ctrl1Data.qX, 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[2], 2);
+      Serial.print(Ctrl1Data.qY, 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[3], 2);
+      Serial.print(Ctrl1Data.qZ, 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[4], 2);
+      Serial.print(Ctrl1Data.BTN, 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[5], 2);
+      Serial.print(((float)Ctrl1Data.trigg/100), 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[6], 2);
+      Serial.print(((float)Ctrl1Data.axisX /100), 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[7], 2);
+      Serial.print(((float)Ctrl1Data.axisY /100), 2);
       Serial.print(", ");
-      Serial.print(ctrl1Data[8], 2);
+      Serial.print(((float)Ctrl1Data.trackY /100), 2);
       Serial.print(", ");
-      Serial.println(ctrl1Data[9], 2);
+      Serial.println(((float)Ctrl1Data.vBAT /100) , 2);
 
       delay(100);
     }
@@ -114,27 +133,27 @@ void loop() {
       data[HMDQY] = mympu.qZ;
       data[HMDQZ] = mympu.qX;
 
-      data[CTRL1QW]     = ctrl1Data[0];
-      data[CTRL1QX]     = ctrl1Data[1];
-      data[CTRL1QY]     = ctrl1Data[2];
-      data[CTRL1QZ]     = ctrl1Data[3];
-      data[CTRL1BTN]    = ctrl1Data[4];
-      data[CTRL1TRIGG]  = ctrl1Data[5];
-      data[CTRL1AXISX]  = ctrl1Data[6];
-      data[CTRL1AXISY]  = ctrl1Data[7];
-      data[CTRL1TRACKY] = ctrl1Data[8];
-      data[CTRL1VBAT]   = ctrl1Data[9];
+      data[CTRL1QW]     = Ctrl1Data.qW;
+      data[CTRL1QX]     = Ctrl1Data.qX;
+      data[CTRL1QY]     = Ctrl1Data.qY;
+      data[CTRL1QZ]     = Ctrl1Data.qZ;
+      data[CTRL1BTN]    = Ctrl1Data.BTN;
+      data[CTRL1TRIGG]  = ((float)Ctrl1Data.trigg/100);
+      data[CTRL1AXISX]  = ((float)Ctrl1Data.axisX/100);
+      data[CTRL1AXISY]  = ((float)Ctrl1Data.axisY/100);
+      data[CTRL1TRACKY] = ((float)Ctrl1Data.trackY/100);
+      data[CTRL1VBAT]   = ((float)Ctrl1Data.vBAT/100);
 
-      data[CTRL2QW]     = ctrl2Data[0];
-      data[CTRL2QX]     = ctrl2Data[1];
-      data[CTRL2QY]     = ctrl2Data[2];
-      data[CTRL2QZ]     = ctrl2Data[3];
-      data[CTRL2BTN]    = ctrl2Data[4];
-      data[CTRL2TRIGG]  = ctrl2Data[5];
-      data[CTRL2AXISX]  = ctrl2Data[6];
-      data[CTRL2AXISY]  = ctrl2Data[7];
-      data[CTRL2TRACKY] = ctrl2Data[8];
-      data[CTRL2VBAT]   = ctrl2Data[9];
+      data[CTRL2QW]     = Ctrl2Data.qW;
+      data[CTRL2QX]     = Ctrl2Data.qX;
+      data[CTRL2QY]     = Ctrl2Data.qY;
+      data[CTRL2QZ]     = Ctrl2Data.qZ;
+      data[CTRL2BTN]    = Ctrl2Data.BTN;
+      data[CTRL2TRIGG]  = ((float)Ctrl2Data.trigg/100);
+      data[CTRL2AXISX]  = ((float)Ctrl2Data.axisX/100);
+      data[CTRL2AXISY]  = ((float)Ctrl2Data.axisY/100);
+      data[CTRL2TRACKY] = ((float)Ctrl2Data.trackY/100);
+      data[CTRL2VBAT]   = ((float)Ctrl2Data.vBAT/100);
 
       data[CHECKSUM] = 29578643;                //TODO: make proper checksum
       Serial.write((byte*)&data, sizeof(data)); 
