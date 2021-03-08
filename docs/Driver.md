@@ -10,9 +10,35 @@ Assuming you have already followed the steps in the [Tracking](Tracking.md) doc,
 
 # Driver Configuration
 
-Driver configuration is pretty self explanatory, the driver configuration file is  hadesvr\resources\settings\default.vrsettings. To change the settings just open the file with Notepad.
+Driver configuration is pretty self explanatory, the driver configuration file is  hadesvr\resources\settings\default.vrsettings. To change the settings just open the file with the text editor of your liking.
 
-TODO:Write more descriptive driver configuration parameters and what they do.
+|Parameter|Type    |Description|
+| ------  | ------ |------     |
+| DebugMode  | bool | ------     |
+| Stereo  | bool | ------     |
+| IsDisplayOnDesktop  | bool | ------     |
+| IsDisplayReal  | bool | ------     |
+| DistanceBetweenEyes  | float | ------     |
+| IPD  | float | ------     |
+| FOV  | float | ------     |
+| serialNumber  | string | ------     |
+| windowWidth  | int | ------     |
+| windowHeight  | int | ------     |
+| renderWidth  | int | ------     |
+| renderHeight  | int | ------     |
+| displayFrequency  | float | ------     |
+| windowX  | int | ------     |
+| windowY  | int | ------     |
+| ScreenOffsetX  | int | ------     |
+| ScreenOffsetY  | int | ------     |
+| ZoomWidth  | float | ------     |
+| ZoomHeight  | float | ------     |
+| DistortionK1  | float | ------     |
+| DistortionK2  | float | ------     |
+| secondsFromVsyncToPhotons  | float | ------     |
+| ComPort  | int | ------     |
+| EnableControllers  | bool | ------     |
+
 # Usage and controller bindings
 
 * Launch PSMoveService before opening SteamVR
