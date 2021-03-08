@@ -134,9 +134,9 @@ void loop() {
       data[HMDQZ] = mympu.qX;
 
       data[CTRL1QW]     = Ctrl1Data.qW;
-      data[CTRL1QX]     = Ctrl1Data.qX;
-      data[CTRL1QY]     = Ctrl1Data.qY;
-      data[CTRL1QZ]     = Ctrl1Data.qZ;
+      data[CTRL1QX]     = Ctrl1Data.qY;
+      data[CTRL1QY]     = Ctrl1Data.qZ;
+      data[CTRL1QZ]     = Ctrl1Data.qX;
       data[CTRL1BTN]    = Ctrl1Data.BTN;
       data[CTRL1TRIGG]  = ((float)Ctrl1Data.trigg/100);
       data[CTRL1AXISX]  = ((float)Ctrl1Data.axisX/100);
@@ -145,9 +145,9 @@ void loop() {
       data[CTRL1VBAT]   = ((float)Ctrl1Data.vBAT/100);
 
       data[CTRL2QW]     = Ctrl2Data.qW;
-      data[CTRL2QX]     = Ctrl2Data.qX;
-      data[CTRL2QY]     = Ctrl2Data.qY;
-      data[CTRL2QZ]     = Ctrl2Data.qZ;
+      data[CTRL2QX]     = Ctrl2Data.qY;
+      data[CTRL2QY]     = Ctrl2Data.qZ;
+      data[CTRL2QZ]     = Ctrl2Data.qX;
       data[CTRL2BTN]    = Ctrl2Data.BTN;
       data[CTRL2TRIGG]  = ((float)Ctrl2Data.trigg/100);
       data[CTRL2AXISX]  = ((float)Ctrl2Data.axisX/100);
