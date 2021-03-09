@@ -30,6 +30,7 @@
 #include "dataHandler.hpp"
 
 vr::VRInputComponentHandle_t HButtonsCtrl1[11], HAnalogCtrl1[12];
+vr::VRInputComponentHandle_t HButtonsCtrl2[11], HAnalogCtrl2[12];
 
 TController MyCtrl, MyCtrl2;
 
