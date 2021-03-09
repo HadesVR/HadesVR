@@ -13,7 +13,7 @@ For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 
 # Building your own controllers
 Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
-Or maybe you want to design your own, check out the [pinouts](docs/img/Pinouts.png) for building the controllers with a regular Arduino!
+Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with a regular Arduino!
 
 # To-do list:
 
