@@ -25,5 +25,4 @@ Or maybe you want to design your own, check out the [pinouts](docs/ControllerPin
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
 - Implement hand bone finger tracking for games that use it
-- Implement battery % remaining
 - NEW: Upgrade Serial to HID
