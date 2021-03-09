@@ -97,7 +97,6 @@ PSMVector3f hmdPos, ctrl1Pos, ctrl2Pos;
 
 int dataCOMPort;
 
-
 void SetCentering()
 {
 	Ctrl1Offset.W = ArduinoData[CTRL1QW];

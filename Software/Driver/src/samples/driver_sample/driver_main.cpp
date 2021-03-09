@@ -672,16 +672,7 @@ public:
 	}
 
 	std::string GetSerialNumber() const { 
-		
-		switch (ControllerIndex)
-		{
-		case 1:
-			return "LHR-E217CD01";
-			break;
-		case 2:
-			return "LHR-E217CD00";
-			break;
-		}
+		return getCtrlSerial(controllerType, ControllerIndex);
 	}
 
 private:
@@ -732,12 +723,6 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 
 	StartData(comPort);
 	DriverLog("[DataStram] Starting data stream on COMPort: =%d\n", comPort);
-
-	if (!PSMConnected)
-	{
-		DriverLog("[DataStream] PSMoveService not connected!!!!");
-		return VRInitError_Driver_Failed;
-	}
 
 	if (SerialConnected)
 	{
