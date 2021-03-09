@@ -653,7 +653,12 @@ public:
 		}
 		
 		updateController(controllerType, ControllerIndex);
-		
+	}
+
+	void UpdateDeviceBattery() 
+	{
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t), vr::Prop_DeviceBatteryPercentage_Float, MyCtrl.vBat);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t), vr::Prop_DeviceBatteryPercentage_Float, MyCtrl2.vBat);
 	}
 
 	void ProcessEvent( const vr::VREvent_t & vrEvent )
@@ -703,6 +708,14 @@ public:
 	virtual void LeaveStandby()  {}
 
 private:
+
+	void BatteryUpdateThread();
+	static void BatteryUpdateThreadEnter(CServerDriver_Sample* ptr) {
+		ptr->BatteryUpdateThread();
+	}
+	bool m_bBatteryUpdateThreadAlive;
+	std::thread* m_ptBatteryUpdateThread;
+
 	C_HMDDeviceDriver *m_pNullHmdLatest = nullptr;
 	C_ControllerDriver *m_pController = nullptr;
 	C_ControllerDriver *m_pController2 = nullptr;
@@ -755,6 +768,13 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pController2->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pController2);
 	}
 
+	// battery thread
+	m_bBatteryUpdateThreadAlive = true;
+	m_ptBatteryUpdateThread = new std::thread(this->BatteryUpdateThreadEnter, this);
+	if (!m_bBatteryUpdateThreadAlive) {
+		return VRInitError_IPC_Failed;
+	}
+
 	return VRInitError_None;
 }
 
@@ -792,6 +812,14 @@ void CServerDriver_Sample::Cleanup()
 			pPSMUpdatethread->join();
 			delete pPSMUpdatethread;
 			pPSMUpdatethread = nullptr;
+		}
+	}
+	if (m_bBatteryUpdateThreadAlive) {
+		m_bBatteryUpdateThreadAlive = false;
+		if (m_ptBatteryUpdateThread) {
+			m_ptBatteryUpdateThread->join();
+			delete m_ptBatteryUpdateThread;
+			m_ptBatteryUpdateThread = nullptr;
 		}
 	}
 
@@ -834,6 +862,24 @@ void CServerDriver_Sample::RunFrame()
 			}
 		}
 	}
+}
+
+void CServerDriver_Sample::BatteryUpdateThread() {
+	
+	while (m_bBatteryUpdateThreadAlive) 
+	{
+		if (m_pController)
+		{
+			m_pController->UpdateDeviceBattery();
+		}
+		if (m_pController2)
+		{
+			m_pController2->UpdateDeviceBattery();
+		}
+
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+	}
+	m_bBatteryUpdateThreadAlive = false;
 }
 
 //-----------------------------------------------------------------------------
