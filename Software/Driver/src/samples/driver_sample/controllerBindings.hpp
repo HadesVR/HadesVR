@@ -429,7 +429,7 @@ void updateController(int contType, int contIndex){
 
 		}
 
-		if ((MyCtrl2.Buttons & HTC_SysClick) != 0 && (MyCtrl.Buttons & HTC_SysClick) != 0 && (MyCtrl2.Trigger > 0.9f) && (MyCtrl.Trigger > 0.9f))
+		if ((MyCtrl2.Buttons & HTC_ThumbstickClick) != 0 && (MyCtrl.Buttons & HTC_ThumbstickClick) != 0 && (MyCtrl2.Trigger > 0.9f) && (MyCtrl.Trigger > 0.9f))
 		{
 			SetCentering();
 		}

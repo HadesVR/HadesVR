@@ -57,6 +57,7 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 // keys for use with the settings API
 static const char * const k_pch_HMD_Section = "HMD";
 static const char * const k_pch_Controllers_Section = "Controllers";
+
 static const char * const k_pch_Sample_SerialNumber_String = "serialNumber";
 static const char * const k_pch_Sample_ModelNumber_String = "modelNumber";
 static const char * const k_pch_Sample_WindowX_Int32 = "windowX";
@@ -80,9 +81,10 @@ static const char * const k_pch_Sample_Stereo_Bool = "Stereo";
 static const char * const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char * const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char * const k_pch_Sample_DebugMode_Bool = "DebugMode";
-static const char * const k_pch_Sample_EnableControllers = "EnableControllers";
-static const char * const k_pch_Sample_Controller_Type = "ControllerType";
-static const char * const k_pch_Sample_ComPort = "ComPort";
+static const char * const k_pch_Sample_EnableControllers_Bool = "EnableControllers";
+static const char * const k_pch_Sample_Controller_Type_Int32 = "ControllerType";
+static const char * const k_pch_Sample_ComPort_Int32 = "ComPort";
+static const char * const k_pch_Sample_EnableHMD_Bool = "EnableHMD";
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -92,7 +94,8 @@ static const char * const k_pch_Sample_ComPort = "ComPort";
 HMODULE hDll;
 THMD MyHMD;
 
-bool HMDConnected = false, ctrlsConnected = false, ctrlsEnabled = false;
+bool HMDConnected = false, ctrlsConnected = false;
+
 int controllerType;
 
 double DegToRad(double f) {
@@ -198,14 +201,13 @@ public:
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayReal);
 
-		controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type);
+		controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type_Int32);
 		
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
 		DriverLog( "Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
 		DriverLog( "Display Frequency: %f\n", m_flDisplayFrequency );
 		DriverLog( "IPD: %f\n", m_flIPD );
-		DriverLog("Controllers enabled: %d\n", ctrlsEnabled);
 		DriverLog("Controller Type: %d\n", controllerType);
 	}
 
@@ -715,7 +717,7 @@ private:
 	}
 	bool m_bBatteryUpdateThreadAlive;
 	std::thread* m_ptBatteryUpdateThread;
-
+	bool ctrlsEnabled = false, HMDEnabled = false;
 	C_HMDDeviceDriver *m_pNullHmdLatest = nullptr;
 	C_ControllerDriver *m_pController = nullptr;
 	C_ControllerDriver *m_pController2 = nullptr;
@@ -729,21 +731,22 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	InitDriverLog( vr::VRDriverLog() );
 
 	//this is stupid
-	comPort = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ComPort);
-	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers);
-	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers);
-	controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type);
+	comPort = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ComPort_Int32);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers_Bool);
+	HMDEnabled = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_EnableHMD_Bool);
+	controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type_Int32);
 
 	StartData(comPort);
-	DriverLog("[DataStram] Starting data stream on COMPort: =%d\n", comPort);
+	DriverLog("[DataStream] Starting data stream on COMPort: =%d\n", comPort);
 
 	if (SerialConnected)
 	{
-		HMDConnected = true;
+		if (HMDEnabled) {
+			HMDConnected = true;
+		}
 		if (ctrlsEnabled) {
 			ctrlsConnected = true;
 		}
-		
 	}
 	else 
 	{
