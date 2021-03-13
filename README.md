@@ -13,12 +13,12 @@ This driver also uses [PSMoveService](https://github.com/psmoveservice/PSMoveSer
 
 For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 
-# Building your own controllers
-Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
-Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with regular Arduino boards!
-
 ![1](docs/img/Headset.png)
 
+# Custom hardware
+Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
+
+Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with regular Arduino boards!
 
 # To-do list:
 
