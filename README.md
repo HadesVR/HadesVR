@@ -15,6 +15,21 @@ For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 
 ![1](docs/img/Headset.png)
 
+# How does it work and what can it do?
+
+The headset connects to the PC and receives rotation and button data from both controllers through RF, while the tracking is done outside-in (base stations) using Playstation Move Cameras and [PSMoveService](https://github.com/psmoveservice/PSMoveService).
+
+You can use the setup in: 
+* Headset and controllers mode: The headset receives data from the controlers and mixed with the PSMoveService position tracking you get full 6dof tracking.
+* Headset only mode: where you only have your HadesVR headset and the 6dof tracking (or 3dof if you don't use PSMoveService)
+* Controller only mode: where if you already have a headset, you can use only the controllers part of the setup (you'll need to build an [RF receiver](docs/RFReceiver.md) to replace the HadesVR headset's built in one).
+
+## What it can and cannot do:
+* This driver partly supports Phone VR (RiftCat, etc): you'll get 6dof tracking for your controllers but only 3dof for your headset, meaning you'll have to stand still.
+* This driver can emulate Wand and Index controllers.
+* This setup cannot do Inside out tracking.
+* This driver cannot do Full body tracking ~~**yet**~~.
+
 # Custom hardware
 Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
 
@@ -31,3 +46,4 @@ Or maybe you want to design your own, check out the [pinouts](docs/ControllerPin
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
 - Implement hand bone finger tracking for games that use it
 - **Upgrade Serial to HID**
+- FBT maybe?

@@ -15,6 +15,13 @@ TODO: Hyperlink everything and create the docs etc.
 - [Uploading the firmware](Headset.md#uploading-the-firmware)
 - [Setting correct COMPort](Headset.md#setting-correct-comport)
 
+## [RF Receiver](RFReceiver.md)
+
+- [Hardware needed](RFReceiver.md#hardware-needed)
+- [Circuit schematic](RFReceiver.md#circuit-schematic)
+- [Uploading the firmware](RFReceiver.md#uploading-the-firmware)
+- [Setting correct COMPort](RFReceiver.md#setting-correct-comport)
+
 ## Controllers
 
 TODO:LIST
