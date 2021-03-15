@@ -1,4 +1,5 @@
-#RF Receiver
+# RF Receiver
+
 This is only needed if you already have an HMD and want to build only the controller part of the setup.
 
 This RF receiver is in charge of receiving rotation and button data from the controllers, replacing the need for the HadesVR headset.
