@@ -3,7 +3,7 @@
 #include <openvr_driver.h>
 #include "controllerBindings.hpp"
 #include "driverlog.h"
-
+#include "settingsAPIKeys.h"
 
 #include <vector>
 #include <thread>
@@ -12,7 +12,7 @@
 #include <windows.h>
 #include <atlbase.h>
 #include <atlstr.h> 
-#include "dataHandler.hpp"
+#include "dataHandler.h"
 
 using namespace vr;
 using namespace std::chrono;
@@ -54,45 +54,11 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 }
 
 
-// keys for use with the settings API
-static const char * const k_pch_HMD_Section = "HMD";
-static const char * const k_pch_Controllers_Section = "Controllers";
-
-static const char * const k_pch_Sample_SerialNumber_String = "serialNumber";
-static const char * const k_pch_Sample_ModelNumber_String = "modelNumber";
-static const char * const k_pch_Sample_WindowX_Int32 = "windowX";
-static const char * const k_pch_Sample_WindowY_Int32 = "windowY";
-static const char * const k_pch_Sample_WindowWidth_Int32 = "windowWidth";
-static const char * const k_pch_Sample_WindowHeight_Int32 = "windowHeight";
-static const char * const k_pch_Sample_RenderWidth_Int32 = "renderWidth";
-static const char * const k_pch_Sample_RenderHeight_Int32 = "renderHeight";
-static const char * const k_pch_Sample_SecondsFromVsyncToPhotons_Float = "secondsFromVsyncToPhotons";
-static const char * const k_pch_Sample_DisplayFrequency_Float = "displayFrequency";
-static const char * const k_pch_Sample_DistortionK1_Float = "DistortionK1";
-static const char * const k_pch_Sample_DistortionK2_Float = "DistortionK2";
-static const char * const k_pch_Sample_ZoomWidth_Float = "ZoomWidth";
-static const char * const k_pch_Sample_ZoomHeight_Float = "ZoomHeight";
-static const char * const k_pch_Sample_FOV_Float = "FOV";
-static const char * const k_pch_Sample_IPD_Float = "IPD";
-static const char * const k_pch_Sample_DistanceBetweenEyes_Int32 = "DistanceBetweenEyes";
-static const char * const k_pch_Sample_ScreenOffsetX_Int32 = "ScreenOffsetX";
-static const char * const k_pch_Sample_ScreenOffsetY_Int32 = "ScreenOffsetY";
-static const char * const k_pch_Sample_Stereo_Bool = "Stereo";
-static const char * const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
-static const char * const k_pch_Sample_DisplayReal = "IsDisplayReal";
-static const char * const k_pch_Sample_DebugMode_Bool = "DebugMode";
-static const char * const k_pch_Sample_EnableControllers_Bool = "EnableControllers";
-static const char * const k_pch_Sample_Controller_Type_Int32 = "ControllerType";
-static const char * const k_pch_Sample_ComPort_Int32 = "ComPort";
-static const char * const k_pch_Sample_EnableHMD_Bool = "EnableHMD";
-
 #define SUCCESS 0
 #define FAILURE 1
 
-
-
 HMODULE hDll;
-THMD MyHMD;
+THMD HMDdata;
 
 bool HMDConnected = false, ctrlsConnected = false;
 
@@ -441,19 +407,19 @@ public:
 		if (HMDConnected) {
 
 			//hmd data
-			GetHMDData(&MyHMD);
+			dH.GetHMDData(&HMDdata);
 
 			//Set head tracking rotation
 			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = MyHMD.qW;
-			HMDQuat.x = MyHMD.qX;
-			HMDQuat.y = MyHMD.qY;
-			HMDQuat.z = MyHMD.qZ;
+			HMDQuat.w = HMDdata.qW;
+			HMDQuat.x = HMDdata.qX;
+			HMDQuat.y = HMDdata.qY;
+			HMDQuat.z = HMDdata.qZ;
 			pose.qRotation = HMDQuat;
 			//Set head position tracking
-			pose.vecPosition[0] = MyHMD.X;
-			pose.vecPosition[1] = MyHMD.Z;
-			pose.vecPosition[2] = MyHMD.Y;
+			pose.vecPosition[0] = HMDdata.X;
+			pose.vecPosition[1] = HMDdata.Z;
+			pose.vecPosition[2] = HMDdata.Y;
 		}
 
 		return pose;
@@ -601,9 +567,9 @@ public:
 		//Controllers positions and rotations
 		if (ControllerIndex == 1) {
 
-			pose.vecPosition[0] = MyCtrl.X;
-			pose.vecPosition[1] = MyCtrl.Z;
-			pose.vecPosition[2] = MyCtrl.Y;
+			pose.vecPosition[0] = RightCtrl.X;
+			pose.vecPosition[1] = RightCtrl.Z;
+			pose.vecPosition[2] = RightCtrl.Y;
 
 			//Velocity, right?
 			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3; // div 3 - ghosting fix, there are right ways to remove ghosting?
@@ -614,13 +580,13 @@ public:
 			FirstCtrlLastPos[2] = pose.vecPosition[2];
 
 			//Rotation first controller
-			pose.qRotation = retquat(MyCtrl.qW, MyCtrl.qX, MyCtrl.qY, MyCtrl.qZ);
+			pose.qRotation = retquat(RightCtrl.qW, RightCtrl.qX, RightCtrl.qY, RightCtrl.qZ);
 
 		} else { 
 			//Controller2
-			pose.vecPosition[0] = MyCtrl2.X;
-			pose.vecPosition[1] = MyCtrl2.Z;
-			pose.vecPosition[2] = MyCtrl2.Y;
+			pose.vecPosition[0] = LeftCtrl.X;
+			pose.vecPosition[1] = LeftCtrl.Z;
+			pose.vecPosition[2] = LeftCtrl.Y;
 
 			//Velocity
 			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3; 
@@ -630,7 +596,7 @@ public:
 			SecondCtrlLastPos[1] = pose.vecPosition[1];
 			SecondCtrlLastPos[2] = pose.vecPosition[2];
 
-			pose.qRotation = retquat(MyCtrl2.qW, MyCtrl2.qX, MyCtrl2.qY, MyCtrl2.qZ);
+			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
 		}
 
 		return pose;
@@ -659,8 +625,8 @@ public:
 
 	void UpdateDeviceBattery() 
 	{
-		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t), vr::Prop_DeviceBatteryPercentage_Float, MyCtrl.vBat);
-		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t), vr::Prop_DeviceBatteryPercentage_Float, MyCtrl2.vBat);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t), vr::Prop_DeviceBatteryPercentage_Float, RightCtrl.vBat);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t), vr::Prop_DeviceBatteryPercentage_Float, LeftCtrl.vBat);
 	}
 
 	void ProcessEvent( const vr::VREvent_t & vrEvent )
@@ -719,8 +685,8 @@ private:
 	std::thread* m_ptBatteryUpdateThread;
 	bool ctrlsEnabled = false, HMDEnabled = false;
 	C_HMDDeviceDriver *m_pNullHmdLatest = nullptr;
-	C_ControllerDriver *m_pController = nullptr;
-	C_ControllerDriver *m_pController2 = nullptr;
+	C_ControllerDriver *m_pControllerRight = nullptr;
+	C_ControllerDriver *m_pControllerLeft = nullptr;
 };
 
 CServerDriver_Sample g_serverDriverNull;
@@ -736,10 +702,10 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	HMDEnabled = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_EnableHMD_Bool);
 	controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type_Int32);
 
-	StartData(comPort);
+	dH.StartData(comPort);
 	DriverLog("[DataStream] Starting data stream on COMPort: =%d\n", comPort);
 
-	if (SerialConnected)
+	if (dH.SerialConnected)
 	{
 		if (HMDEnabled) {
 			HMDConnected = true;
@@ -761,14 +727,14 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	}
 
 	if (ctrlsConnected) {
-		m_pController = new C_ControllerDriver();
-		m_pController->SetControllerIndex(1);
-		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pController->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pController);
+		m_pControllerRight = new C_ControllerDriver();
+		m_pControllerRight->SetControllerIndex(1);
+		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pControllerRight->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pControllerRight);
 
 
-		m_pController2 = new C_ControllerDriver();
-		m_pController2->SetControllerIndex(2);
-		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pController2->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pController2);
+		m_pControllerLeft = new C_ControllerDriver();
+		m_pControllerLeft->SetControllerIndex(2);
+		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pControllerLeft->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pControllerLeft);
 	}
 
 	// battery thread
@@ -789,32 +755,32 @@ void CServerDriver_Sample::Cleanup()
 	}
 
 	if (ctrlsConnected) {
-		delete m_pController;
-		m_pController = NULL;
-		delete m_pController2;
-		m_pController2 = NULL;
+		delete m_pControllerRight;
+		m_pControllerRight = NULL;
+		delete m_pControllerLeft;
+		m_pControllerLeft = NULL;
 	}
 	if (hDll != NULL) {
 		FreeLibrary(hDll);
 		hDll = nullptr;
 	}
 
-	if (SerialConnected) {
-		SerialConnected = false;
-		if (pCtrlthread) {
-			pCtrlthread->join();
-			delete pCtrlthread;
-			pCtrlthread = nullptr;
+	if (dH.SerialConnected) {
+		dH.SerialConnected = false;
+		if (dH.pCtrlthread) {
+			dH.pCtrlthread->join();
+			delete dH.pCtrlthread;
+			dH.pCtrlthread = nullptr;
 		}
-		CloseHandle(hSerial);
+		CloseHandle(dH.hSerial);
 	}
-	if (PSMConnected) {
-		PSMConnected = false;
+	if (dH.PSMConnected) {
+		dH.PSMConnected = false;
 		PSM_Shutdown();
-		if (pPSMUpdatethread) {
-			pPSMUpdatethread->join();
-			delete pPSMUpdatethread;
-			pPSMUpdatethread = nullptr;
+		if (dH.pPSMUpdatethread) {
+			dH.pPSMUpdatethread->join();
+			delete dH.pPSMUpdatethread;
+			dH.pPSMUpdatethread = nullptr;
 		}
 	}
 	if (m_bBatteryUpdateThreadAlive) {
@@ -841,27 +807,27 @@ void CServerDriver_Sample::RunFrame()
 		m_pNullHmdLatest->RunFrame();
 	}
 	if (ctrlsConnected) {
-		GetControllersData(&MyCtrl, &MyCtrl2);
+		dH.GetControllersData(&RightCtrl, &LeftCtrl);
 
-		if (m_pController)
+		if (m_pControllerRight)
 		{
-			m_pController->RunFrame();
+			m_pControllerRight->RunFrame();
 		}
-		if (m_pController2)
+		if (m_pControllerLeft)
 		{
-			m_pController2->RunFrame();
+			m_pControllerLeft->RunFrame();
 		}
 
 		vr::VREvent_t vrEvent;
 		while ( vr::VRServerDriverHost()->PollNextEvent( &vrEvent, sizeof( vrEvent ) ) )
 		{
-			if ( m_pController )
+			if ( m_pControllerRight )
 			{
-				m_pController->ProcessEvent(vrEvent);
+				m_pControllerRight->ProcessEvent(vrEvent);
 			}
-			if (m_pController2)
+			if (m_pControllerLeft)
 			{
-				m_pController2->ProcessEvent(vrEvent);
+				m_pControllerLeft->ProcessEvent(vrEvent);
 			}
 		}
 	}
@@ -871,13 +837,13 @@ void CServerDriver_Sample::BatteryUpdateThread() {
 	
 	while (m_bBatteryUpdateThreadAlive) 
 	{
-		if (m_pController)
+		if (m_pControllerRight)
 		{
-			m_pController->UpdateDeviceBattery();
+			m_pControllerRight->UpdateDeviceBattery();
 		}
-		if (m_pController2)
+		if (m_pControllerLeft)
 		{
-			m_pController2->UpdateDeviceBattery();
+			m_pControllerLeft->UpdateDeviceBattery();
 		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(10));

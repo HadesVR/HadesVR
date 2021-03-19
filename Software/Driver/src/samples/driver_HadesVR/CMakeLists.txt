@@ -4,6 +4,8 @@ add_library(${TARGET_NAME} SHARED
   driverlog.cpp
   driverlog.h
   driver_sample.cpp
+  dataHandler.cpp
+  dataHandler.h
 )
 
 add_definitions(-DDRIVER_SAMPLE_EXPORTS)

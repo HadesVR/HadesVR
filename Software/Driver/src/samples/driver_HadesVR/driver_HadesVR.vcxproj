@@ -163,12 +163,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dataHandler.cpp" />
     <ClCompile Include="driverlog.cpp" />
     <ClCompile Include="driver_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="controllerBindings.hpp" />
-    <ClInclude Include="dataHandler.hpp" />
+    <ClInclude Include="dataHandler.h" />
     <ClInclude Include="driverlog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

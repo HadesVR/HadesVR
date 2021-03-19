@@ -1,18 +1,4 @@
-#ifndef _dataHandler_
-#define _dataHandler_
-
-#pragma once
-
-#include <windows.h>
-#include <thread>
-#include <atlstr.h> 
-#include <math.h>
-
-#include "Quaternion.hpp"
-#include "PSMoveService/PSMoveClient_CAPI.h"
-#include "driverlog.h"
-
-using namespace ATL;
+#include "dataHandler.h"
 
 #define HMDQW          0
 #define HMDQX          1
@@ -40,64 +26,10 @@ using namespace ATL;
 #define CTRL2VBAT      23
 #define CHECKSUM       24
 
-typedef struct _HMDData
-{
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
-} THMD, * PHMD;
-
-typedef struct _Controller
-{
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
-	unsigned short	Buttons;
-	float	Trigger;
-	float	JoyAxisX;
-	float	JoyAxisY;
-	float   TrackpY;
-	float	vBat;
-} TController, * PController;
-
 #define SUCCESS 0
 #define FAILURE 1
 
-HANDLE hSerial;
-
-std::thread* pCtrlthread = NULL;
-std::thread* pPSMUpdatethread = NULL;
-
-float ArduinoData[25] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-float LastArduinoArduinoData[24] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-
-Quaternion Ctrl1Offset = Quaternion::Identity();
-Quaternion Ctrl2Offset = Quaternion::Identity();
-Quaternion HMDOffset = Quaternion::Identity();
-
-bool SerialConnected = false;
-bool PSMConnected = false;
-bool CtrlInitCentring = false;
-bool SerialInit = false;
-bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
-
-static const float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
-
-PSMControllerList controllerList;
-PSMHmdList hmdList;
-PSMVector3f hmdPos, ctrl1Pos, ctrl2Pos;
-
-int dataCOMPort;
-
-void SetCentering()
+void CdataHandler::SetCentering()
 {
 	Ctrl1Offset.W = ArduinoData[CTRL1QW];
 	Ctrl1Offset.Y = -ArduinoData[CTRL1QY];
@@ -120,7 +52,7 @@ inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quat
 	return Output;
 }
 
-void ReadSerialData()
+void CdataHandler::ReadSerialData()
 {
 	bool firstread = false;
 	DWORD bytesRead;
@@ -196,7 +128,7 @@ void ReadSerialData()
 	}
 }
 
-void SerialStreamStart() {
+void CdataHandler::SerialStreamStart() {
 	CString sPortName;
 	sPortName.Format(_T("COM%d"), (int)dataCOMPort);
 
@@ -218,14 +150,14 @@ void SerialStreamStart() {
 			{
 				SerialConnected = true;
 				PurgeComm(hSerial, PURGE_TXCLEAR | PURGE_RXCLEAR);
-				pCtrlthread = new std::thread(ReadSerialData);
+				pCtrlthread = new std::thread(this->ReadSerialDataEnter, this);
 				DriverLog("[DataStream]: created ReadSerialData thread");
 			}
 		}
 	}
 }
 
-void PSMUpdate()
+void CdataHandler::PSMUpdate()
 {
 	while (PSMConnected && HMDAllocated && ctrl1Allocated && ctrl2Allocated) {
 		
@@ -238,7 +170,7 @@ void PSMUpdate()
 	}
 }
 
-void GetHMDData(THMD* HMD)
+void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (SerialConnected) {
 
@@ -257,7 +189,7 @@ void GetHMDData(THMD* HMD)
 		SetCentering();
 }
 
-void GetControllersData(TController* FirstController, TController* SecondController)
+void CdataHandler::GetControllersData(TController* FirstController, TController* SecondController)
 {
 	if (SerialConnected) {
 
@@ -333,7 +265,7 @@ void GetControllersData(TController* FirstController, TController* SecondControl
 	}
 }
 
-bool connectToPSMOVE()
+bool CdataHandler::connectToPSMOVE()
 {
 	DriverLog("[PsMoveData] connecting to PSM, on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
 	int PSMstatus = PSM_InitializeAsync(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
@@ -387,13 +319,13 @@ bool connectToPSMOVE()
 	
 		
 	if (bSuccess)
-		pPSMUpdatethread = new std::thread(PSMUpdate);
+		pPSMUpdatethread = new std::thread(this->PSMUpdateEnter,this);
 	
 	return bSuccess;
 
 }
 
-void StartData(int comPort)
+void CdataHandler::StartData(int comPort)
 {
 	if (SerialInit == false) {
 		dataCOMPort = comPort;
@@ -403,4 +335,3 @@ void StartData(int comPort)
 	}
 
 }
-#endif
