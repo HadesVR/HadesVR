@@ -31,7 +31,7 @@ vr::VRInputComponentHandle_t HButtonsCtrlLeft[11], HAnalogCtrlLeft[12];
 
 TController RightCtrl, LeftCtrl;
 
-CdataHandler dH;
+static CdataHandler dH;
 
 void initController(int contType, int contIndex, vr::PropertyContainerHandle_t m_ulPropertyContainer, vr::VRInputComponentHandle_t m_skeletonHandle, vr::VRInputComponentHandle_t &haptic)
 {

@@ -29,5 +29,6 @@ static const char* const k_pch_Sample_SerialNumber_String = "serialNumber";
 static const char* const k_pch_Sample_ModelNumber_String = "modelNumber";
 static const char* const k_pch_Sample_EnableControllers_Bool = "EnableControllers";
 static const char* const k_pch_Sample_Controller_Type_Int32 = "ControllerType";
+static const char* const k_pch_Tracking_smoothingAmount_float = "smoothingAmount";
 static const char* const k_pch_Sample_ComPort_Int32 = "ComPort";
 static const char* const k_pch_Sample_EnableHMD_Bool = "EnableHMD";

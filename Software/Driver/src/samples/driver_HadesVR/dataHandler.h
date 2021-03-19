@@ -11,6 +11,7 @@
 #include "Quaternion.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
 #include "driverlog.h"
+#include "settingsAPIKeys.h"
 
 using namespace ATL;
 
@@ -52,6 +53,7 @@ public:
 	void GetControllersData(TController* FirstController, TController* SecondController);
 	bool connectToPSMOVE();
 	void StartData(int comPort);
+	float lerp(const float a, const float b, const float f);
 
 	HANDLE hSerial;
 	bool SerialConnected = false;
@@ -62,6 +64,8 @@ public:
 private:
 	float ArduinoData[25] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 	float LastArduinoArduinoData[24] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+
+	float lastPos[9];
 
 	Quaternion Ctrl1Offset = Quaternion::Identity();
 	Quaternion Ctrl2Offset = Quaternion::Identity();
@@ -86,7 +90,7 @@ private:
 	static void ReadSerialDataEnter(CdataHandler* ptr) {
 		ptr->ReadSerialData();
 	}
-
+	float smoothingAmount;
 };
 
 

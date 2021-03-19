@@ -171,6 +171,7 @@
     <ClInclude Include="controllerBindings.hpp" />
     <ClInclude Include="dataHandler.h" />
     <ClInclude Include="driverlog.h" />
+    <ClInclude Include="settingsAPIKeys.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

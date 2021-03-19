@@ -176,14 +176,18 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		Quaternion HMDQuat = SetOffsetQuat(ArduinoData[HMDQW], ArduinoData[HMDQX], ArduinoData[HMDQY], ArduinoData[HMDQZ], HMDOffset);
 
-		HMD->X = hmdPos.x * k_fScalePSMoveAPIToMeters;
-		HMD->Y = hmdPos.z * k_fScalePSMoveAPIToMeters;
-		HMD->Z = hmdPos.y * k_fScalePSMoveAPIToMeters;
+		HMD->X = lerp(lastPos[7], hmdPos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		HMD->Y = lerp(lastPos[8], hmdPos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		HMD->Z = lerp(lastPos[9], hmdPos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
 		HMD->qW = HMDQuat.W;
 		HMD->qX = HMDQuat.X;
 		HMD->qY = HMDQuat.Y;
 		HMD->qZ = HMDQuat.Z;
+
+		lastPos[7] = hmdPos.x * k_fScalePSMoveAPIToMeters;
+		lastPos[8] = hmdPos.z * k_fScalePSMoveAPIToMeters;
+		lastPos[9] = hmdPos.y * k_fScalePSMoveAPIToMeters;
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0)
 		SetCentering();
@@ -195,10 +199,10 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 
 		Quaternion Ctrl1Quat = SetOffsetQuat(ArduinoData[CTRL1QW], ArduinoData[CTRL1QX], ArduinoData[CTRL1QY], ArduinoData[CTRL1QZ], Ctrl1Offset);
 		Quaternion Ctrl2Quat = SetOffsetQuat(ArduinoData[CTRL2QW], ArduinoData[CTRL2QX], ArduinoData[CTRL2QY], ArduinoData[CTRL2QZ], Ctrl2Offset);
-
-		FirstController->X = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
-		FirstController->Y = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
-		FirstController->Z = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
+		
+		FirstController->X = lerp(lastPos[1], ctrl1Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		FirstController->Y = lerp(lastPos[2], ctrl1Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		FirstController->Z = lerp(lastPos[3], ctrl1Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
 		FirstController->qW = Ctrl1Quat.W;
 		FirstController->qX = Ctrl1Quat.X;
@@ -212,9 +216,9 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		FirstController->TrackpY = ArduinoData[CTRL1TRACKY];
 		FirstController->vBat = ArduinoData[CTRL1VBAT];
 
-		SecondController->X = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
-		SecondController->Y = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
-		SecondController->Z = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
+		SecondController->X = lerp(lastPos[4], ctrl2Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		SecondController->Y = lerp(lastPos[5], ctrl2Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		SecondController->Z = lerp(lastPos[6], ctrl2Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
 		SecondController->qW = Ctrl2Quat.W;
 		SecondController->qX = Ctrl2Quat.X;
@@ -228,6 +232,12 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		SecondController->TrackpY = ArduinoData[CTRL2TRACKY];
 		SecondController->vBat = ArduinoData[CTRL2VBAT];
 
+		lastPos[1] = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
+		lastPos[2] = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
+		lastPos[3] = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
+		lastPos[4] = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
+		lastPos[5] = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
+		lastPos[6] = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
 	}
 	else
 	{
@@ -263,6 +273,10 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		SecondController->TrackpY = 0;
 		SecondController->vBat = 0;
 	}
+}
+
+float CdataHandler::lerp(const float a, const float b, const float f) {
+	return a + f * (b - a);
 }
 
 bool CdataHandler::connectToPSMOVE()
@@ -327,6 +341,8 @@ bool CdataHandler::connectToPSMOVE()
 
 void CdataHandler::StartData(int comPort)
 {
+	smoothingAmount = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Tracking_smoothingAmount_float);
+
 	if (SerialInit == false) {
 		dataCOMPort = comPort;
 		SerialInit = true;
