@@ -168,7 +168,7 @@
     <ClCompile Include="driver_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="controllerBindings.hpp" />
+    <ClInclude Include="devices.hpp" />
     <ClInclude Include="dataHandler.h" />
     <ClInclude Include="driverlog.h" />
     <ClInclude Include="settingsAPIKeys.h" />

@@ -42,8 +42,9 @@ Or maybe you want to design your own, check out the [pinouts](docs/ControllerPin
 - Write the joystick calibration sketches
 
 ### Project TODO:
+- full body tracking maybee?
+- hardware design for the wand controllers (and maybe fbt trackers too?)
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
-- Implement hand bone finger tracking for games that use it
+- Implement hand bone finger tracking for games that use it (soon™)
 - **Upgrade Serial to HID**
-- FBT maybe?

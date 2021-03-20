@@ -33,12 +33,12 @@ TController RightCtrl, LeftCtrl;
 
 static CdataHandler dH;
 
-void initController(int contType, int contIndex, vr::PropertyContainerHandle_t m_ulPropertyContainer, vr::VRInputComponentHandle_t m_skeletonHandle, vr::VRInputComponentHandle_t &haptic)
+void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m_ulPropertyContainer, vr::VRInputComponentHandle_t &haptic, vr::VRInputComponentHandle_t m_skeletonHandle = NULL )
 {
-	switch (contType) 
+	switch (DeviceType) 
 	{
 	case 0:
-		if (contIndex == 1) {
+		if (DeviceIndex == 1) {
 	
 			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerRoleHint_Int32, vr::TrackedControllerRole_RightHand);
 			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ModelNumber_String, "Knuckles Right");
@@ -135,7 +135,6 @@ void initController(int contType, int contIndex, vr::PropertyContainerHandle_t m
 
 		
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_UpdateAvailable_Bool, false);
-		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_ManualUpdate_Bool, false);
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceProvidesBatteryStatus_Bool, true);
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceCanPowerOff_Bool, true);
 		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_Controller);
@@ -162,7 +161,7 @@ void initController(int contType, int contIndex, vr::PropertyContainerHandle_t m
 		break;
 
 	case 1:
-		if (contIndex == 1) 
+		if (DeviceIndex == 1) 
 		{
 			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerRoleHint_Int32, vr::TrackedControllerRole_RightHand);
 			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RegisteredDeviceType_String,"htc/vive_controllerLHR-F94B3BD9");
@@ -234,16 +233,63 @@ void initController(int contType, int contIndex, vr::PropertyContainerHandle_t m
 		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "vive_controller");
 
 		break;
+
+	case 10:
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_WillDriftInYaw_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceIsWireless_Bool, true);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceIsCharging_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_UpdateAvailable_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_ManualUpdate_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceProvidesBatteryStatus_Bool, true);
+		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_GenericTracker);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_ForceUpdateRequired_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Identifiable_Bool, true);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_Firmware_RemindUpdate_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasDisplayComponent_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasCameraComponent_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasDriverDirectModeComponent_Bool, false);
+		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_HasVirtualDisplayComponent_Bool, false);
+		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, vr::Prop_CurrentUniverseId_Uint64, 2);
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ModelNumber_String, "Vive. Tracker");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ManufacturerName_String, "HTC");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ResourceRoot_String, "htc");
+		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, vr::Prop_ControllerRoleHint_Int32, vr::ETrackedControllerRole::TrackedControllerRole_OptOut);
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_RenderModelName_String, "{htc}/rendermodels/vr_tracker_vive_1_0");
+
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_InputProfilePath_String, "{htc}/input/vive_tracker_profile.json");
+		// Set the icons
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReady_String, "{htc}/icons/tracker_status_ready.png");
+
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceOff_String, "{htc}/icons/tracker_status_off.png");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearching_String, "{htc}/icons/tracker_status_searching.gif");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{htc}/icons/tracker_status_searching_alert.gif");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{htc}/icons/tracker_status_ready_alert.png");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceStandby_String, "{htc}/icons/tracker_status_standby.png");
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceAlertLow_String, "{htc}/icons/tracker_status_ready_low.png");
+
+		switch (DeviceIndex)
+		{
+		case 0:
+			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "vive_tracker_waist");
+			break;
+		case 1:
+			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "vive_tracker_left_foot");
+			break;
+		case 2:
+			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "vive_tracker_right_foot");
+			break;
+		}
+		break;
 	}
 }
 
 
-void updateController(int contType, int contIndex){
+void updateDevice(int DeviceType, int DeviceIndex){
 
-	switch (contType)
+	switch (DeviceType)
 	{
 	case 0:
-		if (contIndex == 1) {
+		if (DeviceIndex == 1) {
 
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[0], (RightCtrl.Buttons & INDEX_AClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[1], (RightCtrl.Buttons & INDEX_ATouch) != 0, 0);		//a button 
@@ -364,7 +410,7 @@ void updateController(int contType, int contIndex){
 
 
 	case 1:
-		if (contIndex == 1) 
+		if (DeviceIndex == 1) 
 		{
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[0], (RightCtrl.Buttons& HTC_SysClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[2], (RightCtrl.Buttons& HTC_ThumbstickTouch) != 0, 0);
@@ -419,7 +465,7 @@ void updateController(int contType, int contIndex){
 }
 
 
-std::string getCtrlSerial(int contType, int contIndex) {
+std::string getDeviceSerial(int contType, int contIndex) {
 	
 	switch (contType) 
 	{
@@ -439,6 +485,21 @@ std::string getCtrlSerial(int contType, int contIndex) {
 		else 
 		{
 			return "LHR-F94B3BD8";
+		}
+		break;
+
+	case 10:
+		switch (contIndex) 
+		{
+		case 1:
+			return "AAA-00000000";
+			break;
+		case 2:
+			return "AAA-00000001";
+			break;
+		case 3:
+			return "AAA-00000002";
+			break;
 		}
 		break;
 	}
