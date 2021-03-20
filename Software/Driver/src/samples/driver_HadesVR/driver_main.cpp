@@ -38,6 +38,20 @@ inline HmdQuaternion_t HmdQuaternion_Init( double w, double x, double y, double 
 	return quat;
 }
 
+
+inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
+{
+	vr::HmdQuaternion_t q;
+	// Abbreviations for the various angular functions
+	q.w = qW;
+	q.x = qX;
+	q.y = qY;
+	q.z = qZ;
+
+	return q;
+}
+
+
 inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 {
 	pMatrix->m[0][0] = 1.f;
@@ -73,19 +87,9 @@ double DegToRad(double f) {
 int comPort = 3;
 //Velocity
 double FirstCtrlLastPos[3] = { 0, 0, 0 }, SecondCtrlLastPos[3] = { 0, 0, 0 };
+double TrackerWaistLastPos[3] = { 0, 0, 0 }, TrackerLeftFootLastPos[3] = { 0, 0, 0 }, TrackerRightFootLastPos[3] = { 0, 0, 0 };
+
 milliseconds deltaTime;
-
-inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
-{
-	vr::HmdQuaternion_t q;
-	// Abbreviations for the various angular functions
-	q.w = qW;
-	q.x = qX;
-	q.y = qY;
-	q.z = qZ;
-
-	return q;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: HMD mess over here
@@ -732,7 +736,13 @@ public:
 			pose.vecPosition[0] = 0;
 			pose.vecPosition[1] = 0;
 			pose.vecPosition[2] = 0;
-
+			//velocity
+			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerWaistLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerWaistLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerWaistLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			TrackerWaistLastPos[0] = pose.vecPosition[0];
+			TrackerWaistLastPos[1] = pose.vecPosition[1];
+			TrackerWaistLastPos[2] = pose.vecPosition[2];
 			//Rotation
 			pose.qRotation = retquat(RightCtrl.qW, RightCtrl.qX, RightCtrl.qY, RightCtrl.qZ);
 			break;
@@ -741,7 +751,13 @@ public:
 			pose.vecPosition[0] = 0;
 			pose.vecPosition[1] = 0;
 			pose.vecPosition[2] = 0;
-
+			//velocity
+			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerLeftFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerLeftFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerLeftFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			TrackerLeftFootLastPos[0] = pose.vecPosition[0];
+			TrackerLeftFootLastPos[1] = pose.vecPosition[1];
+			TrackerLeftFootLastPos[2] = pose.vecPosition[2];
 			//rotation
 			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
 			break;
@@ -750,6 +766,13 @@ public:
 			pose.vecPosition[0] = 0;
 			pose.vecPosition[1] = 0;
 			pose.vecPosition[2] = 0;
+			//velocity
+			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerRightFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerRightFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerRightFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			TrackerRightFootLastPos[0] = pose.vecPosition[0];
+			TrackerRightFootLastPos[1] = pose.vecPosition[1];
+			TrackerRightFootLastPos[2] = pose.vecPosition[2];
 
 			//rotation
 			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
