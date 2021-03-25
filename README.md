@@ -27,6 +27,7 @@ You can use the setup in:
 ## What it can and cannot do:
 * This driver partly supports Phone VR (RiftCat, etc): you'll get 6dof tracking for your controllers but only 3dof for your headset, meaning you'll have to stand still.
 * This driver can emulate Wand and Index controllers.
+* You can *sort of* play Beat Saber with this setup, as yaw drift is still an issue, the more you wack your controllers around the more they drift.
 * This setup cannot do Inside out tracking.
 * This driver cannot do Full body tracking ~~**yet**~~.
 
@@ -42,6 +43,7 @@ Or maybe you want to design your own, check out the [pinouts](docs/ControllerPin
 - Write the joystick calibration sketches
 
 ### Project TODO:
+- figure out a way to fix controller drift (dual blobs maybe?)
 - full body tracking maybee?
 - hardware design for the wand controllers (and maybe fbt trackers too?)
 - Fix the 3d printable tabs
