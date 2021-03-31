@@ -176,18 +176,27 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		Quaternion HMDQuat = SetOffsetQuat(ArduinoData[HMDQW], ArduinoData[HMDQX], ArduinoData[HMDQY], ArduinoData[HMDQZ], HMDOffset);
 
-		HMD->X = lerp(lastPos[7], hmdPos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		HMD->Y = lerp(lastPos[8], hmdPos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		HMD->Z = lerp(lastPos[9], hmdPos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
+		if (PSMConnected) {			//PSM POSITION
+
+			HMD->X = lerp(lastPos[7], hmdPos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			HMD->Y = lerp(lastPos[8], hmdPos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			HMD->Z = lerp(lastPos[9], hmdPos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
+
+			lastPos[7] = hmdPos.x * k_fScalePSMoveAPIToMeters;
+			lastPos[8] = hmdPos.z * k_fScalePSMoveAPIToMeters;
+			lastPos[9] = hmdPos.y * k_fScalePSMoveAPIToMeters;
+		}
+		else {
+			HMD->X = 0;
+			HMD->Y = 0;
+			HMD->Z = 0;
+		}
 
 		HMD->qW = HMDQuat.W;
 		HMD->qX = HMDQuat.X;
 		HMD->qY = HMDQuat.Y;
 		HMD->qZ = HMDQuat.Z;
 
-		lastPos[7] = hmdPos.x * k_fScalePSMoveAPIToMeters;
-		lastPos[8] = hmdPos.z * k_fScalePSMoveAPIToMeters;
-		lastPos[9] = hmdPos.y * k_fScalePSMoveAPIToMeters;
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0)
 		SetCentering();
@@ -200,10 +209,6 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		Quaternion Ctrl1Quat = SetOffsetQuat(ArduinoData[CTRL1QW], ArduinoData[CTRL1QX], ArduinoData[CTRL1QY], ArduinoData[CTRL1QZ], Ctrl1Offset);
 		Quaternion Ctrl2Quat = SetOffsetQuat(ArduinoData[CTRL2QW], ArduinoData[CTRL2QX], ArduinoData[CTRL2QY], ArduinoData[CTRL2QZ], Ctrl2Offset);
 		
-		FirstController->X = lerp(lastPos[1], ctrl1Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		FirstController->Y = lerp(lastPos[2], ctrl1Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		FirstController->Z = lerp(lastPos[3], ctrl1Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
-
 		FirstController->qW = Ctrl1Quat.W;
 		FirstController->qX = Ctrl1Quat.X;
 		FirstController->qY = Ctrl1Quat.Y;
@@ -215,10 +220,6 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		FirstController->JoyAxisY = ArduinoData[CTRL1AXISY];
 		FirstController->TrackpY = ArduinoData[CTRL1TRACKY];
 		FirstController->vBat = ArduinoData[CTRL1VBAT];
-
-		SecondController->X = lerp(lastPos[4], ctrl2Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		SecondController->Y = lerp(lastPos[5], ctrl2Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-		SecondController->Z = lerp(lastPos[6], ctrl2Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
 		SecondController->qW = Ctrl2Quat.W;
 		SecondController->qX = Ctrl2Quat.X;
@@ -232,46 +233,32 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 		SecondController->TrackpY = ArduinoData[CTRL2TRACKY];
 		SecondController->vBat = ArduinoData[CTRL2VBAT];
 
-		lastPos[1] = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
-		lastPos[2] = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
-		lastPos[3] = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
-		lastPos[4] = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
-		lastPos[5] = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
-		lastPos[6] = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
-	}
-	else
-	{
-		FirstController->X = 0.1;
-		FirstController->Y = -0.3;
-		FirstController->Z = -0.2;
+		if (PSMConnected) {		//PSM POSITION
 
-		SecondController->X = -0.1;
-		SecondController->Y = -0.3;
-		SecondController->Z = -0.2;
+			FirstController->X = lerp(lastPos[1], ctrl1Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			FirstController->Y = lerp(lastPos[2], ctrl1Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			FirstController->Z = lerp(lastPos[3], ctrl1Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
-		FirstController->qW = 0;
-		FirstController->qX = 0;
-		FirstController->qY = 0;
-		FirstController->qZ = 0;
+			SecondController->X = lerp(lastPos[4], ctrl2Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			SecondController->Y = lerp(lastPos[5], ctrl2Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			SecondController->Z = lerp(lastPos[6], ctrl2Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
 
-		SecondController->qW = 0;
-		SecondController->qX = 0;
-		SecondController->qY = 0;
-		SecondController->qZ = 0;
+			lastPos[1] = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
+			lastPos[2] = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
+			lastPos[3] = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
+			lastPos[4] = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
+			lastPos[5] = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
+			lastPos[6] = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
+		}
+		else {
+			FirstController->X = 0.1;
+			FirstController->Y = -0.3;
+			FirstController->Z = -0.2;
 
-		FirstController->Buttons = 0;
-		FirstController->Trigger = 0;
-		FirstController->JoyAxisX = 0;
-		FirstController->JoyAxisY = 0;
-		FirstController->TrackpY = 0;
-		FirstController->vBat = 0;
-
-		SecondController->Buttons = 0;
-		SecondController->Trigger = 0;
-		SecondController->JoyAxisX = 0;
-		SecondController->JoyAxisY = 0;
-		SecondController->TrackpY = 0;
-		SecondController->vBat = 0;
+			SecondController->X = -0.1;
+			SecondController->Y = -0.3;
+			SecondController->Z = -0.2;
+		}
 	}
 }
 
@@ -282,8 +269,8 @@ float CdataHandler::lerp(const float a, const float b, const float f) {
 bool CdataHandler::connectToPSMOVE()
 {
 	DriverLog("[PsMoveData] connecting to PSM, on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
-	int PSMstatus = PSM_InitializeAsync(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
-	bool bSuccess = (PSMstatus != PSMResult_Error);
+	int PSMstatus = PSM_Initialize(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT,3000);
+	bool bSuccess = (PSMstatus == PSMResult_Success);
 	DriverLog("[PsMoveData] PSM status: %d", PSMstatus);
 	PSMConnected = bSuccess;
 	
@@ -302,7 +289,6 @@ bool CdataHandler::connectToPSMOVE()
 
 		DriverLog("[PsMoveData] PSM hmdCount: %d", hmdList.count);
 		DriverLog("[PsMoveData] PSM ControllerCount: %d", controllerList.count);
-	}
 
 	//hmd
 	if (hmdList.count > 0) 
@@ -314,10 +300,7 @@ bool CdataHandler::connectToPSMOVE()
 		}
 	}
 
-
-
 	//controllers
-
 	if (PSM_AllocateControllerListener(controllerList.controller_id[0]) == PSMResult_Success && PSM_StartControllerDataStream(controllerList.controller_id[0], data_stream_flags, PSM_DEFAULT_TIMEOUT) == PSMResult_Success)
 	{
 		DriverLog("Controller %d allocated successfully!", controllerList.controller_id[0]);
@@ -334,7 +317,11 @@ bool CdataHandler::connectToPSMOVE()
 		
 	if (bSuccess)
 		pPSMUpdatethread = new std::thread(this->PSMUpdateEnter,this);
-	
+
+	}
+	else {
+		DriverLog("[PsMoveData] PSMS not connected!");
+	}
 	return bSuccess;
 
 }

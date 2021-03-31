@@ -83,6 +83,8 @@ private:
 
 	int dataCOMPort;
 
+	float smoothingAmount;
+
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
 	}
@@ -90,7 +92,7 @@ private:
 	static void ReadSerialDataEnter(CdataHandler* ptr) {
 		ptr->ReadSerialData();
 	}
-	float smoothingAmount;
+	
 };
 
 
