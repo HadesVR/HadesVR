@@ -36,6 +36,18 @@ Thinking of building your own set of controllers? check out the [guide](docs/Doc
 
 Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with regular Arduino boards!
 
+# Demos
+
+6dof tracking and individual finger tracking demo:
+
+![6dof](docs/img/6dof.gif)
+
+
+Me being awful at beatsaber demo:
+
+![beatsaber](docs/img/Beatsaber.gif)
+
+
 # To-do list:
 
 ### Github TODO:
@@ -44,7 +56,7 @@ Or maybe you want to design your own, check out the [pinouts](docs/ControllerPin
 
 ### Project TODO:
 - figure out a way to fix controller drift (dual blobs maybe?)
-- full body tracking maybee?
+- full body tracking maybe?
 - hardware design for the wand controllers (and maybe fbt trackers too?)
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
