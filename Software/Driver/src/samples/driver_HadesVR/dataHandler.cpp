@@ -31,14 +31,15 @@
 
 void CdataHandler::SetCentering()
 {
+
+	HMDOffset.W = ArduinoData[HMDQW];
+	HMDOffset.Y = -ArduinoData[HMDQY];
+
 	Ctrl1Offset.W = ArduinoData[CTRL1QW];
 	Ctrl1Offset.Y = -ArduinoData[CTRL1QY];
 
 	Ctrl2Offset.W = ArduinoData[CTRL2QW];
 	Ctrl2Offset.Y = -ArduinoData[CTRL2QY];
-
-	HMDOffset.W = ArduinoData[HMDQW];
-	HMDOffset.Y = -ArduinoData[HMDQY];
 }
 
 inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat)
@@ -268,8 +269,8 @@ float CdataHandler::lerp(const float a, const float b, const float f) {
 
 bool CdataHandler::connectToPSMOVE()
 {
-	DriverLog("[PsMoveData] connecting to PSM, on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
-	int PSMstatus = PSM_Initialize(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT,3000);
+	DriverLog("[PsMoveData] Trying to connect to PSMS on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
+	int PSMstatus = PSM_Initialize(PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT, 3000);
 	bool bSuccess = (PSMstatus == PSMResult_Success);
 	DriverLog("[PsMoveData] PSM status: %d", PSMstatus);
 	PSMConnected = bSuccess;
@@ -281,6 +282,9 @@ bool CdataHandler::connectToPSMOVE()
 		PSMControllerDataStreamFlags::PSMStreamFlags_includeRawTrackerData;
 
 	if (PSMConnected) {
+
+		DriverLog("[PsMoveData] PSMS connected!");
+
 		memset(&hmdList, 0, sizeof(PSMHmdList));
 		PSM_GetHmdList(&hmdList, PSM_DEFAULT_TIMEOUT);
 
@@ -310,7 +314,7 @@ bool CdataHandler::connectToPSMOVE()
 
 	if (PSM_AllocateControllerListener(controllerList.controller_id[1]) == PSMResult_Success && PSM_StartControllerDataStream(controllerList.controller_id[1], data_stream_flags, PSM_DEFAULT_TIMEOUT) == PSMResult_Success)
 	{
-		DriverLog("Controller %d allocated successfully!", controllerList.controller_id[0]);
+		DriverLog("Controller %d allocated successfully!", controllerList.controller_id[1]);
 		ctrl2Allocated = true;
 	}
 	

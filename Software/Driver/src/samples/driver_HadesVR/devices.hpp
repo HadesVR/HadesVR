@@ -312,7 +312,7 @@ void updateDevice(int DeviceType, int DeviceIndex){
 
 			
 
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], ((RightCtrl.Buttons & INDEX_FingerIndex) != 0), 0); //Index
+			
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[7], ((RightCtrl.Buttons & INDEX_FingerMiddle) != 0), 0); //middle
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[8], ((RightCtrl.Buttons & INDEX_FingerRing) != 0), 0); //Ring
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[9], ((RightCtrl.Buttons & INDEX_FingerPinky) != 0), 0); //Pinky
@@ -324,6 +324,13 @@ void updateDevice(int DeviceType, int DeviceIndex){
 			}
 			else {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[5], 0.f, 0); //Trackpad force
+			}
+
+			if (RightCtrl.Trigger > 0.05f) {
+				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], 1.f, 0); //Index
+			}
+			else {
+				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], 0.f, 0); //Index
 			}
 
 			if ((RightCtrl.Buttons & INDEX_FingerMiddle) != 0) {
@@ -379,6 +386,13 @@ void updateDevice(int DeviceType, int DeviceIndex){
 			}
 			else {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[5], 0.f, 0); //Trackpad force
+			}
+
+			if (LeftCtrl.Trigger > 0.05f) {
+				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], 1.f, 0); //Index
+			}
+			else {
+				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], 0.f, 0); //Index
 			}
 
 			if ((LeftCtrl.Buttons & INDEX_FingerMiddle) != 0) {
