@@ -166,11 +166,13 @@
     <ClCompile Include="dataHandler.cpp" />
     <ClCompile Include="driverlog.cpp" />
     <ClCompile Include="driver_main.cpp" />
+    <ClCompile Include="HandTracking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="devices.hpp" />
     <ClInclude Include="dataHandler.h" />
     <ClInclude Include="driverlog.h" />
+    <ClInclude Include="HandTracking.h" />
     <ClInclude Include="settingsAPIKeys.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -442,6 +442,7 @@ private:
 class C_ControllerDriver : public vr::ITrackedDeviceServerDriver
 {
 	vr::VRInputComponentHandle_t m_skeletonHandle;
+	vr::VRBoneTransform_t m_handBones[31];
 	int32_t ControllerIndex;
 public:
 	C_ControllerDriver()
@@ -467,10 +468,22 @@ public:
 		switch (ControllerIndex)
 		{
 		case 1:
+
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				m_handBones[i] = fingerTracking::Pose_OpenRight[i];
+			}
+
 			Ctrl1Index_t = unObjectId;
 			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl1Index_t);		
 			break;
 		case 2:
+
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				m_handBones[i] = fingerTracking::Pose_OpenLeft[i];
+			}
+
 			Ctrl2Index_t = unObjectId;
 			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t);
 			break;
@@ -586,7 +599,7 @@ public:
 			break;
 		}
 		
-		updateDevice(controllerType, ControllerIndex);
+		updateDevice(controllerType, ControllerIndex, m_skeletonHandle, m_handBones);
 	}
 
 	void UpdateDeviceBattery() 
@@ -618,7 +631,8 @@ private:
 	vr::TrackedDeviceIndex_t Ctrl1Index_t;
 	vr::TrackedDeviceIndex_t Ctrl2Index_t;
 	vr::PropertyContainerHandle_t m_ulPropertyContainer;
-
+	
+	
 	//vr::VRInputComponentHandle_t m_compA;
 	//vr::VRInputComponentHandle_t m_compB;
 	//vr::VRInputComponentHandle_t m_compC;
@@ -634,6 +648,7 @@ private:
 class C_TrackerDriver : public vr::ITrackedDeviceServerDriver
 {
 	int32_t TrackerIndex;
+	vr::VRInputComponentHandle_t m_skeletonHandle;
 public:
 	C_TrackerDriver()
 	{
@@ -641,6 +656,7 @@ public:
 		TrackerLeftFoot_t = vr::k_unTrackedDeviceIndexInvalid;
 		TrackerRightFoot_t = vr::k_unTrackedDeviceIndexInvalid;
 		m_ulPropertyContainer = vr::k_ulInvalidPropertyContainer;
+		m_skeletonHandle = vr::k_ulInvalidInputComponentHandle;
 	}
 
 	virtual void SetTrackerIndex(int32_t trckIndex)
@@ -671,9 +687,7 @@ public:
 			break;
 		}
 
-
-
-		initDevice(10, TrackerIndex, m_ulPropertyContainer, m_compHaptic);
+		initDevice(10, TrackerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle);
 
 		return VRInitError_None;
 	}
