@@ -178,7 +178,7 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trigger/value", &HAnalogCtrlRight[0], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedOneSided);
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/x", &HAnalogCtrlRight[1], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/y", &HAnalogCtrlRight[2], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", vr::VRSkeletalTracking_Estimated, fingerTracking::Pose_OpenRight, fingerTracking::NUM_BONES, &m_skeletonHandle);
+			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", vr::VRSkeletalTracking_Estimated, nullptr, 0U, &m_skeletonHandle);
 		}
 		else 
 		{
@@ -196,7 +196,7 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trigger/value", &HAnalogCtrlLeft[0], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedOneSided);
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/x", &HAnalogCtrlLeft[1], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
 			vr::VRDriverInput()->CreateScalarComponent(m_ulPropertyContainer, "/input/trackpad/y", &HAnalogCtrlLeft[2], vr::VRScalarType_Absolute, vr::VRScalarUnits_NormalizedTwoSided);
-			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", vr::VRSkeletalTracking_Estimated, fingerTracking::Pose_OpenLeft, fingerTracking::NUM_BONES, &m_skeletonHandle);
+			vr::VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", vr::VRSkeletalTracking_Estimated, nullptr, 0U, &m_skeletonHandle);
 		}
 
 		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_TrackingSystemName_String, "lighthouse");
@@ -286,19 +286,14 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 	}
 }
 
-
-void updateDevice(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t& m_skeletonHandle, vr::VRBoneTransform_t* HandBoneTransform = NULL){
-
+void updateDevice(int DeviceType, int DeviceIndex)
+{
 	switch (DeviceType)
 	{
 	case 0:
 		if (DeviceIndex == 1) {
 			//Controller1
-			fingerTracking::CalculateHandBones(HandBoneTransform, (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.Trigger, (RightCtrl.Buttons & INDEX_FingerMiddle) != 0, (RightCtrl.Buttons & INDEX_FingerRing) != 0, (RightCtrl.Buttons & INDEX_FingerPinky) != 0, true);
-			
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithoutController, HandBoneTransform, fingerTracking::NUM_BONES);
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, HandBoneTransform, fingerTracking::NUM_BONES);
-
+		
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[0], (RightCtrl.Buttons & INDEX_AClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[1], (RightCtrl.Buttons & INDEX_ATouch) != 0, 0);		//a button 
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[2], (RightCtrl.Buttons & INDEX_BClick) != 0, 0);
@@ -360,10 +355,6 @@ void updateDevice(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t&
 		else
 		{
 			//Controller2
-			fingerTracking::CalculateHandBones(HandBoneTransform, (float)(LeftCtrl.Buttons & INDEX_ThumbStickTouch) != 0, LeftCtrl.Trigger, (LeftCtrl.Buttons & INDEX_FingerMiddle) != 0, (LeftCtrl.Buttons & INDEX_FingerRing) != 0, (LeftCtrl.Buttons & INDEX_FingerPinky) != 0, false);
-		
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithoutController, HandBoneTransform, fingerTracking::NUM_BONES);
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, HandBoneTransform, fingerTracking::NUM_BONES);
 
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[0], (LeftCtrl.Buttons & INDEX_AClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[1], (LeftCtrl.Buttons & INDEX_ATouch) != 0, 0);
@@ -435,11 +426,7 @@ void updateDevice(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t&
 		if (DeviceIndex == 1) 
 		{
 
-			fingerTracking::CalculateHandBones(HandBoneTransform, (float)(RightCtrl.Buttons& HTC_ThumbstickTouch) != 0, RightCtrl.Trigger, (RightCtrl.Buttons& HTC_GripClick) != 0, (RightCtrl.Buttons& HTC_GripClick) != 0, (RightCtrl.Buttons& HTC_GripClick) != 0, false);
-
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithoutController, HandBoneTransform, fingerTracking::NUM_BONES);
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, HandBoneTransform, fingerTracking::NUM_BONES);
-
+			
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[0], (RightCtrl.Buttons& HTC_SysClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[2], (RightCtrl.Buttons& HTC_ThumbstickTouch) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[3], (RightCtrl.Buttons& HTC_ThumbstickClick) != 0, 0);
@@ -462,11 +449,6 @@ void updateDevice(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t&
 		}
 		else
 		{
-
-			fingerTracking::CalculateHandBones(HandBoneTransform, (float)(LeftCtrl.Buttons& HTC_ThumbstickTouch) != 0, LeftCtrl.Trigger, (LeftCtrl.Buttons& HTC_GripClick) != 0, (LeftCtrl.Buttons& HTC_GripClick) != 0, (LeftCtrl.Buttons& HTC_GripClick) != 0, false);
-
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithoutController, HandBoneTransform, fingerTracking::NUM_BONES);
-			vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, HandBoneTransform, fingerTracking::NUM_BONES);
 
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[0], (LeftCtrl.Buttons& HTC_SysClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[2], (LeftCtrl.Buttons& HTC_ThumbstickTouch) != 0, 0);
@@ -496,6 +478,50 @@ void updateDevice(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t&
 
 		break;
 	}
+}
+
+
+void updateFingerTracking(int DeviceType, int DeviceIndex, vr::VRInputComponentHandle_t& m_skeletonHandle, vr::VRBoneTransform_t* m_handBones)
+{
+	switch (DeviceType)
+	{
+	case 0:
+		if (DeviceIndex == 1)
+		{
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.Trigger, (RightCtrl.Buttons & INDEX_FingerMiddle) != 0, (RightCtrl.Buttons & INDEX_FingerRing) != 0, (RightCtrl.Buttons & INDEX_FingerPinky) != 0, true, i);
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(LeftCtrl.Buttons & INDEX_ThumbStickTouch) != 0, LeftCtrl.Trigger, (LeftCtrl.Buttons & INDEX_FingerMiddle) != 0, (LeftCtrl.Buttons & INDEX_FingerRing) != 0, (LeftCtrl.Buttons & INDEX_FingerPinky) != 0, false, i);
+			}
+		}
+		break;
+	case 1:
+		if (DeviceIndex == 1)
+		{
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons& HTC_ThumbstickTouch) != 0, RightCtrl.Trigger, (RightCtrl.Buttons& HTC_GripClick) != 0, (RightCtrl.Buttons& HTC_GripClick) != 0, (RightCtrl.Buttons& HTC_GripClick) != 0, true, i);
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+			{
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(LeftCtrl.Buttons& HTC_ThumbstickTouch) != 0, LeftCtrl.Trigger, (LeftCtrl.Buttons& HTC_GripClick) != 0, (LeftCtrl.Buttons& HTC_GripClick) != 0, (LeftCtrl.Buttons& HTC_GripClick) != 0, false, i);
+			}
+		}
+		break;
+	}
+
+	vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, m_handBones, fingerTracking::NUM_BONES);
+	vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithoutController, m_handBones, fingerTracking::NUM_BONES);
+
 }
 
 

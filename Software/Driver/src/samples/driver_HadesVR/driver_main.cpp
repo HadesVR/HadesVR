@@ -442,7 +442,6 @@ private:
 class C_ControllerDriver : public vr::ITrackedDeviceServerDriver
 {
 	vr::VRInputComponentHandle_t m_skeletonHandle;
-	vr::VRBoneTransform_t m_handBones[31];
 	int32_t ControllerIndex;
 public:
 	C_ControllerDriver()
@@ -488,8 +487,6 @@ public:
 			m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(Ctrl2Index_t);
 			break;
 		}
-
-		
 
 		initDevice(controllerType, ControllerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle );
 
@@ -598,8 +595,10 @@ public:
 			}
 			break;
 		}
-		
-		updateDevice(controllerType, ControllerIndex, m_skeletonHandle, m_handBones);
+
+		updateFingerTracking(controllerType, ControllerIndex, m_skeletonHandle, m_handBones);
+
+		updateDevice(controllerType, ControllerIndex);
 	}
 
 	void UpdateDeviceBattery() 
@@ -632,7 +631,7 @@ private:
 	vr::TrackedDeviceIndex_t Ctrl2Index_t;
 	vr::PropertyContainerHandle_t m_ulPropertyContainer;
 	
-	
+	vr::VRBoneTransform_t m_handBones[31];
 	//vr::VRInputComponentHandle_t m_compA;
 	//vr::VRInputComponentHandle_t m_compB;
 	//vr::VRInputComponentHandle_t m_compC;

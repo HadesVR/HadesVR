@@ -143,83 +143,81 @@ namespace fingerTracking{
 		return a + f * (b - a);
 	}
 
-	void CalculateHandBones(vr::VRBoneTransform_t* HandBoneTransform, float thumbFingerFlexion, float indexFingerFlexion, float middleFingerFlexion, float ringFingerFlexion, float pinkyFingerFlexion, const bool isRightHand){
+	void CalculateHandBones(vr::VRBoneTransform_t* HandBoneTransform, float thumbFingerFlexion, float indexFingerFlexion, float middleFingerFlexion, float ringFingerFlexion, float pinkyFingerFlexion, const bool isRightHand, int i){
 
-		vr::VRBoneTransform_t Pose_open[NUM_BONES];
-		vr::VRBoneTransform_t Pose_closed[NUM_BONES];
+		vr::VRBoneTransform_t* Pose_open;
+		vr::VRBoneTransform_t* Pose_closed;
 		float FlexionAmount;
 
 		if (isRightHand)
 		{
-			Pose_open[NUM_BONES] = Pose_OpenRight[NUM_BONES];
-			Pose_closed[NUM_BONES] = Pose_ClosedRight[NUM_BONES];
+			Pose_open = Pose_OpenRight;
+			Pose_closed = Pose_ClosedRight;
 		}
 		else 
 		{
-			Pose_open[NUM_BONES] = Pose_OpenLeft[NUM_BONES];
-			Pose_closed[NUM_BONES] = Pose_ClosedLeft[NUM_BONES];
+			Pose_open = Pose_OpenLeft;
+			Pose_closed = Pose_ClosedLeft;
 		}
 
-		for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
+
+		switch (i) 
 		{
-			switch (i) 
-			{
-			case eBone_Aux_Thumb:
-			case eBone_Thumb0:
-			case eBone_Thumb1:
-			case eBone_Thumb2:
-			case eBone_Thumb3:
-				FlexionAmount = thumbFingerFlexion;
-				break;
-			case eBone_Aux_IndexFinger:
-			case eBone_IndexFinger0:
-			case eBone_IndexFinger1:
-			case eBone_IndexFinger2:
-			case eBone_IndexFinger3:
-			case eBone_IndexFinger4:
-				FlexionAmount = indexFingerFlexion;
-				break;
-			case eBone_Aux_MiddleFinger:
-			case eBone_MiddleFinger0:
-			case eBone_MiddleFinger1:
-			case eBone_MiddleFinger2:
-			case eBone_MiddleFinger3:
-			case eBone_MiddleFinger4:
-				FlexionAmount = middleFingerFlexion;
-				break;
-			case eBone_Aux_RingFinger:
-			case eBone_RingFinger0:
-			case eBone_RingFinger1:
-			case eBone_RingFinger2:
-			case eBone_RingFinger3:
-			case eBone_RingFinger4:
-				FlexionAmount = ringFingerFlexion;
-				break;
-			case eBone_Aux_PinkyFinger:
-			case eBone_PinkyFinger0:
-			case eBone_PinkyFinger1:
-			case eBone_PinkyFinger2:
-			case eBone_PinkyFinger3:
-			case eBone_PinkyFinger4:
-				FlexionAmount = pinkyFingerFlexion;
-				break;
+		case eBone_Aux_Thumb:
+		case eBone_Thumb0:
+		case eBone_Thumb1:
+		case eBone_Thumb2:
+		case eBone_Thumb3:
+			FlexionAmount = thumbFingerFlexion;
+			break;
+		case eBone_Aux_IndexFinger:
+		case eBone_IndexFinger0:
+		case eBone_IndexFinger1:
+		case eBone_IndexFinger2:
+		case eBone_IndexFinger3:
+		case eBone_IndexFinger4:
+			FlexionAmount = indexFingerFlexion;
+			break;
+		case eBone_Aux_MiddleFinger:
+		case eBone_MiddleFinger0:
+		case eBone_MiddleFinger1:
+		case eBone_MiddleFinger2:
+		case eBone_MiddleFinger3:
+		case eBone_MiddleFinger4:
+			FlexionAmount = middleFingerFlexion;
+			break;
+		case eBone_Aux_RingFinger:
+		case eBone_RingFinger0:
+		case eBone_RingFinger1:
+		case eBone_RingFinger2:
+		case eBone_RingFinger3:
+		case eBone_RingFinger4:
+			FlexionAmount = ringFingerFlexion;
+			break;
+		case eBone_Aux_PinkyFinger:
+		case eBone_PinkyFinger0:
+		case eBone_PinkyFinger1:
+		case eBone_PinkyFinger2:
+		case eBone_PinkyFinger3:
+		case eBone_PinkyFinger4:
+			FlexionAmount = pinkyFingerFlexion;
+			break;
 
-			default:
-				FlexionAmount = -1;
-				break;
-
-			if (FlexionAmount == -1) { return; }
-
-			HandBoneTransform[i].orientation.w = Lerp(Pose_open[i].orientation.w, Pose_closed[i].orientation.w, FlexionAmount);
-			HandBoneTransform[i].orientation.x = Lerp(Pose_open[i].orientation.x, Pose_closed[i].orientation.x, FlexionAmount);
-			HandBoneTransform[i].orientation.y = Lerp(Pose_open[i].orientation.y, Pose_closed[i].orientation.y, FlexionAmount);
-			HandBoneTransform[i].orientation.z = Lerp(Pose_open[i].orientation.z, Pose_closed[i].orientation.z, FlexionAmount);
-
-			HandBoneTransform[i].position.v[0] = Lerp(Pose_open[i].position.v[0], Pose_closed[i].position.v[0], FlexionAmount);
-			HandBoneTransform[i].position.v[1] = Lerp(Pose_open[i].position.v[1], Pose_closed[i].position.v[1], FlexionAmount);
-			HandBoneTransform[i].position.v[2] = Lerp(Pose_open[i].position.v[2], Pose_closed[i].position.v[2], FlexionAmount);
-			HandBoneTransform[i].position.v[3] = Lerp(Pose_open[i].position.v[3], Pose_closed[i].position.v[3], FlexionAmount);
-			}
+		default:
+			FlexionAmount = 0;
+			return;
+			break;
 		}
+
+		HandBoneTransform->orientation.w = Lerp(Pose_open[i].orientation.w, Pose_closed[i].orientation.w, FlexionAmount);
+		HandBoneTransform->orientation.x = Lerp(Pose_open[i].orientation.x, Pose_closed[i].orientation.x, FlexionAmount);
+		HandBoneTransform->orientation.y = Lerp(Pose_open[i].orientation.y, Pose_closed[i].orientation.y, FlexionAmount);
+		HandBoneTransform->orientation.z = Lerp(Pose_open[i].orientation.z, Pose_closed[i].orientation.z, FlexionAmount);
+
+		HandBoneTransform->position.v[0] = Lerp(Pose_open[i].position.v[0], Pose_closed[i].position.v[0], FlexionAmount);
+		HandBoneTransform->position.v[1] = Lerp(Pose_open[i].position.v[1], Pose_closed[i].position.v[1], FlexionAmount);
+		HandBoneTransform->position.v[2] = Lerp(Pose_open[i].position.v[2], Pose_closed[i].position.v[2], FlexionAmount);
+		HandBoneTransform->position.v[3] = Lerp(Pose_open[i].position.v[3], Pose_closed[i].position.v[3], FlexionAmount);
+		
 	}
 }

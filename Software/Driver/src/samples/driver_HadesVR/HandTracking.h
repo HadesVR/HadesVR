@@ -50,5 +50,5 @@ namespace fingerTracking {
 	extern vr::VRBoneTransform_t Pose_ClosedLeft[NUM_BONES];
 
 	float Lerp(const float a, const float b, const float f);
-	extern void CalculateHandBones(vr::VRBoneTransform_t* HandBoneTransform, float thumbFingerFlexion, float indexFingerFlexion, float middleFingerFlexion, float ringFingerFlexion, float pinkyFingerFlexion, const bool isRightHand);
+	extern void CalculateHandBones(vr::VRBoneTransform_t* HandBoneTransform, float thumbFingerFlexion, float indexFingerFlexion, float middleFingerFlexion, float ringFingerFlexion, float pinkyFingerFlexion, const bool isRightHand, int i);
 }
