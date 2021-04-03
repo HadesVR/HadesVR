@@ -1,4 +1,4 @@
-#pragma once
+//my crappy implementation of LucidVR's open vr gloves finger tracking code, check them out here https://github.com/LucidVR/opengloves-driver
 #pragma once
 
 #include <openvr_driver.h>

@@ -1,3 +1,5 @@
+//my crappy implementation of LucidVR's open vr gloves finger tracking code, check them out here https://github.com/LucidVR/opengloves-driver
+
 #include "HandTracking.h"
 
 namespace fingerTracking{
