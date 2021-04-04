@@ -531,11 +531,11 @@ public:
 	virtual DriverPose_t GetPose()
 	{
 		DriverPose_t pose = { 0 };
-		//pose.poseIsValid = false;
 		pose.poseIsValid = true;
 		//pose.result = TrackingResult_Calibrating_OutOfRange;
 		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
+		pose.poseTimeOffset = 0.035;
 
 		pose.qWorldFromDriverRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
 		pose.qDriverFromHeadRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
@@ -548,9 +548,9 @@ public:
 			pose.vecPosition[2] = RightCtrl.Y;
 
 			//Velocity, right?
-			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3; // div 3 - ghosting fix, there are right ways to remove ghosting?
-			pose.vecVelocity[1] = (pose.vecPosition[1] - FirstCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - FirstCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); // div 3 - ghosting fix, there are right ways to remove ghosting?
+			pose.vecVelocity[1] = (pose.vecPosition[1] - FirstCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
+			pose.vecVelocity[2] = (pose.vecPosition[2] - FirstCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
 			FirstCtrlLastPos[0] = pose.vecPosition[0];
 			FirstCtrlLastPos[1] = pose.vecPosition[1];
 			FirstCtrlLastPos[2] = pose.vecPosition[2];
@@ -565,9 +565,9 @@ public:
 			pose.vecPosition[2] = LeftCtrl.Y;
 
 			//Velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3; 
-			pose.vecVelocity[1] = (pose.vecPosition[1] - SecondCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - SecondCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
+			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
+			pose.vecVelocity[1] = (pose.vecPosition[1] - SecondCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
+			pose.vecVelocity[2] = (pose.vecPosition[2] - SecondCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
 			SecondCtrlLastPos[0] = pose.vecPosition[0];
 			SecondCtrlLastPos[1] = pose.vecPosition[1];
 			SecondCtrlLastPos[2] = pose.vecPosition[2];
@@ -595,7 +595,6 @@ public:
 			}
 			break;
 		}
-
 		updateFingerTracking(controllerType, ControllerIndex, m_skeletonHandle, m_handBones);
 
 		updateDevice(controllerType, ControllerIndex);
