@@ -179,13 +179,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		if (PSMConnected) {			//PSM POSITION
 
-			HMD->X = lerp(lastPos[7], hmdPos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			HMD->Y = lerp(lastPos[8], hmdPos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			HMD->Z = lerp(lastPos[9], hmdPos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
-
-			lastPos[7] = hmdPos.x * k_fScalePSMoveAPIToMeters;
-			lastPos[8] = hmdPos.z * k_fScalePSMoveAPIToMeters;
-			lastPos[9] = hmdPos.y * k_fScalePSMoveAPIToMeters;
+			HMD->X = hmdPos.x * k_fScalePSMoveAPIToMeters;
+			HMD->Y = hmdPos.z * k_fScalePSMoveAPIToMeters;
+			HMD->Z = hmdPos.y * k_fScalePSMoveAPIToMeters;
 		}
 		else {
 			HMD->X = 0;
@@ -236,20 +232,14 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 
-			FirstController->X = lerp(lastPos[1], ctrl1Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			FirstController->Y = lerp(lastPos[2], ctrl1Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			FirstController->Z = lerp(lastPos[3], ctrl1Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			FirstController->X = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
+			FirstController->Y = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
+			FirstController->Z = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
 
-			SecondController->X = lerp(lastPos[4], ctrl2Pos.x * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			SecondController->Y = lerp(lastPos[5], ctrl2Pos.z * k_fScalePSMoveAPIToMeters, smoothingAmount);
-			SecondController->Z = lerp(lastPos[6], ctrl2Pos.y * k_fScalePSMoveAPIToMeters, smoothingAmount);
+			SecondController->X = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
+			SecondController->Y = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
+			SecondController->Z = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
 
-			lastPos[1] = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
-			lastPos[2] = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
-			lastPos[3] = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
-			lastPos[4] = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
-			lastPos[5] = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
-			lastPos[6] = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
 		}
 		else {
 			FirstController->X = 0.1;
@@ -332,8 +322,6 @@ bool CdataHandler::connectToPSMOVE()
 
 void CdataHandler::StartData(int comPort)
 {
-	smoothingAmount = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Tracking_smoothingAmount_float);
-
 	if (SerialInit == false) {
 		dataCOMPort = comPort;
 		SerialInit = true;

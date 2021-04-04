@@ -68,8 +68,6 @@ private:
 	float ArduinoData[25] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 	float LastArduinoArduinoData[24] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-	float lastPos[9];
-
 	Quaternion Ctrl1Offset = Quaternion::Identity();
 	Quaternion Ctrl2Offset = Quaternion::Identity();
 	Quaternion HMDOffset = Quaternion::Identity();
@@ -85,8 +83,6 @@ private:
 	PSMVector3f hmdPos, ctrl1Pos, ctrl2Pos;
 
 	int dataCOMPort;
-
-	float smoothingAmount;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
