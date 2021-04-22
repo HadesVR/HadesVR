@@ -479,14 +479,14 @@ void updateFingerTracking(int DeviceType, int DeviceIndex, vr::VRInputComponentH
 		{
 			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
 			{
-				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.FingIndex, (RightCtrl.FingMiddl) != 0, (RightCtrl.FingRing) != 0, (RightCtrl.FingPinky) != 0, true, i);
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.FingIndex, RightCtrl.FingMiddl, RightCtrl.FingRing, RightCtrl.FingPinky, true, i);
 			}
 		}
 		else
 		{
 			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
 			{
-				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.FingIndex, (RightCtrl.FingMiddl) != 0, (RightCtrl.FingRing) != 0, (RightCtrl.FingPinky) != 0, false, i);
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(LeftCtrl.Buttons & INDEX_ThumbStickTouch) != 0, LeftCtrl.FingIndex, LeftCtrl.FingMiddl, LeftCtrl.FingRing, LeftCtrl.FingPinky, false, i);
 			}
 		}
 		break;
