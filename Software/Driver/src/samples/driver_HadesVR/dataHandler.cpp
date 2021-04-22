@@ -60,11 +60,9 @@ void CdataHandler::ReadHIDData()
 	int r;
 	DriverLog("ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
 	while (HIDConnected) {
-		DriverLog("doing a hid read", r);
 		r = hid_read(hHID, packet_buffer, 64); //Result should be greater than 0.
-		DriverLog("HIDReadReturned %d", r);
 		if (r > 0) {
-			switch (packet_buffer[0])
+			switch (packet_buffer[1])
 			{
 			case 1:
 				HMDData.qW = DataHMD->HMDQuatW;

@@ -60,10 +60,11 @@ typedef struct _Controller
 	float	FingRing;
 	float	FingPinky;
 } TController, * PController;
-
+#pragma pack(push, 1)
 typedef struct HMDPacket
 {
-	uint8_t ID;
+	uint8_t HIDID;			//this is fucking stupid
+	uint8_t PacketID;
 	float HMDQuatW;
 	float HMDQuatX;
 	float HMDQuatY;
@@ -87,12 +88,14 @@ typedef struct HMDPacket
 	uint8_t tracker2_vBat;
 	uint8_t tracker3_vBat;
 
-	uint8_t Padding[20];
+	uint8_t Padding[19];
 };
-
+#pragma pack(pop)
+#pragma pack(push, 1)
 typedef struct ControllerPacket
 {
-	uint8_t ID;
+	uint8_t HIDID;			//this is also fucking stupid
+	uint8_t PacketID;
 	float Ctrl1_QuatW;
 	float Ctrl1_QuatX;
 	float Ctrl1_QuatY;
@@ -108,6 +111,7 @@ typedef struct ControllerPacket
 	uint8_t Ctrl1_MIDDLE;
 	uint8_t Ctrl1_RING;
 	uint8_t Ctrl1_PINKY;
+
 	float Ctrl2_QuatW;
 	float Ctrl2_QuatX;
 	float Ctrl2_QuatY;
@@ -123,9 +127,9 @@ typedef struct ControllerPacket
 	uint8_t Ctrl2_MIDDLE;
 	uint8_t Ctrl2_RING;
 	uint8_t Ctrl2_PINKY;
-	uint8_t Padding[3];
+	uint8_t Padding[2];
 };
-
+#pragma pack(pop)
 class CdataHandler {
 public:
 	void SetCentering();
