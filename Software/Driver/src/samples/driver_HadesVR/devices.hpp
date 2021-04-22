@@ -10,12 +10,8 @@
 #define INDEX_BTouch           0x0008
 #define INDEX_SYSClick         0x0010
 #define INDEX_ThumbStickClick  0x0020
-#define INDEX_FingerIndex      0x0040
-#define INDEX_FingerMiddle     0x0080
-#define INDEX_FingerRing       0x0100
-#define INDEX_FingerPinky      0x0200
-#define INDEX_TrackpadTouch    0x0400
-#define INDEX_ThumbStickTouch  0x0800
+#define INDEX_TrackpadTouch    0x0040
+#define INDEX_ThumbStickTouch  0x0080
 
 #define HTC_SysClick		0x0001
 #define HTC_MenuClick		0x0004
@@ -302,7 +298,7 @@ void updateDevice(int DeviceType, int DeviceIndex)
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[5], (RightCtrl.Buttons & INDEX_SYSClick) != 0, 0);	//sys button
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[6], (RightCtrl.Buttons & INDEX_TrackpadTouch) != 0, 0);	//trackpad touch
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[7], (RightCtrl.Trigger), 0);							//trigger click
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[8], (RightCtrl.Buttons & INDEX_FingerMiddle) != 0, 0);	//grip touch
+			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[8], (RightCtrl.FingMiddl) != 0, 0);	//grip touch
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[9], (RightCtrl.Buttons & INDEX_ThumbStickClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlRight[10], (RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, 0); //joy touch and click
 
@@ -312,10 +308,10 @@ void updateDevice(int DeviceType, int DeviceIndex)
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[2], RightCtrl.Trigger, 0);	//Trigger
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[3], 0, 0); //Trackpad x
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[4], RightCtrl.TrackpY, 0); //Trackpad Y
-
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[7], ((RightCtrl.Buttons & INDEX_FingerMiddle) != 0), 0); //middle
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[8], ((RightCtrl.Buttons & INDEX_FingerRing) != 0), 0); //Ring
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[9], ((RightCtrl.Buttons & INDEX_FingerPinky) != 0), 0); //Pinky
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], RightCtrl.FingIndex, 0); //index
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[7], RightCtrl.FingMiddl, 0); //middle
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[8], RightCtrl.FingRing, 0); //Ring
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[9], RightCtrl.FingPinky, 0); //Pinky
 
 			if ((RightCtrl.Buttons & INDEX_TrackpadTouch) != 0) {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[5], 1.f, 0); //Trackpad force
@@ -326,22 +322,15 @@ void updateDevice(int DeviceType, int DeviceIndex)
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[5], 0.f, 0); //Trackpad force
 			}
 
-			if (RightCtrl.Trigger > 0.05f) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], 1.f, 0); //Index
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[6], 0.f, 0); //Index
-			}
-
-			if ((RightCtrl.Buttons & INDEX_FingerMiddle) != 0) {
+			if (RightCtrl.FingMiddl != 0) {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 0.5f, 0); //grip force
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 0.5f, 0); //grip value
 
-				if ((RightCtrl.Buttons & INDEX_FingerRing) != 0) {
+				if (RightCtrl.FingRing != 0) {
 					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 0.75f, 2); //grip force
 					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 0.75f, 2); //grip value
 
-					if ((RightCtrl.Buttons & INDEX_FingerPinky) != 0) {
+					if (RightCtrl.FingPinky != 0) {
 						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 1.f, 5); //grip force
 						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 1.f, 5); //grip value
 					}
@@ -364,7 +353,7 @@ void updateDevice(int DeviceType, int DeviceIndex)
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[5], (LeftCtrl.Buttons & INDEX_SYSClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[6], (LeftCtrl.Buttons & INDEX_TrackpadTouch) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[7], (LeftCtrl.Trigger), 0);
-			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[8], (LeftCtrl.Buttons & INDEX_FingerMiddle) != 0, 0);
+			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[8], (LeftCtrl.FingMiddl) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[9], (LeftCtrl.Buttons & INDEX_ThumbStickClick) != 0, 0);
 			vr::VRDriverInput()->UpdateBooleanComponent(HButtonsCtrlLeft[10], (LeftCtrl.Buttons & INDEX_ThumbStickTouch) != 0, 0);
 
@@ -375,10 +364,10 @@ void updateDevice(int DeviceType, int DeviceIndex)
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[3], 0, 0); //Trackpad x
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[4], 0, 0); //Trackpad Y
 
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], ((LeftCtrl.Buttons & INDEX_FingerIndex) != 0), 0); //Index
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[7], ((LeftCtrl.Buttons & INDEX_FingerMiddle) != 0), 0); //middle
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[8], ((LeftCtrl.Buttons & INDEX_FingerRing) != 0), 0); //Ring
-			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[9], ((LeftCtrl.Buttons & INDEX_FingerPinky) != 0), 0); //Pinky
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], LeftCtrl.FingIndex, 0); //Index
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[7], LeftCtrl.FingMiddl, 0); //middle
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[8], LeftCtrl.FingRing, 0); //Ring
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[9], LeftCtrl.FingPinky, 0); //Pinky
 
 			if ((LeftCtrl.Buttons & INDEX_TrackpadTouch) != 0) {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[5], 1.f, 0); //Trackpad force
@@ -396,15 +385,15 @@ void updateDevice(int DeviceType, int DeviceIndex)
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], 0.f, 0); //Index
 			}
 
-			if ((LeftCtrl.Buttons & INDEX_FingerMiddle) != 0) {
+			if (LeftCtrl.FingMiddl != 0) {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 0.5f, 0); //grip force
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 0.5f, 0); //grip value
 
-				if ((LeftCtrl.Buttons & INDEX_FingerRing) != 0) {
+				if (LeftCtrl.FingRing != 0) {
 					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 0.75f, 2); //grip force
 					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 0.75f, 2); //grip value
 
-					if ((LeftCtrl.Buttons & INDEX_FingerPinky) != 0) {
+					if (LeftCtrl.FingPinky != 0) {
 						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 1.f, 5); //grip force
 						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 1.f, 5); //grip value
 					}
@@ -490,14 +479,14 @@ void updateFingerTracking(int DeviceType, int DeviceIndex, vr::VRInputComponentH
 		{
 			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
 			{
-				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.Trigger, (RightCtrl.Buttons & INDEX_FingerMiddle) != 0, (RightCtrl.Buttons & INDEX_FingerRing) != 0, (RightCtrl.Buttons & INDEX_FingerPinky) != 0, true, i);
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.FingIndex, (RightCtrl.FingMiddl) != 0, (RightCtrl.FingRing) != 0, (RightCtrl.FingPinky) != 0, true, i);
 			}
 		}
 		else
 		{
 			for (size_t i = 0; i < fingerTracking::NUM_BONES; i++)
 			{
-				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(LeftCtrl.Buttons & INDEX_ThumbStickTouch) != 0, LeftCtrl.Trigger, (LeftCtrl.Buttons & INDEX_FingerMiddle) != 0, (LeftCtrl.Buttons & INDEX_FingerRing) != 0, (LeftCtrl.Buttons & INDEX_FingerPinky) != 0, false, i);
+				fingerTracking::CalculateHandBones(&m_handBones[i], (float)(RightCtrl.Buttons & INDEX_ThumbStickTouch) != 0, RightCtrl.FingIndex, (RightCtrl.FingMiddl) != 0, (RightCtrl.FingRing) != 0, (RightCtrl.FingPinky) != 0, false, i);
 			}
 		}
 		break;
