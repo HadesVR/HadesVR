@@ -69,6 +69,24 @@ void CdataHandler::ReadHIDData()
 				HMDData.qX = DataHMD->HMDQuatX;
 				HMDData.qY = DataHMD->HMDQuatY;
 				HMDData.qZ = DataHMD->HMDQuatZ;
+
+				Tracker1.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
+				Tracker1.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
+				Tracker1.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
+				Tracker1.qZ = (float)(DataHMD->tracker1_QuatZ) / 32767;
+				Tracker1.vBat = (float)(DataHMD->tracker1_vBat) / 255;
+
+				Tracker2.qW = (float)(DataHMD->tracker2_QuatW) / 32767;
+				Tracker2.qX = (float)(DataHMD->tracker2_QuatX) / 32767;
+				Tracker2.qY = (float)(DataHMD->tracker2_QuatY) / 32767;
+				Tracker2.qZ = (float)(DataHMD->tracker2_QuatZ) / 32767;
+				Tracker2.vBat = (float)(DataHMD->tracker2_vBat) / 255;
+
+				Tracker3.qW = (float)(DataHMD->tracker3_QuatW) / 32767;
+				Tracker3.qX = (float)(DataHMD->tracker3_QuatX) / 32767;
+				Tracker3.qY = (float)(DataHMD->tracker3_QuatY) / 32767;
+				Tracker3.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
+				Tracker3.vBat = (float)(DataHMD->tracker3_vBat) / 255;
 				break;
 			case 2:
 				Ctrl1Data.qW = DataCtrl->Ctrl1_QuatW;

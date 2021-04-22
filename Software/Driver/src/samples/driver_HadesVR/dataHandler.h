@@ -69,20 +69,20 @@ typedef struct HMDPacket
 	float HMDQuatX;
 	float HMDQuatY;
 	float HMDQuatZ;
-	uint16_t tracker1_QuatW;
-	uint16_t tracker1_QuatX;
-	uint16_t tracker1_QuatY;
-	uint16_t tracker1_QuatZ;
+	int16_t tracker1_QuatW;
+	int16_t tracker1_QuatX;
+	int16_t tracker1_QuatY;
+	int16_t tracker1_QuatZ;
 
-	uint16_t tracker2_QuatW;
-	uint16_t tracker2_QuatX;
-	uint16_t tracker2_QuatY;
-	uint16_t tracker2_QuatZ;
+	int16_t tracker2_QuatW;
+	int16_t tracker2_QuatX;
+	int16_t tracker2_QuatY;
+	int16_t tracker2_QuatZ;
 
-	uint16_t tracker3_QuatW;
-	uint16_t tracker3_QuatX;
-	uint16_t tracker3_QuatY;
-	uint16_t tracker3_QuatZ;
+	int16_t tracker3_QuatW;
+	int16_t tracker3_QuatX;
+	int16_t tracker3_QuatY;
+	int16_t tracker3_QuatZ;
 
 	uint8_t tracker1_vBat;
 	uint8_t tracker2_vBat;
@@ -150,9 +150,13 @@ public:
 
 private:
 
+	_HMDData	HMDData;
 	_Controller Ctrl1Data;
 	_Controller Ctrl2Data;
-	_HMDData	HMDData;
+	_TrackerData Tracker1;
+	_TrackerData Tracker2;
+	_TrackerData Tracker3;
+	
 
 	uint8_t packet_buffer[64];
 
