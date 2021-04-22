@@ -1,61 +1,120 @@
 #include <SPI.h>
 #include "RF24.h"
+#include "HID.h"
 
-#define DISPLAY_INTERVAL  5
-#define SerialDebug false
+static const uint8_t _hidReportDescriptor[] PROGMEM = {
 
-#define HMDQW          0
-#define HMDQX          1
-#define HMDQY          2
-#define HMDQZ          3
-#define CTRL1QW        4
-#define CTRL1QX        5
-#define CTRL1QY        6
-#define CTRL1QZ        7
-#define CTRL1BTN       8
-#define CTRL1TRIGG     9
-#define CTRL1AXISX     10
-#define CTRL1AXISY     11
-#define CTRL1TRACKY    12
-#define CTRL1VBAT      13
-#define CTRL2QW        14
-#define CTRL2QX        15
-#define CTRL2QY        16
-#define CTRL2QZ        17
-#define CTRL2BTN       18
-#define CTRL2TRIGG     19
-#define CTRL2AXISX     20
-#define CTRL2AXISY     21
-#define CTRL2TRACKY    22
-#define CTRL2VBAT      23
-#define CHECKSUM       24
+  0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
+  0x09, 0x00,         // USAGE (Undefined)
+  0xa1, 0x01,         // COLLECTION (Application)
+  0x15, 0x00,         //   LOGICAL_MINIMUM (0)
+  0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)
+  0x85, 0x01,         //   REPORT_ID (1)
+  0x75, 0x08,         //   REPORT_SIZE (16)
 
-unsigned long lastDisplay = 0;
-float data[25]; float ctrl2Data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  0x95, 0x3f,         //   REPORT_COUNT (1)
+
+  0x09, 0x00,         //   USAGE (Undefined)
+  0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
+  0xc0
+
+};
 
 RF24 radio(9, 10);
 
 const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
 
-struct ctrlData{
+struct ctrlData {
   float qW;
   float qX;
   float qY;
   float qZ;
-  float BTN;
-  short  trigg;
-  short  axisX;
-  short  axisY;
-  short  trackY;
-  short  vBAT;
+  uint32_t BTN;
+  uint8_t  trigg;
+  int8_t  axisX;
+  int8_t  axisY;
+  int8_t  trackY;
+  uint8_t  vBAT;
+  uint8_t  fingerThumb;
+  uint8_t  fingerIndex;
+  uint8_t  fingerMiddle;
+  uint8_t  fingerRing;
+  uint8_t  fingerPinky;
 };
 
-ctrlData Ctrl1Data,Ctrl2Data;
+ctrlData Ctrl1Data, Ctrl2Data;
+
+struct HMDPacket
+{
+  uint8_t  PacketID;
+  float HMDQuatW;
+  float HMDQuatX;
+  float HMDQuatY;
+  float HMDQuatZ;
+  
+  uint16_t tracker1_QuatW;
+  uint16_t tracker1_QuatX;
+  uint16_t tracker1_QuatY;
+  uint16_t tracker1_QuatZ;
+
+  uint16_t tracker2_QuatW;
+  uint16_t tracker2_QuatX;
+  uint16_t tracker2_QuatY;
+  uint16_t tracker2_QuatZ;
+
+  uint16_t tracker3_QuatW;
+  uint16_t tracker3_QuatX;
+  uint16_t tracker3_QuatY;
+  uint16_t tracker3_QuatZ;
+
+  uint8_t tracker1_vBat;
+  uint8_t tracker2_vBat;
+  uint8_t tracker3_vBat;
+};
+
+struct ControllerPacket
+{
+  uint8_t PacketID;
+  float Ctrl1_QuatW;
+  float Ctrl1_QuatX;
+  float Ctrl1_QuatY;
+  float Ctrl1_QuatZ;
+  uint32_t Ctrl1_Buttons;
+  uint8_t Ctrl1_Trigger;
+  int8_t Ctrl1_axisX;
+  int8_t Ctrl1_axisY;
+  int8_t Ctrl1_trackY;
+  uint8_t Ctrl1_vBat;
+  uint8_t Ctrl1_THUMB;
+  uint8_t Ctrl1_INDEX;
+  uint8_t Ctrl1_MIDDLE;
+  uint8_t Ctrl1_RING;
+  uint8_t Ctrl1_PINKY;
+
+  float Ctrl2_QuatW;
+  float Ctrl2_QuatX;
+  float Ctrl2_QuatY;
+  float Ctrl2_QuatZ;
+  uint32_t Ctrl2_Buttons;
+  uint8_t Ctrl2_Trigger;
+  int8_t Ctrl2_axisX;
+  int8_t Ctrl2_axisY;
+  int8_t Ctrl2_trackY;
+  uint8_t Ctrl2_vBat;
+  uint8_t Ctrl2_THUMB;
+  uint8_t Ctrl2_INDEX;
+  uint8_t Ctrl2_MIDDLE;
+  uint8_t Ctrl2_RING;
+  uint8_t Ctrl2_PINKY;
+};
+
+static HMDPacket HMDData;
+static ControllerPacket ContData;
 
 void setup() {
-  
-  Serial.begin(115200);
+  static HIDSubDescriptor node (_hidReportDescriptor, sizeof(_hidReportDescriptor));
+  HID().AppendDescriptor(&node);
   radio.begin();
   radio.setPayloadSize(40);
   radio.openReadingPipe(2, leftCtrlPipe);
@@ -64,14 +123,22 @@ void setup() {
   radio.setDataRate(RF24_1MBPS);
   radio.setPALevel(RF24_PA_LOW);
   radio.startListening();
+  HMDData.PacketID = 1;
+  ContData.PacketID = 2;
 }
 
 
 
 void loop() {
   uint8_t pipenum;
-  unsigned long now = millis();
 
+  HMDData.HMDQuatW = 8;
+  HMDData.HMDQuatX = 8;
+  HMDData.HMDQuatY = 8;
+  HMDData.HMDQuatZ = 8;
+  
+  HID().SendReport(1, &HMDData, 63);
+  
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
       radio.read(&Ctrl1Data, sizeof(ctrlData));
@@ -81,64 +148,39 @@ void loop() {
     }
   }
 
-  if ((now - lastDisplay) >= DISPLAY_INTERVAL)
-  {
-    if (SerialDebug) {
+  ContData.Ctrl1_QuatW    = Ctrl1Data.qW;         //there's more efficient ways of doing this
+  ContData.Ctrl1_QuatX    = Ctrl1Data.qY;         //but I need a small delay between hmd data and
+  ContData.Ctrl1_QuatY    = Ctrl1Data.qZ;         //Ctrl data so this will do just fine.
+  ContData.Ctrl1_QuatZ    = Ctrl1Data.qX;
+  ContData.Ctrl1_Buttons  = Ctrl1Data.BTN;
+  ContData.Ctrl1_Trigger  = Ctrl1Data.trigg;
+  ContData.Ctrl1_axisX    = Ctrl1Data.axisX;
+  ContData.Ctrl1_axisY    = Ctrl1Data.axisY;
+  ContData.Ctrl1_trackY   = Ctrl1Data.trackY;
+  ContData.Ctrl1_vBat     = Ctrl1Data.vBAT;
 
-      Serial.print("Controller1Data: ");
-      Serial.print(Ctrl1Data.qW, 2);
-      Serial.print(", ");
-      Serial.print(Ctrl1Data.qX, 2);
-      Serial.print(", ");
-      Serial.print(Ctrl1Data.qY, 2);
-      Serial.print(", ");
-      Serial.print(Ctrl1Data.qZ, 2);
-      Serial.print(", ");
-      Serial.print(Ctrl1Data.BTN, 2);
-      Serial.print(", ");
-      Serial.print(((float)Ctrl1Data.trigg/100), 2);
-      Serial.print(", ");
-      Serial.print(((float)Ctrl1Data.axisX /100), 2);
-      Serial.print(", ");
-      Serial.print(((float)Ctrl1Data.axisY /100), 2);
-      Serial.print(", ");
-      Serial.print(((float)Ctrl1Data.trackY /100), 2);
-      Serial.print(", ");
-      Serial.println(((float)Ctrl1Data.vBAT /100) , 2);
+  ContData.Ctrl1_THUMB    = Ctrl1Data.fingerThumb;
+  ContData.Ctrl1_INDEX    = Ctrl1Data.fingerIndex;
+  ContData.Ctrl1_MIDDLE   = Ctrl1Data.fingerMiddle;
+  ContData.Ctrl1_RING     = Ctrl1Data.fingerRing;
+  ContData.Ctrl1_PINKY    = Ctrl1Data.fingerPinky;
+  
+  ContData.Ctrl2_QuatW    = Ctrl2Data.qW;
+  ContData.Ctrl2_QuatX    = Ctrl2Data.qY;
+  ContData.Ctrl2_QuatY    = Ctrl2Data.qZ;
+  ContData.Ctrl2_QuatZ    = Ctrl2Data.qX;
+  ContData.Ctrl2_Buttons  = Ctrl2Data.BTN;
+  ContData.Ctrl2_Trigger  = Ctrl2Data.trigg;
+  ContData.Ctrl2_axisX    = Ctrl2Data.axisX;
+  ContData.Ctrl2_axisY    = Ctrl2Data.axisY;
+  ContData.Ctrl2_trackY   = Ctrl2Data.trackY;
+  ContData.Ctrl2_vBat     = Ctrl2Data.vBAT;
 
-      delay(100);
-    }
-    else {
-      data[HMDQW] = 8;
-      data[HMDQX] = 8;
-      data[HMDQY] = 8;
-      data[HMDQZ] = 8;
-
-      data[CTRL1QW]     = Ctrl1Data.qW;
-      data[CTRL1QX]     = Ctrl1Data.qY;
-      data[CTRL1QY]     = Ctrl1Data.qZ;
-      data[CTRL1QZ]     = Ctrl1Data.qX;
-      data[CTRL1BTN]    = Ctrl1Data.BTN;
-      data[CTRL1TRIGG]  = ((float)Ctrl1Data.trigg/100);
-      data[CTRL1AXISX]  = ((float)Ctrl1Data.axisX/100);
-      data[CTRL1AXISY]  = ((float)Ctrl1Data.axisY/100);
-      data[CTRL1TRACKY] = ((float)Ctrl1Data.trackY/100);
-      data[CTRL1VBAT]   = ((float)Ctrl1Data.vBAT/100);
-
-      data[CTRL2QW]     = Ctrl2Data.qW;
-      data[CTRL2QX]     = Ctrl2Data.qY;
-      data[CTRL2QY]     = Ctrl2Data.qZ;
-      data[CTRL2QZ]     = Ctrl2Data.qX;
-      data[CTRL2BTN]    = Ctrl2Data.BTN;
-      data[CTRL2TRIGG]  = ((float)Ctrl2Data.trigg/100);
-      data[CTRL2AXISX]  = ((float)Ctrl2Data.axisX/100);
-      data[CTRL2AXISY]  = ((float)Ctrl2Data.axisY/100);
-      data[CTRL2TRACKY] = ((float)Ctrl2Data.trackY/100);
-      data[CTRL2VBAT]   = ((float)Ctrl2Data.vBAT/100);
-
-      data[CHECKSUM] = 29578643;                //TODO: make proper checksum
-      Serial.write((byte*)&data, sizeof(data)); 
-    }
-    lastDisplay = now;
-  }
+  ContData.Ctrl2_THUMB    = Ctrl2Data.fingerThumb;
+  ContData.Ctrl2_INDEX    = Ctrl2Data.fingerIndex;
+  ContData.Ctrl2_MIDDLE   = Ctrl2Data.fingerMiddle;
+  ContData.Ctrl2_RING     = Ctrl2Data.fingerRing;
+  ContData.Ctrl2_PINKY    = Ctrl2Data.fingerPinky;
+  
+  HID().SendReport(1, &ContData, 63);
 }
