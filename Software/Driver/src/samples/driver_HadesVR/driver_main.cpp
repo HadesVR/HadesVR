@@ -78,7 +78,7 @@ THMD HMDdata;
 
 bool HMDConnected = false, ctrlsConnected = false, trackersConnected = false;
 
-int controllerType;
+int controllerMode, trackerMode;
 
 double DegToRad(double f) {
 	return f * (3.14159265358979323846 / 180);
@@ -104,35 +104,35 @@ public:
 		m_ulPropertyContainer = vr::k_ulInvalidPropertyContainer;
 
 		//DriverLog( "Using settings values\n" );
-		m_flIPD = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_IPD_Float);
+		m_flIPD = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_IPD_Float);
 
 		char buf[1024];
-		vr::VRSettings()->GetString( k_pch_HMD_Section, k_pch_Sample_SerialNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString( k_pch_Driver_Section, k_pch_Sample_SerialNumber_String, buf, sizeof( buf ) );
 		m_sSerialNumber = buf;
 
-		vr::VRSettings()->GetString( k_pch_HMD_Section, k_pch_Sample_ModelNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString( k_pch_Driver_Section, k_pch_Sample_ModelNumber_String, buf, sizeof( buf ) );
 		m_sModelNumber = buf;
 
-		m_nWindowX = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowX_Int32 );
-		m_nWindowY = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowY_Int32 );
-		m_nWindowWidth = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowWidth_Int32 );
-		m_nWindowHeight = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_WindowHeight_Int32 );
-		m_nRenderWidth = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_RenderWidth_Int32 );
-		m_nRenderHeight = vr::VRSettings()->GetInt32( k_pch_HMD_Section, k_pch_Sample_RenderHeight_Int32 );
-		m_flSecondsFromVsyncToPhotons = vr::VRSettings()->GetFloat( k_pch_HMD_Section, k_pch_Sample_SecondsFromVsyncToPhotons_Float );
-		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_HMD_Section, k_pch_Sample_DisplayFrequency_Float );
-		m_fDistortionK1 = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_DistortionK1_Float);
-		m_fDistortionK2 = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_DistortionK2_Float);
-		m_fZoomWidth = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_ZoomWidth_Float);
-		m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_ZoomHeight_Float);
-		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
-		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
-		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ScreenOffsetX_Int32);
-		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ScreenOffsetY_Int32);
-		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_Stereo_Bool);
-		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DebugMode_Bool);
-		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayOnDesktop);
-		m_displayReal = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_DisplayReal);
+		m_nWindowX = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowX_Int32 );
+		m_nWindowY = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowY_Int32 );
+		m_nWindowWidth = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowWidth_Int32 );
+		m_nWindowHeight = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowHeight_Int32 );
+		m_nRenderWidth = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_RenderWidth_Int32 );
+		m_nRenderHeight = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_RenderHeight_Int32 );
+		m_flSecondsFromVsyncToPhotons = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_SecondsFromVsyncToPhotons_Float );
+		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_DisplayFrequency_Float );
+		m_fDistortionK1 = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistortionK1_Float);
+		m_fDistortionK2 = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistortionK2_Float);
+		m_fZoomWidth = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomWidth_Float);
+		m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomHeight_Float);
+		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
+		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
+		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetX_Int32);
+		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetY_Int32);
+		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Stereo_Bool);
+		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
+		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
+		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
 		
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
@@ -488,7 +488,7 @@ public:
 			break;
 		}
 
-		initDevice(controllerType, ControllerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle );
+		initDevice(controllerMode, ControllerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle );
 
 		return VRInitError_None;
 	}
@@ -595,9 +595,9 @@ public:
 			}
 			break;
 		}
-		updateFingerTracking(controllerType, ControllerIndex, m_skeletonHandle, m_handBones);
+		updateFingerTracking(controllerMode, ControllerIndex, m_skeletonHandle, m_handBones);
 
-		updateDevice(controllerType, ControllerIndex);
+		updateDevice(controllerMode, ControllerIndex);
 	}
 
 	void UpdateDeviceBattery() 
@@ -622,7 +622,7 @@ public:
 	}
 
 	std::string GetSerialNumber() const { 
-		return getDeviceSerial(controllerType, ControllerIndex);
+		return getDeviceSerial(controllerMode, ControllerIndex);
 	}
 
 private:
@@ -902,20 +902,29 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	InitDriverLog( vr::VRDriverLog() );
 
 	//this is stupid
-	comPort = vr::VRSettings()->GetInt32(k_pch_HMD_Section, k_pch_Sample_ComPort_Int32);
-	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Sample_EnableControllers_Bool);
-	HMDEnabled = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Sample_EnableHMD_Bool);
-	trackersEnabled = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_FBT_Bool);
-	controllerType = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Sample_Controller_Type_Int32);
-	
-	DriverLog("[TRACKER] Trackers enabled: %d\n", trackersEnabled);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_Controller_Enable_Bool);
+	controllerMode = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Controller_Mode_Int32);
+	HMDEnabled = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_HMD_Enable_Bool);
+	trackersEnabled = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Tracker_Enable_Bool);
+	trackerMode = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Tracker_Mode_Int32);
 
-	if (controllerType > 9) { controllerType = 0; }
+	if (trackersEnabled) {
+		DriverLog("[TRACKER] Trackers enabled!");
+		if (trackerMode == 0) {
+			DriverLog("[TRACKER] Tracker Mode: Full body");
+		}
+		else {
+			DriverLog("[TRACKER] Tracker Mode: Waist");
+		}
+	}
 
-	dH.StartData(comPort);
-	DriverLog("[DataStream] Starting data stream on COMPort: =%d\n", comPort);
+	if (controllerMode > 9) { controllerMode = 0; }
 
-	if (dH.SerialConnected)
+	dH.StartData(vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32), vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32));
+
+	DriverLog("[DataStream] HID value PID = %d , VID = %d\n", vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32), vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32));
+
+	if (dH.HIDConnected)
 	{
 		if (HMDEnabled) {
 			HMDConnected = true;
@@ -932,6 +941,7 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 		HMDConnected = false;
 		ctrlsConnected = false;
 		trackersConnected = false;
+		return vr::VRInitError_Init_InterfaceNotFound;
 	}
 
 	if (HMDConnected) 
@@ -957,14 +967,15 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 		m_pTrackerWaist = new C_TrackerDriver();
 		m_pTrackerWaist->SetTrackerIndex(1);
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerWaist->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerWaist);
+		if (trackerMode == 0) {
+			m_pTrackerLeftFoot = new C_TrackerDriver();
+			m_pTrackerLeftFoot->SetTrackerIndex(2);
+			vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerLeftFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerLeftFoot);
 
-		m_pTrackerLeftFoot = new C_TrackerDriver();
-		m_pTrackerLeftFoot->SetTrackerIndex(2);
-		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerLeftFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerLeftFoot);
-
-		m_pTrackerRightFoot = new C_TrackerDriver();
-		m_pTrackerRightFoot->SetTrackerIndex(3);
-		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerRightFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerRightFoot);
+			m_pTrackerRightFoot = new C_TrackerDriver();
+			m_pTrackerRightFoot->SetTrackerIndex(3);
+			vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerRightFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerRightFoot);
+		}
 	}
 
 	// battery thread
@@ -996,10 +1007,12 @@ void CServerDriver_Sample::Cleanup()
 	if (trackersConnected) {
 		delete m_pTrackerWaist;
 		m_pTrackerWaist = NULL;
-		delete m_pTrackerLeftFoot;
-		m_pTrackerLeftFoot = NULL;
-		delete m_pTrackerRightFoot;
-		m_pTrackerRightFoot = NULL;
+		if (trackerMode == 0) {
+			delete m_pTrackerLeftFoot;
+			m_pTrackerLeftFoot = NULL;
+			delete m_pTrackerRightFoot;
+			m_pTrackerRightFoot = NULL;
+		}
 	}
 
 	if (hDll != NULL) {
@@ -1007,14 +1020,14 @@ void CServerDriver_Sample::Cleanup()
 		hDll = nullptr;
 	}
 
-	if (dH.SerialConnected) {
-		dH.SerialConnected = false;
-		if (dH.pCtrlthread) {
-			dH.pCtrlthread->join();
-			delete dH.pCtrlthread;
-			dH.pCtrlthread = nullptr;
+	if (dH.HIDConnected) {
+		dH.HIDConnected = false;
+		if (dH.pHIDthread) {
+			dH.pHIDthread->join();
+			delete dH.pHIDthread;
+			dH.pHIDthread = nullptr;
+			dH.stopData();
 		}
-		CloseHandle(dH.hSerial);
 	}
 	if (dH.PSMConnected) {
 		dH.PSMConnected = false;
@@ -1080,13 +1093,15 @@ void CServerDriver_Sample::RunFrame()
 		{
 			m_pTrackerWaist->RunFrame();
 		}
-		if (m_pTrackerLeftFoot)
-		{
-			m_pTrackerLeftFoot->RunFrame();
-		}
-		if (m_pTrackerRightFoot)
-		{
-			m_pTrackerRightFoot->RunFrame();
+		if (trackerMode == 0) {
+			if (m_pTrackerLeftFoot)
+			{
+				m_pTrackerLeftFoot->RunFrame();
+			}
+			if (m_pTrackerRightFoot)
+			{
+				m_pTrackerRightFoot->RunFrame();
+			}
 		}
 
 		vr::VREvent_t vrEvent;

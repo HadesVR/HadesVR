@@ -1,7 +1,7 @@
 #pragma once
 
-static const char* const k_pch_HMD_Section = "HMD";
-static const char* const k_pch_Controllers_Section = "Controllers";
+static const char* const k_pch_Display_Section = "Display";
+static const char* const k_pch_Driver_Section = "Driver";
 
 static const char* const k_pch_Sample_WindowX_Int32 = "windowX";
 static const char* const k_pch_Sample_WindowY_Int32 = "windowY";
@@ -27,8 +27,10 @@ static const char* const k_pch_Sample_DebugMode_Bool = "DebugMode";
 
 static const char* const k_pch_Sample_SerialNumber_String = "serialNumber";
 static const char* const k_pch_Sample_ModelNumber_String = "modelNumber";
-static const char* const k_pch_Sample_EnableControllers_Bool = "EnableControllers";
-static const char* const k_pch_Sample_Controller_Type_Int32 = "ControllerType";
-static const char* const k_pch_Sample_ComPort_Int32 = "ComPort";
-static const char* const k_pch_Sample_EnableHMD_Bool = "EnableHMD";
-static const char* const k_pch_Sample_FBT_Bool = "FBT";
+static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
+static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
+static const char* const k_pch_HMD_Enable_Bool = "EnableHMD";
+static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
+static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
+static const char* const k_pch_HID_PID_Int32 = "HID_PID";
+static const char* const k_pch_HID_VID_Int32 = "HID_VID";

@@ -32,14 +32,14 @@
 void CdataHandler::SetCentering()
 {
 
-	HMDOffset.W = ArduinoData[HMDQW];
-	HMDOffset.Y = -ArduinoData[HMDQY];
+	HMDOffset.W = HMDData.qW;
+	HMDOffset.Y = -HMDData.qY;
 
-	Ctrl1Offset.W = ArduinoData[CTRL1QW];
-	Ctrl1Offset.Y = -ArduinoData[CTRL1QY];
+	Ctrl1Offset.W = Ctrl1Data.qW;
+	Ctrl1Offset.Y = -Ctrl1Data.qY;
 
-	Ctrl2Offset.W = ArduinoData[CTRL2QW];
-	Ctrl2Offset.Y = -ArduinoData[CTRL2QY];
+	Ctrl2Offset.W = Ctrl2Data.qW;
+	Ctrl2Offset.Y = -Ctrl2Data.qY;
 }
 
 inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat)
@@ -53,106 +53,65 @@ inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quat
 	return Output;
 }
 
-void CdataHandler::ReadSerialData()
+void CdataHandler::ReadHIDData()
 {
-	bool firstread = false;
-	DWORD bytesRead;
-	while (SerialConnected) {
-		ReadFile(hSerial, &ArduinoData, sizeof(ArduinoData), &bytesRead, 0);
-		//Filter incorrect values
-		if (!(ArduinoData[CHECKSUM] == 29578643))
-		{
-			//Last correct values
-			ArduinoData[0] = LastArduinoArduinoData[0];
-			ArduinoData[1] = LastArduinoArduinoData[1];
-			ArduinoData[2] = LastArduinoArduinoData[2];
-			ArduinoData[3] = LastArduinoArduinoData[3];
-			ArduinoData[4] = LastArduinoArduinoData[4];
-			ArduinoData[5] = LastArduinoArduinoData[5];
-			ArduinoData[6] = LastArduinoArduinoData[6];
-			ArduinoData[7] = LastArduinoArduinoData[7];
-			ArduinoData[8] = LastArduinoArduinoData[8];
-			ArduinoData[9] = LastArduinoArduinoData[9];
-			ArduinoData[10] = LastArduinoArduinoData[10];
-			ArduinoData[11] = LastArduinoArduinoData[11];
-			ArduinoData[12] = LastArduinoArduinoData[12];
-			ArduinoData[13] = LastArduinoArduinoData[13];
-			ArduinoData[14] = LastArduinoArduinoData[14];
-			ArduinoData[15] = LastArduinoArduinoData[15];
-			ArduinoData[16] = LastArduinoArduinoData[16];
-			ArduinoData[17] = LastArduinoArduinoData[17];
-			ArduinoData[18] = LastArduinoArduinoData[18];
-			ArduinoData[19] = LastArduinoArduinoData[19];
-			ArduinoData[20] = LastArduinoArduinoData[20];
-			ArduinoData[21] = LastArduinoArduinoData[21];
-			ArduinoData[22] = LastArduinoArduinoData[22];
-			ArduinoData[23] = LastArduinoArduinoData[23];
-
-			PurgeComm(hSerial, PURGE_TXCLEAR | PURGE_RXCLEAR);
-		}
-
-		//Save last correct values
-		if (ArduinoData[CHECKSUM] == 29578643)
-		{
-			LastArduinoArduinoData[0] = ArduinoData[0];
-			LastArduinoArduinoData[1] = ArduinoData[1];
-			LastArduinoArduinoData[2] = ArduinoData[2];
-			LastArduinoArduinoData[3] = ArduinoData[3];
-			LastArduinoArduinoData[4] = ArduinoData[4];
-			LastArduinoArduinoData[5] = ArduinoData[5];
-			LastArduinoArduinoData[6] = ArduinoData[6];
-			LastArduinoArduinoData[7] = ArduinoData[7];
-			LastArduinoArduinoData[8] = ArduinoData[8];
-			LastArduinoArduinoData[9] = ArduinoData[9];
-			LastArduinoArduinoData[10] = ArduinoData[10];
-			LastArduinoArduinoData[11] = ArduinoData[11];
-			LastArduinoArduinoData[12] = ArduinoData[12];
-			LastArduinoArduinoData[13] = ArduinoData[13];
-			LastArduinoArduinoData[14] = ArduinoData[14];
-			LastArduinoArduinoData[15] = ArduinoData[15];
-			LastArduinoArduinoData[16] = ArduinoData[16];
-			LastArduinoArduinoData[17] = ArduinoData[17];
-			LastArduinoArduinoData[18] = ArduinoData[18];
-			LastArduinoArduinoData[19] = ArduinoData[19];
-			LastArduinoArduinoData[20] = ArduinoData[20];
-			LastArduinoArduinoData[21] = ArduinoData[21];
-			LastArduinoArduinoData[22] = ArduinoData[22];
-			LastArduinoArduinoData[23] = ArduinoData[23];
-
-		}
-
-		if (CtrlInitCentring == false)
-			if (ArduinoData[0] != 0 || ArduinoData[1] != 0 || ArduinoData[2] != 0) {
-				SetCentering();
-				CtrlInitCentring = true;
-			}
-	}
-}
-
-void CdataHandler::SerialStreamStart() {
-	CString sPortName;
-	sPortName.Format(_T("COM%d"), (int)dataCOMPort);
-
-	hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
-	if (hSerial != INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_NOT_FOUND) {
-
-		DCB dcbSerialParams = { 0 };
-		dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-
-		if (GetCommState(hSerial, &dcbSerialParams))
-		{
-			dcbSerialParams.BaudRate = CBR_115200;
-			dcbSerialParams.ByteSize = 8;
-			dcbSerialParams.StopBits = ONESTOPBIT;
-			dcbSerialParams.Parity = NOPARITY;
-
-			if (SetCommState(hSerial, &dcbSerialParams))
+	HMDPacket* DataHMD = (HMDPacket*)packet_buffer;
+	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
+	int r;
+	DriverLog("ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
+	while (HIDConnected) {
+		DriverLog("doing a hid read", r);
+		r = hid_read(hHID, packet_buffer, 64); //Result should be greater than 0.
+		DriverLog("HIDReadReturned %d", r);
+		if (r > 0) {
+			switch (packet_buffer[0])
 			{
-				SerialConnected = true;
-				PurgeComm(hSerial, PURGE_TXCLEAR | PURGE_RXCLEAR);
-				pCtrlthread = new std::thread(this->ReadSerialDataEnter, this);
-				DriverLog("[DataStream]: created ReadSerialData thread");
+			case 1:
+				HMDData.qW = DataHMD->HMDQuatW;
+				HMDData.qX = DataHMD->HMDQuatX;
+				HMDData.qY = DataHMD->HMDQuatY;
+				HMDData.qZ = DataHMD->HMDQuatZ;
+				break;
+			case 2:
+				Ctrl1Data.qW = DataCtrl->Ctrl1_QuatW;
+				Ctrl1Data.qX = DataCtrl->Ctrl1_QuatX;
+				Ctrl1Data.qY = DataCtrl->Ctrl1_QuatY;
+				Ctrl1Data.qZ = DataCtrl->Ctrl1_QuatZ;
+				Ctrl1Data.Buttons = DataCtrl->Ctrl1_Buttons;
+				Ctrl1Data.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255;
+				Ctrl1Data.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127;
+				Ctrl1Data.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127;
+				Ctrl1Data.TrackpY = (float)(DataCtrl->Ctrl1_trackY) / 127;
+				Ctrl1Data.vBat = (float)(DataCtrl->Ctrl1_vBat) / 255;
+				Ctrl1Data.FingThumb = (float)(DataCtrl->Ctrl1_THUMB) / 255;
+				Ctrl1Data.FingIndex = (float)(DataCtrl->Ctrl1_INDEX) / 255;
+				Ctrl1Data.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255;
+				Ctrl1Data.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255;
+				Ctrl1Data.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255;
+
+				Ctrl2Data.qW = DataCtrl->Ctrl2_QuatW;
+				Ctrl2Data.qX = DataCtrl->Ctrl2_QuatX;
+				Ctrl2Data.qY = DataCtrl->Ctrl2_QuatY;
+				Ctrl2Data.qZ = DataCtrl->Ctrl2_QuatZ;
+				Ctrl2Data.Buttons = DataCtrl->Ctrl2_Buttons;
+				Ctrl2Data.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255;
+				Ctrl2Data.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127;
+				Ctrl2Data.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127;
+				Ctrl2Data.TrackpY = (float)(DataCtrl->Ctrl2_trackY) / 127;
+				Ctrl2Data.vBat = (float)(DataCtrl->Ctrl2_vBat) / 255;
+				Ctrl2Data.FingThumb = (float)(DataCtrl->Ctrl2_THUMB) / 255;
+				Ctrl2Data.FingIndex = (float)(DataCtrl->Ctrl2_INDEX) / 255;
+				Ctrl2Data.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255;
+				Ctrl2Data.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
+				Ctrl2Data.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
+				break;
+			}
+			if (InitCentring == false)
+			{
+				if (HMDData.qW != 0 || HMDData.qX != 0 && Ctrl1Data.qW != 0 || Ctrl1Data.qX != 0) {
+					SetCentering();
+					InitCentring = true;
+				}
 			}
 		}
 	}
@@ -173,9 +132,9 @@ void CdataHandler::PSMUpdate()
 
 void CdataHandler::GetHMDData(THMD* HMD)
 {
-	if (SerialConnected) {
+	if (HIDConnected) {
 
-		Quaternion HMDQuat = SetOffsetQuat(ArduinoData[HMDQW], ArduinoData[HMDQX], ArduinoData[HMDQY], ArduinoData[HMDQZ], HMDOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.qW, HMDData.qX, HMDData.qY, HMDData.qZ, HMDOffset);
 
 		if (PSMConnected) {			//PSM POSITION
 
@@ -201,34 +160,47 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 void CdataHandler::GetControllersData(TController* FirstController, TController* SecondController)
 {
-	if (SerialConnected) {
+	if (HIDConnected) {
 
-		Quaternion Ctrl1Quat = SetOffsetQuat(ArduinoData[CTRL1QW], ArduinoData[CTRL1QX], ArduinoData[CTRL1QY], ArduinoData[CTRL1QZ], Ctrl1Offset);
-		Quaternion Ctrl2Quat = SetOffsetQuat(ArduinoData[CTRL2QW], ArduinoData[CTRL2QX], ArduinoData[CTRL2QY], ArduinoData[CTRL2QZ], Ctrl2Offset);
+		Quaternion Ctrl1Quat = SetOffsetQuat(Ctrl1Data.qW, Ctrl1Data.qX, Ctrl1Data.qY, Ctrl1Data.qZ, Ctrl1Offset);
+		Quaternion Ctrl2Quat = SetOffsetQuat(Ctrl2Data.qW, Ctrl2Data.qX, Ctrl2Data.qY, Ctrl2Data.qZ, Ctrl2Offset);
 		
 		FirstController->qW = Ctrl1Quat.W;
 		FirstController->qX = Ctrl1Quat.X;
 		FirstController->qY = Ctrl1Quat.Y;
 		FirstController->qZ = Ctrl1Quat.Z;
 
-		FirstController->Buttons = ArduinoData[CTRL1BTN];
-		FirstController->Trigger = ArduinoData[CTRL1TRIGG];
-		FirstController->JoyAxisX = ArduinoData[CTRL1AXISX];
-		FirstController->JoyAxisY = ArduinoData[CTRL1AXISY];
-		FirstController->TrackpY = ArduinoData[CTRL1TRACKY];
-		FirstController->vBat = ArduinoData[CTRL1VBAT];
+		FirstController->Buttons  = Ctrl1Data.Buttons;
+		FirstController->Trigger  = Ctrl1Data.Trigger;
+		FirstController->JoyAxisX = Ctrl1Data.JoyAxisX;
+		FirstController->JoyAxisY = Ctrl1Data.JoyAxisY;
+		FirstController->TrackpY  = Ctrl1Data.TrackpY;
+		FirstController->vBat     = Ctrl1Data.vBat;
+
+		FirstController->FingThumb = Ctrl1Data.FingThumb;
+		FirstController->FingIndex = Ctrl1Data.FingIndex;
+		FirstController->FingMiddl = Ctrl1Data.FingMiddl;
+		FirstController->FingRing  = Ctrl1Data.FingRing;
+		FirstController->FingPinky = Ctrl1Data.FingPinky;
+
 
 		SecondController->qW = Ctrl2Quat.W;
 		SecondController->qX = Ctrl2Quat.X;
 		SecondController->qY = Ctrl2Quat.Y;
 		SecondController->qZ = Ctrl2Quat.Z;
 
-		SecondController->Buttons = ArduinoData[CTRL2BTN];
-		SecondController->Trigger = ArduinoData[CTRL2TRIGG];
-		SecondController->JoyAxisX = ArduinoData[CTRL2AXISX];
-		SecondController->JoyAxisY = ArduinoData[CTRL2AXISY];
-		SecondController->TrackpY = ArduinoData[CTRL2TRACKY];
-		SecondController->vBat = ArduinoData[CTRL2VBAT];
+		SecondController->Buttons  = Ctrl2Data.Buttons;
+		SecondController->Trigger  = Ctrl2Data.Trigger;
+		SecondController->JoyAxisX = Ctrl2Data.JoyAxisX;
+		SecondController->JoyAxisY = Ctrl2Data.JoyAxisY;
+		SecondController->TrackpY  = Ctrl2Data.TrackpY;
+		SecondController->vBat     = Ctrl2Data.vBat;
+
+		SecondController->FingThumb = Ctrl2Data.FingThumb;
+		SecondController->FingIndex = Ctrl2Data.FingIndex;
+		SecondController->FingMiddl = Ctrl2Data.FingMiddl;
+		SecondController->FingRing  = Ctrl2Data.FingRing;
+		SecondController->FingPinky = Ctrl2Data.FingPinky;
 
 		if (PSMConnected) {		//PSM POSITION
 
@@ -320,13 +292,32 @@ bool CdataHandler::connectToPSMOVE()
 
 }
 
-void CdataHandler::StartData(int comPort)
+void CdataHandler::StartData(int32_t PID, int32_t VID)
 {
-	if (SerialInit == false) {
-		dataCOMPort = comPort;
-		SerialInit = true;
-		SerialStreamStart();
+	if (HIDInit == false) {
+		
 		connectToPSMOVE();
-	}
+		int result;
+		result = hid_init(); //Result should be 0.
+		if (result) {
+			DriverLog("[DataStream] HID init failed.");
+		}
 
+		hHID = hid_open((unsigned short)VID, (unsigned short)PID, NULL);
+		if (!hHID) {
+			DriverLog("[DataStream] Unable to start data stream of device with pid=%d and vid=%d.\n", PID, VID);
+			HIDConnected = false;
+			return;
+		}
+		HIDInit = true;
+		HIDConnected = true;
+		pHIDthread = new std::thread(this->ReadHIDEnter, this);
+	}
+}
+
+void CdataHandler::stopData() {
+	hid_close(hHID);
+	hid_exit();
+	HIDConnected = false;
+	HIDInit = false;
 }
