@@ -23,42 +23,34 @@
 #define JoyXMax             935             //that help on getting these values
 #define JoyYMin             190             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
 #define JoyYMax             900             //if you use these values without changing them you MAY
-#define JoyXDeadZoneMin     525             //get stick drift
-#define JoyXDeadZoneMax     580
-#define JoyYDeadZoneMin     460
-#define JoyYDeadZoneMax     530
-
-#define CTRLQW        0
-#define CTRLQX        1
-#define CTRLQY        2
-#define CTRLQZ        3
-#define CTRLBTN       4
-#define CTRLTRIGG     5
-#define CTRLAXISX     6
-#define CTRLAXISY     7
-#define CTRLTRACKY    8
-#define CTRLVBAT      9
+#define JoyXDeadZoneMin     515             //get stick drift
+#define JoyXDeadZoneMax     590
+#define JoyYDeadZoneMin     440
+#define JoyYDeadZoneMax     600
 
 
 uint64_t Pipe = 0xF0F0F0F0E1LL; //right
 //uint64_t Pipe = 0xF0F0F0F0D2LL; //left
 
-struct ctrlData{
+struct ctrlData {
   float qW;
   float qX;
   float qY;
   float qZ;
-  float BTN;
-  short  trigg;
-  short  axisX;
-  short  axisY;
-  short  trackY;
-  short  vBAT;
+  uint32_t BTN;
+  uint8_t  trigg;
+  int8_t  axisX;
+  int8_t  axisY;
+  int8_t  trackY;
+  uint8_t  vBAT;
+  uint8_t  fingerThumb;
+  uint8_t  fingerIndex;
+  uint8_t  fingerMiddle;
+  uint8_t  fingerRing;
+  uint8_t  fingerPinky;
 };
 
-float trigger;
-float axisXout;
-float axisYout;
+
 int tracky;
 int trackoutput;
 int axisX;
@@ -98,19 +90,19 @@ void loop() {
   axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-    axisXout = -mapFloat(axisX, JoyXMin, JoyXMax, -1, 1);
+    data.axisX = -mapFloat(axisX, JoyXMin, JoyXMax, -127, 127);
   } else {
-    axisXout = 0;
+    data.axisX = 0;
   }
 
   if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-    axisYout = mapFloat(axisY, JoyYMin, JoyYMax, -1, 1);
+    data.axisY = mapFloat(axisY, JoyYMin, JoyYMax, -127, 127);
     btn |= HTC_ThumbstickTouch;
   } else {
-    axisYout = 0;
+    data.axisY = 0;
   }
 
-  trigger = (mapFloat(analogRead(TriggerPin), 1024, 0, 0, 1));
+  data.trigg = (mapFloat(analogRead(TriggerPin), 1024, 0, 0, 255));
 
   if (!digitalRead(SysPin)) {
     btn |= HTC_SysClick;
@@ -130,10 +122,7 @@ void loop() {
   data.qZ = mympu.qZ;
   data.qX = mympu.qX;
   data.BTN = btn;
-  data.trigg = (trigger * 100);
-  data.axisX = (axisXout * 100);
-  data.axisY = (axisYout * 100);
-  data.vBAT = (mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 1) * 100);
+  data.vBAT = mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
   radio.startListening();
