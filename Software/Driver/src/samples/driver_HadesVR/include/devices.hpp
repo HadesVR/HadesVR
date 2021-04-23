@@ -19,7 +19,7 @@
 #define HTC_GripClick		0x0080
 #define HTC_ThumbstickTouch 0x0800
 
-#include <openvr_driver.h>
+#include "openvr/openvr_driver.h"
 #include "dataHandler.h"
 #include "HandTracking.h"
 

@@ -1,6 +1,6 @@
 //============ Copyright (c) Valve Corporation, All rights reserved. ============
 
-#include <openvr_driver.h>
+#include "openvr/openvr_driver.h"
 #include "driverlog.h"
 
 
