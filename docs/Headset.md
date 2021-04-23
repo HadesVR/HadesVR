@@ -109,7 +109,7 @@ The steps to upload the firmware are as follows:
 
 # Getting HID values
 
-To configure the driver you will need the VID and PID values from the board you're using. The easiest way of getting them is going to the Arduino IDE, clicking on tools and clicking on get board info with the receiver plugged in:
+To configure the driver you will need the VID and PID values from the board you're using. The easiest way of getting them is going to the Arduino IDE, clicking on tools and clicking on get board info with the HMD plugged in:
 
 ![3](img/Headset/3.png)
 
