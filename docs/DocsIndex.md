@@ -13,18 +13,27 @@ TODO: Hyperlink everything and create the docs etc.
     - [Display(s)](Headset.md#displays)
 - [Circuit schematic](Headset.md#circuit-schematic)
 - [Uploading the firmware](Headset.md#uploading-the-firmware)
-- [Setting correct COMPort](Headset.md#setting-correct-comport)
+- [Getting HID values](Headset.md#getting-hid-values)
 
 ## [RF Receiver](RFReceiver.md)
 
 - [Hardware needed](RFReceiver.md#hardware-needed)
 - [Circuit schematic](RFReceiver.md#circuit-schematic)
 - [Uploading the firmware](RFReceiver.md#uploading-the-firmware)
-- [Setting correct COMPort](RFReceiver.md#setting-correct-comport)
+- [Getting HID values](RFReceiver.md#getting-hid-values)
 
 ## Controllers
 
-TODO:LIST
+- Controller types
+- Wand controller
+    - Hardware needed
+    - Circuit schematic
+    - Joystick calibration
+- Index Controller
+    - Hardware needed
+    - Circuit schematic
+    - Joystick calibration
+    - Capacitive sensor calibration
 
 ## [Tracking](Tracking.md)
 
@@ -38,6 +47,7 @@ TODO:LIST
 
 - [Driver Installation](Driver.md#Driver-Installation)
 - [Driver Configuration](Driver.md#Driver-Configuration)
+- [Display Configuration](Driver.md#Display-configuration)
 - [Usage and controller bindings](Driver.md#Usage-and-controller-bindings)
 
 ## Troubleshooting

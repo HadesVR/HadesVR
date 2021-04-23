@@ -31,21 +31,16 @@ The steps to upload the firmware are as follows:
 * Select the correct COM port for the board
 * Press the Upload button, if all goes well, you can move to setting the correct COMPort.
 
-# Setting correct COMPort
+# Getting HID values
 
-Chances are, the set COM port on your arduino is not in the 1-9 range (COM13 for example), to configure the driver properly, the Arduino COM port should be between 1-9 the easiest way to change the port is as follows:
-
-Open up device manager and go down to "Ports(COM/LPT)", you should see your Arduino in there, Right click on it and click on properties.
+To configure the driver you will need the VID and PID values from the board you're using. The easiest way of getting them is going to the Arduino IDE, clicking on tools and clicking on get board info with the receiver plugged in:
 
 ![3](img/Receiver/3.png)
 
-Then click on "Port Settings" and then on "Advanced"
+Do note these values are in HEX so to use them in the driver config file you'll need to convert them to decimal numbers.
+to do that you can use websites like [Rapidtables](https://www.rapidtables.com/convert/number/hex-to-decimal.html), just input your VID and PID values one at a time and convert them to decimal numbers.
+
+
+Once done, you'll get values like these and then all you have to do is load them up in your driver config file. For more details on driver configuration, check out the [driver configuration docs](Driver.md#driver-configuration)
 
 ![4](img/Receiver/4.png)
-
-On the bottom of the window there should be something that says "COM Port Number:", click on it and choose a port between 1 and 9. It doesn't matter if it says "in use", Windows will realocate it later.
-
-![5](img/Receiver/5.png)
-
-And then click "OK" and "OK".
-Unplug your Arduino and plug it back in. Now if you check on Device manager, your Arduino should be on the port you selected.

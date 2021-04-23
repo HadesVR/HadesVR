@@ -1,8 +1,6 @@
 # Headset
 The headset will not only be in charge of showing you the image and relaying back rotation data from it's internal IMU, but it will also be in charge of receiving the RF Controller data and sending it back to the computer. Another thing that can be integrated into the headset is an USB Sound Card, that way it'll also have an integrated Microphone and a headphone jack for you to plug your headphones in. Though it's not mandatory.
 
-As of right now, the communication between Headset and PC is done using the arduino's serial port but this is subject to change in the future in favour of USB HID.
-
 I plan on eventually making a custom pcb for the headset that includes a 2 port USB hub, an audio interface for headphones and microphone integration, an STM32 as the main microcontroller and maybe a couple other goodies like an attempt at backlight strobing to reduce screen blur.
 
 # Hardware Needed
@@ -18,9 +16,13 @@ You could also 3d print the shell, like the guys over at [Relativty](https://git
 
 ## Electronics
 
-Electronics needed as of *right now* is anything that can talk over serial, though this is subject to change once USB HID communication is implemented. So while you technically *could* use an Arduino Nano, I'm going to recommend against it, since once the move to USB HID is done you won't be able to update your driver.
+As the main microcontroller I suggest sticking to stuff that supports the [Arduino HID library](https://www.arduino.cc/en/Reference/HID). That means:
 
-I suggest sticking to stuff that supports the [Arduino HID library](https://www.arduino.cc/en/Reference/HID). An ideal candidate is the Arduino Pro Micro since it's based on the Atmega32u4 and it's fairly small.
+* Arduino Leonardo
+* Arduino Pro micro
+* Arduino DUE
+
+An ideal candidate is the Arduino Pro Micro since it's based on the Atmega32u4 which is the microcontroller used on the Arduino Leonardo and it's fairly small.
 
 Also needed are:
 * An MPU9250 to gather rotation data (though you could use any IMU that's fast enough and can output rotation data to quaternions if you modify the code a bit to allow for that).
@@ -105,21 +107,16 @@ The steps to upload the firmware are as follows:
 * Select the correct COM port for the board
 * Press the Upload button, if all goes well, you can move to setting the correct COMPort.
 
-# Setting correct COMPort
+# Getting HID values
 
-Chances are, the set COM port on your arduino is not in the 1-9 range (COM13 for example), to configure the driver properly, the Arduino COM port should be between 1-9 the easiest way to change the port is as follows:
-
-Open up device manager and go down to "Ports(COM/LPT)", you should see your Arduino in there, Right click on it and click on properties.
+To configure the driver you will need the VID and PID values from the board you're using. The easiest way of getting them is going to the Arduino IDE, clicking on tools and clicking on get board info with the receiver plugged in:
 
 ![3](img/Headset/3.png)
 
-Then click on "Port Settings" and then on "Advanced"
+Do note these values are in HEX so to use them in the driver config file you'll need to convert them to decimal numbers.
+to do that you can use websites like [Rapidtables](https://www.rapidtables.com/convert/number/hex-to-decimal.html), just input your VID and PID values one at a time and convert them to decimal numbers.
+
+
+Once done, you'll get values like these and then all you have to do is load them up in your driver config file. For more details on driver configuration, check out the [driver configuration docs](Driver.md#driver-configuration)
 
 ![4](img/Headset/4.png)
-
-On the bottom of the window there should be something that says "COM Port Number:", click on it and choose a port between 1 and 9. It doesn't matter if it says "in use", Windows will realocate it later.
-
-![5](img/Headset/5.png)
-
-And then click "OK" and "OK".
-Unplug your Arduino and plug it back in. Now if you check on Device manager, your Arduino should be on the port you selected.
