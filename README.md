@@ -56,8 +56,9 @@ Me being awful at beatsaber demo:
 
 ### Project TODO:
 - figure out a way to fix controller drift (dual blobs maybe?)
+    - Or maybe offload the kalman filter to the driver since 8mhz atmegas aren't the best at floating point math...
+- hardware design for the HadesVR Wand controllers and trackers
+    - _Being worked on!_
 - full body tracking maybe?
-- hardware design for the wand controllers (and maybe fbt trackers too?)
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
-- **Upgrade Serial to HID**
