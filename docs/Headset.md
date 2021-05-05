@@ -20,7 +20,7 @@ As the main microcontroller I suggest sticking to stuff that supports the [Ardui
 
 * Arduino Leonardo
 * Arduino Pro micro
-* Arduino DUE
+* Arduino DUE (code might require some modification since it doesn't support EEPROM.)
 
 An ideal candidate is the Arduino Pro Micro since it's based on the Atmega32u4 which is the microcontroller used on the Arduino Leonardo and it's fairly small.
 
