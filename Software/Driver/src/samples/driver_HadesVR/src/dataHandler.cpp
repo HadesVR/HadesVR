@@ -42,14 +42,18 @@ void CdataHandler::SetCentering()
 	Ctrl2Offset.Y = -Ctrl2Data.qY;
 }
 
-inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat)
+inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat, Quaternion configOffset)
 {
 	Quaternion Input;
 	Input.W = qW;
 	Input.X = qX;
 	Input.Y = qY;
 	Input.Z = qZ;
-	Quaternion Output = Quaternion::Normalized(offsetQuat * Input);
+
+	Quaternion inputCal = Quaternion::Normalized(offsetQuat * Input);
+	
+	Quaternion Output = Quaternion::Normalized(inputCal * configOffset);
+
 	return Output;
 }
 
@@ -150,7 +154,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
 
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.qW, HMDData.qX, HMDData.qY, HMDData.qZ, HMDOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.qW, HMDData.qX, HMDData.qY, HMDData.qZ, HMDOffset, HMDConfigOffset);
 
 		if (PSMConnected) {			//PSM POSITION
 
@@ -178,8 +182,8 @@ void CdataHandler::GetControllersData(TController* FirstController, TController*
 {
 	if (HIDConnected) {
 
-		Quaternion Ctrl1Quat = SetOffsetQuat(Ctrl1Data.qW, Ctrl1Data.qX, Ctrl1Data.qY, Ctrl1Data.qZ, Ctrl1Offset);
-		Quaternion Ctrl2Quat = SetOffsetQuat(Ctrl2Data.qW, Ctrl2Data.qX, Ctrl2Data.qY, Ctrl2Data.qZ, Ctrl2Offset);
+		Quaternion Ctrl1Quat = SetOffsetQuat(Ctrl1Data.qW, Ctrl1Data.qX, Ctrl1Data.qY, Ctrl1Data.qZ, Ctrl1Offset, CTRL1ConfigOffset);
+		Quaternion Ctrl2Quat = SetOffsetQuat(Ctrl2Data.qW, Ctrl2Data.qX, Ctrl2Data.qY, Ctrl2Data.qZ, Ctrl2Offset, CTRL2ConfigOffset);
 		
 		FirstController->qW = Ctrl1Quat.W;
 		FirstController->qX = Ctrl1Quat.X;
@@ -328,6 +332,11 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		HIDInit = true;
 		HIDConnected = true;
 		pHIDthread = new std::thread(this->ReadHIDEnter, this);
+
+		CTRL1ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller1_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller1_RollOffset_Float) * 3.14159265358979323846 / 180);
+		CTRL2ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_RollOffset_Float) * 3.14159265358979323846 / 180);
+
+		HMDConfigOffset =  Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * 3.14159265358979323846 / 180);
 	}
 }
 

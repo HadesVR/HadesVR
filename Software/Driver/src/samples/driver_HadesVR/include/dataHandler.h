@@ -16,18 +16,6 @@
 
 using namespace ATL;
 
-typedef struct _TrackerData
-{
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
-	float	vBat;
-} TTracker, * PTracker;
-
 typedef struct _HMDData
 {
 	double	X;
@@ -60,8 +48,22 @@ typedef struct _Controller
 	float	FingRing;
 	float	FingPinky;
 } TController, * PController;
+
+typedef struct _TrackerData
+{
+	double	X;
+	double	Y;
+	double	Z;
+	double	qW;
+	double	qX;
+	double	qY;
+	double  qZ;
+	float	vBat;
+} TTracker, * PTracker;
+
 #pragma pack(push, 1)
-typedef struct HMDPacket
+
+struct HMDPacket
 {
 	uint8_t HIDID;			//this is fucking stupid
 	uint8_t PacketID;
@@ -90,9 +92,8 @@ typedef struct HMDPacket
 
 	uint8_t Padding[19];
 };
-#pragma pack(pop)
-#pragma pack(push, 1)
-typedef struct ControllerPacket
+
+struct ControllerPacket
 {
 	uint8_t HIDID;			//this is also fucking stupid
 	uint8_t PacketID;
@@ -129,7 +130,10 @@ typedef struct ControllerPacket
 	uint8_t Ctrl2_PINKY;
 	uint8_t Padding[2];
 };
+
 #pragma pack(pop)
+
+
 class CdataHandler {
 public:
 	void SetCentering();
@@ -165,6 +169,11 @@ private:
 	Quaternion Ctrl1Offset = Quaternion::Identity();
 	Quaternion Ctrl2Offset = Quaternion::Identity();
 	Quaternion HMDOffset = Quaternion::Identity();
+
+	Quaternion CTRL1ConfigOffset = Quaternion::Identity();
+	Quaternion CTRL2ConfigOffset = Quaternion::Identity();
+
+	Quaternion HMDConfigOffset = Quaternion::Identity();
 
 	bool InitCentring = false;
 	bool HIDInit = false;
