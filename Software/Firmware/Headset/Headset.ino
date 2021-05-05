@@ -113,6 +113,7 @@ struct ControllerPacket
 
 static HMDPacket HMDData;
 static ControllerPacket ContData;
+bool newContData = false;
 
 void setup() {
   static HIDSubDescriptor node (_hidReportDescriptor, sizeof(_hidReportDescriptor));
@@ -148,15 +149,19 @@ void loop() {
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
       radio.read(&Ctrl1Data, sizeof(ctrlData));
+      newContData = true;
     }
     if (pipenum == 2) {
       radio.read(&Ctrl2Data, sizeof(ctrlData));
+      newContData = true;
     }
   }
 
-  ContData.Ctrl1_QuatW    = Ctrl1Data.qW;         //there's more efficient ways of doing this
-  ContData.Ctrl1_QuatX    = Ctrl1Data.qY;         //but I need a small delay between hmd data and
-  ContData.Ctrl1_QuatY    = Ctrl1Data.qZ;         //Ctrl data so this will do just fine.
+  if(newContData){
+
+  ContData.Ctrl1_QuatW    = Ctrl1Data.qW;         //there's more efficient ways of doing this...
+  ContData.Ctrl1_QuatX    = Ctrl1Data.qY;         
+  ContData.Ctrl1_QuatY    = Ctrl1Data.qZ;         
   ContData.Ctrl1_QuatZ    = Ctrl1Data.qX;
   ContData.Ctrl1_Buttons  = Ctrl1Data.BTN;
   ContData.Ctrl1_Trigger  = Ctrl1Data.trigg;
@@ -189,4 +194,5 @@ void loop() {
   ContData.Ctrl2_PINKY    = Ctrl2Data.fingerPinky;
   
   HID().SendReport(1, &ContData, 63);
+  }
 }
