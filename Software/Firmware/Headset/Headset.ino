@@ -194,5 +194,8 @@ void loop() {
   ContData.Ctrl2_PINKY    = Ctrl2Data.fingerPinky;
   
   HID().SendReport(1, &ContData, 63);
+
+  newContData = false;
+  
   }
 }
