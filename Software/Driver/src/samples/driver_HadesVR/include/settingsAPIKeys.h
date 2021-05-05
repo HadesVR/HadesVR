@@ -25,12 +25,41 @@ static const char* const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char* const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char* const k_pch_Sample_DebugMode_Bool = "DebugMode";
 
-static const char* const k_pch_Sample_SerialNumber_String = "serialNumber";
-static const char* const k_pch_Sample_ModelNumber_String = "modelNumber";
-static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
-static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
-static const char* const k_pch_HMD_Enable_Bool = "EnableHMD";
-static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
-static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
+
+
 static const char* const k_pch_HID_PID_Int32 = "HID_PID";
 static const char* const k_pch_HID_VID_Int32 = "HID_VID";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_HMD_Section = "HMD";
+
+static const char* const k_pch_HMD_SerialNumber_String = "serialNumber";
+static const char* const k_pch_HMD_ModelNumber_String = "modelNumber";
+static const char* const k_pch_HMD_Enable_Bool = "EnableHMD";
+
+static const char* const k_pch_HMD_YawOffset_Float = "HMDYawOffset";
+static const char* const k_pch_HMD_PitchOffset_Float = "HMDPitchOffset";
+static const char* const k_pch_HMD_RollOffset_Float = "HMDRollOffset";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_Controllers_Section = "Controllers";
+
+static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
+static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
+
+static const char* const k_pch_Controller1_YawOffset_Float = "CTRL1YawOffset";
+static const char* const k_pch_Controller1_PitchOffset_Float = "CTRL1PitchOffset";
+static const char* const k_pch_Controller1_RollOffset_Float = "CTRL1RollOffset";
+
+static const char* const k_pch_Controller2_YawOffset_Float = "CTRL2YawOffset";
+static const char* const k_pch_Controller2_PitchOffset_Float = "CTRL2PitchOffset";
+static const char* const k_pch_Controller2_RollOffset_Float = "CTRL2RollOffset";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_Tracker_Section = "Trackers";
+
+static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
+static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";

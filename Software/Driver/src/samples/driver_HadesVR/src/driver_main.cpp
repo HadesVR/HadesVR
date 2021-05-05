@@ -107,10 +107,10 @@ public:
 		m_flIPD = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_IPD_Float);
 
 		char buf[1024];
-		vr::VRSettings()->GetString( k_pch_Driver_Section, k_pch_Sample_SerialNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString(k_pch_HMD_Section, k_pch_HMD_SerialNumber_String, buf, sizeof( buf ) );
 		m_sSerialNumber = buf;
 
-		vr::VRSettings()->GetString( k_pch_Driver_Section, k_pch_Sample_ModelNumber_String, buf, sizeof( buf ) );
+		vr::VRSettings()->GetString(k_pch_HMD_Section, k_pch_HMD_ModelNumber_String, buf, sizeof( buf ) );
 		m_sModelNumber = buf;
 
 		m_nWindowX = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_WindowX_Int32 );
@@ -902,19 +902,20 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	InitDriverLog( vr::VRDriverLog() );
 
 	//this is stupid
-	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_Controller_Enable_Bool);
-	controllerMode = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Controller_Mode_Int32);
-	HMDEnabled = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_HMD_Enable_Bool);
-	trackersEnabled = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Tracker_Enable_Bool);
-	trackerMode = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_Tracker_Mode_Int32);
+	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_Enable_Bool);
+	controllerMode = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Controller_Mode_Int32);
+
+	HMDEnabled = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_HMD_Enable_Bool);
+	trackersEnabled = vr::VRSettings()->GetInt32(k_pch_Tracker_Section, k_pch_Tracker_Enable_Bool);
+	trackerMode = vr::VRSettings()->GetInt32(k_pch_Tracker_Section, k_pch_Tracker_Mode_Int32);
 
 	if (trackersEnabled) {
-		DriverLog("[TRACKER] Trackers enabled!");
+		DriverLog("[TRACKERS] Trackers enabled!");
 		if (trackerMode == 0) {
-			DriverLog("[TRACKER] Tracker Mode: Full body");
+			DriverLog("[TRACKERS] Tracker Mode: Full body");
 		}
 		else {
-			DriverLog("[TRACKER] Tracker Mode: Waist");
+			DriverLog("[TRACKERS] Tracker Mode: Waist");
 		}
 	}
 
