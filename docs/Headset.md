@@ -20,7 +20,7 @@ As the main microcontroller I suggest sticking to stuff that supports the [Ardui
 
 * Arduino Leonardo
 * Arduino Pro micro
-* Arduino DUE (code might require some modification since it doesn't support EEPROM.)
+* Arduino DUE (code will require changing a couple settings and inputing the calibration values manually since it doesn't support EEPROM.)
 
 An ideal candidate is the Arduino Pro Micro since it's based on the Atmega32u4 which is the microcontroller used on the Arduino Leonardo and it's fairly small.
 
@@ -94,18 +94,44 @@ Circuit pins for the Arduino pro micro are as follows:
 
 
 ## ⚠️ IMPORTANT: YOU NEED A 5V TO 3.3V REGULATOR TO POWER THE NRF24 MODULE, ***THE PRO MICRO DOES NOT SUPPLY 3.3V ON ANY OF ITS PINS*** 
-# Uploading the firmware
+# Uploading the firmware and calibrating the magnetometer.
 
 To upload the firmware you will need to have the [RF24 Arduino Library](https://github.com/nRF24/RF24) installed in your [Arduino IDE](https://www.arduino.cc/en/software). 
 
 You can download the required library using the Libraries manager from within the Arduino IDE. The rest of the used libaries are already included in the firmware folder.
 
-The steps to upload the firmware are as follows:
+First you'll need to calibrate the magnetometer (and optionally, altough not necessary, gyro and accel biases).
+to do this: 
+
+* Open Calibration.ino inside the Software/Firmware/Calibration folder
+* Select the board you'll be using.
+* if you have an atmega32u4 based board (pro micro, leonardo) leave the values as default and upload the sketch.
+* Open the serial monitor and folow the instructions to calibrate the magnetometer, you will have to wave your headset in a figure eight movement, rotating every axis for around 15 seconds.
+* if all goes well, you should see in the serial monitor that the calibration values have been stored on the EEPROM.
+* Open Headset.ino inside Software/Firmware/Headset folder and upload the sketch and you're done!
+
+if you're running the calibration on a board that doesn't support EEPROM (Arduino DUE), you'll have to input the calibration values manually, to do this:
+
+* Open Calibration.ino inside the Software/Firmware/Calibration folder
+* Select the board you'll be using.
+* Comment the line that says `#define USE_EEPROM` by adding `//` to the start of it and upload the sketch.
+* Open the serial monitor and folow the instructions to calibrate the magnetometer, you will have to wave your headset in a figure eight movement, rotating every axis for around 15 seconds.
+* once you're done, you'll see the calibration values on the serial monitor.
+
+![10](img/Headset/10.png)
 
 * Open Headset.ino inside the Software/Firmware/Headset folder
-* Select "Arduino Leonardo" as the board if you're using an Arduino Pro Micro
-* Select the correct COM port for the board
-* Press the Upload button, if all goes well, you can move to setting the correct COMPort.
+* Scroll down to the calibration values which look like this:
+
+![11](img/Headset/11.png)
+
+* Replace the default values with the calibration values like this:
+
+![12](img/Headset/12.png)
+
+⚠️ These are example values and they are different from the ones for your sensor.
+
+* Comment the line that says `#define USE_EEPROM_CALIBRATION` by adding `//` to the start of it and upload the sketch and you're done.
 
 # Getting HID values
 
