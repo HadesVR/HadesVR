@@ -12,7 +12,7 @@ TODO: Hyperlink everything and create the docs etc.
     - [Electronics](Headset.md#electronics)
     - [Display(s)](Headset.md#displays)
 - [Circuit schematic](Headset.md#circuit-schematic)
-- [Uploading the firmware](Headset.md#uploading-the-firmware)
+- [Uploading the firmware and calibrating the magnetometer](Headset.md#uploading-the-firmware-and-calibrating-the-magnetometer)
 - [Getting HID values](Headset.md#getting-hid-values)
 
 ## [RF Receiver](RFReceiver.md)
@@ -35,6 +35,11 @@ TODO: Hyperlink everything and create the docs etc.
     - Joystick calibration
     - Capacitive sensor calibration
 
+
+## Trackers
+- Hardware needed
+- Circuit schematic
+
 ## [Tracking](Tracking.md)
 
 - [What you'll need](Tracking.md#what-youll-need)
@@ -47,9 +52,13 @@ TODO: Hyperlink everything and create the docs etc.
 
 - [Driver Installation](Driver.md#Driver-Installation)
 - [Driver Configuration](Driver.md#Driver-Configuration)
+- [HID Configuration](Driver.md#hid-configuration)
 - [Display Configuration](Driver.md#Display-configuration)
 - [Usage and controller bindings](Driver.md#Usage-and-controller-bindings)
 
 ## Troubleshooting
 
-- TODO
+Driver troubleshooting:
+- Error 422
+- Red viewport
+- Headset not connected
