@@ -1,15 +1,27 @@
-/*
+/*Copyright 2021 LiquidCGS
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,INCLUDING BUT NOT LIMITED TO
+  THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
   =============================================================================
-  ===========================MPU-9250 ARDUINO AHRS=============================
+  ====================MPU-9250 ARDUINO AHRS CALIBRATION========================
   =============================================================================
 
-  Part of the code is taken straight out of Kriswiner's MPU9250 AHRS code except this one runs properly for me...
+  Part of the code is taken straight out of Kriswiner's MPU9250 AHRS.
   I've tested this on a 16mhz UNO and it runs fine, I have yet to test it on 12mhz and 8mhz.
 
-  you'll need to at least calibrate the magnetometer to use this, you can do that by pulling the CALPIN to GND and following the instructions in the serial monitor.
-  you can also calibrate the gyro and accel biases if you really want to, but it's not necessary, to do this you just need to set CALIBRATE_ONLY_MAG to false.
+  To calibrate the magnetometer all you have to do is upload this sketch and follow the instructions shown on the serial monitor.
+  you can also calibrate the gyro and accel biases if you really want to, but it's not necessary, to do this you just need to comment out CALIBRATE_ONLY_MAG.
 
-  Calibration settings are stored in the 328p's integrated EEPROM.
+  Calibration settings are stored in the 328p's integrated EEPROM, if your MCU doesn't support EEPROM you'll have to comment the "USE_EEPROM" line, this will
+  make it so that the calibration data is sent on the serial monitor and you'll have to input it manually.
 
   Anyways, check out Kriswiner's original MPU9250 code over here: https://github.com/kriswiner/MPU9250
   You can get the Madgwick filter from here: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/
@@ -19,17 +31,19 @@
 
 #include <Wire.h>
 #include "RegisterMap.h"
+//==========================================================================================================
+//************************************ USER CONFIGURABLE STUFF HERE*****************************************
+//==========================================================================================================
 
 #define MPU9250_ADDRESS 0x68 //ADO 0
-
 #define CALIBRATE_ONLY_MAG    //comment this line if you want to calibrate accel and gyro biases.
 #define USE_EEPROM            //comment this line if your MCU doesn't support EEPROM
+
+//==========================================================================================================
 
 #ifdef USE_EEPROM
 #include <EEPROM.h>
 #endif
-
-#define LEDPIN 13
 
 float magCalibration[3]; // factory mag calibration
 
@@ -62,7 +76,6 @@ MFS MFSSEL = MFS::M16BITS;
 
 void setup() {
 
-  pinMode(LEDPIN, OUTPUT);
   Serial.begin(115200);
   while (!Serial) {
     ;
