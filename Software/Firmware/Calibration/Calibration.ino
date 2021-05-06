@@ -22,8 +22,8 @@
 
 #define MPU9250_ADDRESS 0x68 //ADO 0
 
-#define CALIBRATE_ONLY_MAG    //uncomment this line if you want to calibrate accel and gyro biases.
-#define USE_EEPROM            //uncomment this line if your MCU doesn't support EEPROM
+#define CALIBRATE_ONLY_MAG    //comment this line if you want to calibrate accel and gyro biases.
+#define USE_EEPROM            //comment this line if your MCU doesn't support EEPROM
 
 #ifdef USE_EEPROM
 #include <EEPROM.h>
@@ -45,7 +45,7 @@ Calibration cal;
 
 float x, y, z;
 static float ax, ay, az, gx, gy, gz, mx, my, mz;
-float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};    // vector to hold quaternion
+
 
 enum class AFS { A2G, A4G, A8G, A16G };
 enum class GFS { G250DPS, G500DPS, G1000DPS, G2000DPS };
