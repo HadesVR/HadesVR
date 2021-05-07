@@ -25,7 +25,6 @@ You can use the setup in:
 * Controller only mode: where if you already have a headset, you can use only the controllers part of the setup (you'll need to build an [RF receiver](docs/RFReceiver.md) to replace the HadesVR headset's built in one).
 
 ## What it can and cannot do:
-* This driver partly supports Phone VR (RiftCat, etc): you'll get 6dof tracking for your controllers but only 3dof for your headset, meaning you'll have to stand still.
 * This driver can emulate Wand and Index controllers.
 * You can *sort of* play Beat Saber with this setup, as yaw drift is still an issue, the more you wack your controllers around the more they drift.
 * This setup cannot do Inside out tracking.
@@ -56,7 +55,7 @@ Me being awful at beatsaber demo:
 
 ### Project TODO:
 - figure out a way to fix controller drift (dual blobs maybe?)
-    - Or maybe offload the kalman filter to the driver since 8mhz atmegas aren't the best at floating point math...
+    - _Currently being tested_
 - hardware design for the HadesVR Wand controllers and trackers
     - _Being worked on!_
 - full body tracking maybe?
