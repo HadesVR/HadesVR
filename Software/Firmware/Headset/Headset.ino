@@ -45,8 +45,9 @@ float accelBias[3] {0, 0, 0}; // bias corrections for accel
 //************************************ USER CONFIGURABLE STUFF HERE*****************************************
 //==========================================================================================================
 
-#define betaDef         0.02f       // how hard do you want to correct for drift with the magnetometer, leave as is for headset.
+#define beta         0.02f       // how hard do you want to correct for drift with the magnetometer, leave as is for headset.
 #define USE_EEPROM_CALIBRATION      //comment this to input calibration values manually.
+//#define USE_GYROACCEL_BIAS        //uncomment to use gyro and accel bias (optional)
 #define MPU9250_ADDRESS 0x68 //ADO 0
 
 //==========================================================================================================
@@ -84,6 +85,14 @@ AFS AFSSEL = AFS::A16G;
 GFS GFSSEL = GFS::G2000DPS;
 MFS MFSSEL = MFS::M16BITS;
 #define Mmode 0x06                    // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
+
+uint32_t sumCount = 0;
+uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
+uint32_t Now = 0;        // used to calculate integration interval
+float deltat = 0.0f, sum = 0.0f;        // integration interval for both filter schemes
+
+int time = 1000;
+unsigned long timenow;
 
 static const uint8_t _hidReportDescriptor[] PROGMEM = {
 
@@ -198,6 +207,8 @@ bool newContData = false;
 
 void setup() {
 
+  //Serial.begin(115200);
+
   static HIDSubDescriptor node (_hidReportDescriptor, sizeof(_hidReportDescriptor));
   HID().AppendDescriptor(&node);
 
@@ -242,6 +253,7 @@ void setup() {
     ;
   }
 
+
 #else
   cal.magBias[0] = magBias[0];
   cal.magBias[1] = magBias[1];
@@ -257,10 +269,19 @@ void setup() {
   cal.accelBias[2] = accelBias[2];
 #endif
 
-  filter.begin();
+#ifndef USE_GYROACCEL_BIAS
+  cal.gyroBias[0] = 0;
+  cal.gyroBias[1] = 0;
+  cal.gyroBias[2] = 0;
+  cal.accelBias[0] = 0;
+  cal.accelBias[1] = 0;
+  cal.accelBias[2] = 0;
+#endif
+
+  filter.begin(beta);
 
   radio.begin();
-  radio.setPayloadSize(40);
+  radio.setPayloadSize(32);
   radio.openReadingPipe(2, leftCtrlPipe);
   radio.openReadingPipe(1, rightCtrlPipe);
   radio.setAutoAck(false);
@@ -280,6 +301,13 @@ void loop() {
     updateMag();
   }
 
+  Now = micros();
+  deltat = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
+  lastUpdate = Now;
+
+  sum += deltat; // sum for averaging filter update rate
+  sumCount++;
+
   filter.update(gx, gy, gz, ax, ay, az, my, mx, mz);
 
 
@@ -288,59 +316,34 @@ void loop() {
   HMDData.HMDQuatY = filter.getQuatZ();
   HMDData.HMDQuatZ = filter.getQuatX();
 
+  if (millis() > timenow + time) {
+    timenow = millis();
+    Serial.print("rate = "); Serial.print((float)sumCount / sum, 2); Serial.println(" Hz");
+  }
+
   HID().SendReport(1, &HMDData, 63);
+
+  //Serial.print("qw: "); Serial.print(filter.getQuatW()); Serial.print(" qx: "); Serial.print(filter.getQuatX()); Serial.print(" qy: "); Serial.print(filter.getQuatY());  Serial.print(" qz: "); Serial.println(filter.getQuatZ());
+
+
+
+  sumCount = 0;
+  sum = 0;
 
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
-      radio.read(&Ctrl1Data, sizeof(ctrlData));
+      radio.read(&ContData.Ctrl1_QuatW, 30);
       newContData = true;
     }
     if (pipenum == 2) {
-      radio.read(&Ctrl2Data, sizeof(ctrlData));
+      radio.read(&ContData.Ctrl2_QuatW, 30);
       newContData = true;
     }
   }
 
   if (newContData) {
-
-    ContData.Ctrl1_QuatW    = Ctrl1Data.qW;         //there's more efficient ways of doing this...
-    ContData.Ctrl1_QuatX    = Ctrl1Data.qY;
-    ContData.Ctrl1_QuatY    = Ctrl1Data.qZ;
-    ContData.Ctrl1_QuatZ    = Ctrl1Data.qX;
-    ContData.Ctrl1_Buttons  = Ctrl1Data.BTN;
-    ContData.Ctrl1_Trigger  = Ctrl1Data.trigg;
-    ContData.Ctrl1_axisX    = Ctrl1Data.axisX;
-    ContData.Ctrl1_axisY    = Ctrl1Data.axisY;
-    ContData.Ctrl1_trackY   = Ctrl1Data.trackY;
-    ContData.Ctrl1_vBat     = Ctrl1Data.vBAT;
-
-    ContData.Ctrl1_THUMB    = Ctrl1Data.fingerThumb;
-    ContData.Ctrl1_INDEX    = Ctrl1Data.fingerIndex;
-    ContData.Ctrl1_MIDDLE   = Ctrl1Data.fingerMiddle;
-    ContData.Ctrl1_RING     = Ctrl1Data.fingerRing;
-    ContData.Ctrl1_PINKY    = Ctrl1Data.fingerPinky;
-
-    ContData.Ctrl2_QuatW    = Ctrl2Data.qW;
-    ContData.Ctrl2_QuatX    = Ctrl2Data.qY;
-    ContData.Ctrl2_QuatY    = Ctrl2Data.qZ;
-    ContData.Ctrl2_QuatZ    = Ctrl2Data.qX;
-    ContData.Ctrl2_Buttons  = Ctrl2Data.BTN;
-    ContData.Ctrl2_Trigger  = Ctrl2Data.trigg;
-    ContData.Ctrl2_axisX    = Ctrl2Data.axisX;
-    ContData.Ctrl2_axisY    = Ctrl2Data.axisY;
-    ContData.Ctrl2_trackY   = Ctrl2Data.trackY;
-    ContData.Ctrl2_vBat     = Ctrl2Data.vBAT;
-
-    ContData.Ctrl2_THUMB    = Ctrl2Data.fingerThumb;
-    ContData.Ctrl2_INDEX    = Ctrl2Data.fingerIndex;
-    ContData.Ctrl2_MIDDLE   = Ctrl2Data.fingerMiddle;
-    ContData.Ctrl2_RING     = Ctrl2Data.fingerRing;
-    ContData.Ctrl2_PINKY    = Ctrl2Data.fingerPinky;
-
     HID().SendReport(1, &ContData, 63);
-
     newContData = false;
-
   }
 
 }
