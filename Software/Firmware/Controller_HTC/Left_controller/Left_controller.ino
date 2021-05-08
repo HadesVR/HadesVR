@@ -19,14 +19,14 @@
 #define HTC_ThumbstickTouch 0x0800
 
 #define BatLevelMax         968             //you need to find all of these values on your own
-#define JoyXMin             237             //check on the utils folder for sketches and instructions
-#define JoyXMax             935             //that help on getting these values
-#define JoyYMin             190             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
-#define JoyYMax             900             //if you use these values without changing them you MAY
+#define JoyXMin             200             //check on the utils folder for sketches and instructions
+#define JoyXMax             900             //that help on getting these values
+#define JoyYMin             150             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
+#define JoyYMax             870             //if you use these values without changing them you MAY
 #define JoyXDeadZoneMin     515             //get stick drift
 #define JoyXDeadZoneMax     590
-#define JoyYDeadZoneMin     440
-#define JoyYDeadZoneMax     600
+#define JoyYDeadZoneMin     430
+#define JoyYDeadZoneMax     560
 
 
 //uint64_t Pipe = 0xF0F0F0F0E1LL; //right
@@ -90,19 +90,19 @@ void loop() {
   axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-    data.axisX = -mapFloat(axisX, JoyXMin, JoyXMax, -127, 127);
+    data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
   } else {
     data.axisX = 0;
   }
 
   if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-    data.axisY = mapFloat(axisY, JoyYMin, JoyYMax, -127, 127);
+    data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
     btn |= HTC_ThumbstickTouch;
   } else {
     data.axisY = 0;
   }
 
-  data.trigg = (mapFloat(analogRead(TriggerPin), 1024, 0, 0, 255));
+  data.trigg = (map(analogRead(TriggerPin), 1024, 0, 0, 255));
 
   if (!digitalRead(SysPin)) {
     btn |= HTC_SysClick;
@@ -118,16 +118,12 @@ void loop() {
   }
 
   data.qW = mympu.qW;
-  data.qY = mympu.qY;
-  data.qZ = mympu.qZ;
-  data.qX = mympu.qX;
+  data.qX = mympu.qY;
+  data.qY = mympu.qZ;
+  data.qZ = mympu.qX;
   data.BTN = btn;
-  data.vBAT = mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
+  data.vBAT = map(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
   radio.startListening();
-}
-
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

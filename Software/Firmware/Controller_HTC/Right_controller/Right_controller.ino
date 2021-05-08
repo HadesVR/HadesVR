@@ -90,19 +90,19 @@ void loop() {
   axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-    data.axisX = -mapFloat(axisX, JoyXMin, JoyXMax, -127, 127);
+    data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
   } else {
     data.axisX = 0;
   }
 
   if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-    data.axisY = mapFloat(axisY, JoyYMin, JoyYMax, -127, 127);
+    data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
     btn |= HTC_ThumbstickTouch;
   } else {
     data.axisY = 0;
   }
 
-  data.trigg = (mapFloat(analogRead(TriggerPin), 1024, 0, 0, 255));
+  data.trigg = (map(analogRead(TriggerPin), 1024, 0, 0, 255));
 
   if (!digitalRead(SysPin)) {
     btn |= HTC_SysClick;
@@ -118,16 +118,12 @@ void loop() {
   }
 
   data.qW = mympu.qW;
-  data.qY = mympu.qY;
-  data.qZ = mympu.qZ;
-  data.qX = mympu.qX;
+  data.qX = mympu.qY;
+  data.qY = mympu.qZ;
+  data.qZ = mympu.qX;
   data.BTN = btn;
-  data.vBAT = mapFloat(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
+  data.vBAT = map(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
   radio.startListening();
-}
-
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
