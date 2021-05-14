@@ -11,55 +11,51 @@
   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   =============================================================================
-  ====================MPU-9250 ARDUINO AHRS CALIBRATION========================
+  ===========================MPU-9250 ARDUINO AHRS=============================
   =============================================================================
-
-  Part of the code is taken straight out of Kriswiner's MPU9250 AHRS.
+  Part of the code is taken straight out of Kriswiner's MPU9250 AHRS code.
   I've tested this on a 16mhz UNO and it runs fine, I have yet to test it on 12mhz and 8mhz.
 
-  To calibrate the magnetometer all you have to do is upload this sketch and follow the instructions shown on the serial monitor.
-  you can also calibrate the gyro and accel biases if you really want to, but it's not necessary, to do this you just need to comment out CALIBRATE_ONLY_MAG.
-
-  Calibration settings are stored in the 328p's integrated EEPROM, if your MCU doesn't support EEPROM you'll have to comment the "USE_EEPROM" line, this will
-  make it so that the calibration data is sent on the serial monitor and you'll have to input it manually.
+  you'll need to at least calibrate the magnetometer to use this, you can do that by uploading the calibration sketch and following the instructions in the serial monitor.
+  Calibration settings are stored in the 328p's integrated EEPROM, if your MCU doesn't support EEPROM you'll have to comment the line USE_EEPROM_CALIBRATION and input
+  the calibration values manually.
 
   Anyways, check out Kriswiner's original MPU9250 code over here: https://github.com/kriswiner/MPU9250
   You can get the Madgwick filter from here: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/
-
   ~LiquidCGS
 */
 
 #include <Wire.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include "RF24-STM.h"
 #include "RegisterMap.h"
+#include "Madgwick.h"
+
 //==========================================================================================================
 //************************************ USER CONFIGURABLE STUFF HERE*****************************************
 //==========================================================================================================
-
-#define MPU9250_ADDRESS 0x68 //ADO 0
-#define CALIBRATE_ONLY_MAG    //comment this line if you want to calibrate accel and gyro biases.
-#define USE_EEPROM            //comment this line if your MCU doesn't support EEPROM
-
+#define MadwickBeta            0.5f       // how hard do you want to correct for drift with the magnetometer
+#define MPU9250_ADDRESS        0x68       //ADO 0
+#define CALPIN                 PB3
+//#define CALIBRATE_ONLY_MAG              // comment to calibrate only magnetometer.
 //==========================================================================================================
 
-#ifdef USE_EEPROM
-#include <EEPROM.h>
-#endif
+Madgwick filter;
 
 float magCalibration[3]; // factory mag calibration
 
 struct Calibration {
   int calDone;
   float magBias[3];
-  float magScale[3]; // Bias corrections for mag
-  float gyroBias[3]; // bias corrections
+  float magScale[3];
+  float gyroBias[3];
   float accelBias[3]; // bias corrections
 };
-
+bool calDone;
 Calibration cal;
 
-float x, y, z;
 static float ax, ay, az, gx, gy, gz, mx, my, mz;
-
 
 enum class AFS { A2G, A4G, A8G, A16G };
 enum class GFS { G250DPS, G500DPS, G1000DPS, G2000DPS };
@@ -74,17 +70,62 @@ GFS GFSSEL = GFS::G2000DPS;
 MFS MFSSEL = MFS::M16BITS;
 #define Mmode 0x06                    // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 
-void setup() {
 
-  Serial.begin(115200);
-  while (!Serial) {
-    ;
-  }
-  Wire.begin();
+uint32_t count = 0, sumCount = 0; // used to control display output rate
+float deltat = 0.0f, sum = 0.0f;        // integration interval for both filter schemes
+uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
+uint32_t Now = 0;
+
+int period = 10;
+unsigned long TimeNow = 0;
+
+uint64_t Pipe = 0xF0F0F0F0E1LL; //right
+
+struct ctrlData {
+  float qW;
+  float qX;
+  float qY;
+  float qZ;
+  uint32_t BTN;
+  uint8_t  trigg;
+  int8_t  axisX;
+  int8_t  axisY;
+  int8_t  trackY;
+  uint8_t  vBAT;
+  uint8_t  fingerThumb;
+  uint8_t  fingerIndex;
+  uint8_t  fingerMiddle;
+  uint8_t  fingerRing;
+  uint8_t  fingerPinky;
+};
+ctrlData data;
+
+RF24 radio(PB0, PA4); // CE, CSN on Blue Pill
+
+void setup() {
+  pinMode(PC13, OUTPUT);
+  pinMode(PB3, INPUT_PULLUP);
 
   aRes = getAres();
   gRes = getGres();
   mRes = getMres();
+
+  Serial.begin();
+//  while (!Serial) {
+//    ;
+//  }
+
+  radio.begin();
+  radio.setPayloadSize(32);
+  radio.setPALevel(RF24_PA_HIGH);
+  radio.setDataRate(RF24_1MBPS);
+  radio.openWritingPipe(Pipe);
+  radio.startListening();
+  radio.setAutoAck(false);
+
+  Wire.setSDA(PB11);
+  Wire.setSCL(PB10);
+  Wire.begin();
 
   if (readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250) == MPU9250_WHOAMI_DEFAULT_VALUE)
   {
@@ -107,50 +148,135 @@ void setup() {
   {
     Serial.print("Could not connect to MPU9250: 0x");
     Serial.println(readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250), HEX);
+    while (true) {
+      digitalWrite(PC13, LOW);
+      delay(200);
+      digitalWrite(PC13, HIGH);
+      delay(200);
+      digitalWrite(PC13, LOW);
+      delay(200);
+      digitalWrite(PC13, HIGH);
+      delay(1000);
+    }
   }
 
+  EEPROM.get(0, cal);
 
-  Serial.println("Entered calibration mode!");
+  calDone = (cal.calDone != 99);                                  //check if calibration values are on flash
+  while (calDone) {
+    digitalWrite(PC13, HIGH);
+    delay(200);
+    digitalWrite(PC13, LOW);
+    delay(200);
+    if (!digitalRead(PB3)) {
+      calDone = false;
+    }
+  }
 
-  delay(1000);
-
+  if (!digitalRead(PB3)) {                                        //enter calibration mode
 #ifndef CALIBRATE_ONLY_MAG
-  Serial.println("Lay IMU on flat surface.");
-  delay(10000);
-  calibrateMPU9250(cal.gyroBias, cal.accelBias);
-  Serial.println("AccelBias and GyroBias calibration done!");
-  delay(1000);
-#else
-  cal.gyroBias[0] = 0;
-  cal.gyroBias[1] = 0;
-  cal.gyroBias[2] = 0;
+    Serial.println("Lay IMU on flat surface.");
+    digitalWrite(PC13, LOW);
+    delay(10000);
+    calibrateMPU9250(cal.gyroBias, cal.accelBias);
+    digitalWrite(PC13, HIGH);
+    Serial.println("AccelBias and GyroBias calibration done!");
+    delay(1000);
 
-  cal.accelBias[0] = 0;
-  cal.accelBias[1] = 0;
-  cal.accelBias[2] = 0;
+#else
+    cal.gyroBias[0] = 0;
+    cal.gyroBias[1] = 0;
+    cal.gyroBias[2] = 0;
+
+    cal.accelBias[0] = 0;
+    cal.accelBias[1] = 0;
+    cal.accelBias[2] = 0;
 #endif
 
+    Serial.println("Magnetic calibration mode.");
+    delay(1000);
+    digitalWrite(PC13, LOW);
+    magcalMPU9250(cal.magBias, cal.magScale);
+    digitalWrite(PC13, HIGH);
+    Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
+    Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
+    Serial.print("gyroBias: "); Serial.print(cal.gyroBias[0], 7); Serial.print(","); Serial.print(cal.gyroBias[1], 7); Serial.print(","); Serial.println(cal.gyroBias[2], 7);
+    Serial.print("accelBias: "); Serial.print(cal.accelBias[0], 7); Serial.print(","); Serial.print(cal.accelBias[1], 7); Serial.print(","); Serial.println(cal.accelBias[2], 7);
 
-  Serial.println("Magnetic calibration mode.");
-  delay(1000);
-  magcalMPU9250(cal.magBias, cal.magScale);
+    Serial.println("Writting calibration values to FLASH!");
+    cal.calDone = 99;
+    EEPROM.put(0, cal);
+    delay(3000);
+  }
 
-#ifdef USE_EEPROM
-  Serial.println("Writting calibration values to EEPROM!");
-  cal.calDone = 99;
-  EEPROM.put(50, cal);
-  delay(3000);
-#else
-  Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
-  Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
-  Serial.print("gyroBias: "); Serial.print(cal.gyroBias[0], 7); Serial.print(","); Serial.print(cal.gyroBias[1], 7); Serial.print(","); Serial.println(cal.gyroBias[2], 7);
-  Serial.print("accelBias: "); Serial.print(cal.accelBias[0], 7); Serial.print(","); Serial.print(cal.accelBias[1], 7); Serial.print(","); Serial.println(cal.accelBias[2], 7);
-#endif
+  filter.begin(MadwickBeta);
 
+  //initialize controller data.
+  data.qW = 1;
+  data.qX = 0;
+  data.qY = 0;
+  data.qZ = 0;
+  data.BTN = 0;
+  data.trigg = 0;
+  data.axisX = 0;
+  data.axisY = 0;
+  data.trackY = 0;
+  data.vBAT = 0;
+  data.fingerThumb = 0;
+  data.fingerIndex = 0;
+  data.fingerMiddle = 0;
+  data.fingerRing = 0;
+  data.fingerPinky = 0;
 }
 
 
 void loop() {
+
+  Now = micros();
+  deltat = ((Now - lastUpdate) / (float)1000000.0f); // set integration time by time elapsed since last filter update
+  lastUpdate = Now;
+  sum += deltat; // sum for averaging filter update rate
+  sumCount++;
+
+  if (dataAvailable()) {
+    updateAccelGyro();
+    if (data.qX < 0.15f && data.qX > -0.15f) {  //don't wanna use the magnetometer if not level.
+      updateMag();
+    }
+    else {
+      mx = 0;
+      my = 0;
+      mz = 0;
+    }
+  }
+
+
+
+  filter.update(gx, gy, gz, ax, ay, az, my, mx, mz);
+
+  if (millis() > TimeNow + period) {
+    TimeNow = millis();
+
+    int btn = 0;
+    data.BTN = btn;
+    data.qW = filter.getQuatW();
+    data.qX = filter.getQuatY();
+    data.qY = filter.getQuatZ();
+    data.qZ = filter.getQuatX();
+
+    radio.stopListening();
+    radio.write(&data, sizeof(ctrlData));
+    radio.startListening();
+
+    //Serial.print("qW: "); Serial.print(filter.getQuatW()); Serial.print(" qX: "); Serial.print(filter.getQuatX()); Serial.print(" qY: "); Serial.print(filter.getQuatY()); Serial.print(" qZ: "); Serial.println(filter.getQuatZ());
+    Serial.print("rate = "); Serial.print((float)sumCount / sum, 2); Serial.println(" Hz");
+
+  }
+
+
+
+  sumCount = 0;
+  sum = 0;
 
 }
 
@@ -170,10 +296,10 @@ void initMPU()
   // be higher than 1 / 0.0059 = 170 Hz
   // DLPF_CFG = bits 2:0 = 011; this limits the sample rate to 1000 Hz for both
   // With the MPU9250, it is possible to get gyro sample rates of 32 kHz (!), 8 kHz, or 1 kHz
-  writeByte(MPU9250_ADDRESS, MPU_CONFIG, 0x03);
+  writeByte(MPU9250_ADDRESS, MPU_CONFIG, 0x01);
 
   // Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
-  writeByte(MPU9250_ADDRESS, SMPLRT_DIV, 0x04);  // Use a 200 Hz rate; a rate consistent with the filter update rate
+  writeByte(MPU9250_ADDRESS, SMPLRT_DIV, 0x01);  // Use a 200 Hz rate; a rate consistent with the filter update rate
   // determined inset in CONFIG above
 
   // Set gyroscope full scale range
@@ -573,7 +699,6 @@ void magcalMPU9250(float * dest1, float * dest2)
   //  Serial.print(cal.magScale[1]); Serial.print(", ");
   //  Serial.print(cal.magScale[2]); Serial.println();
 }
-
 
 bool dataAvailable()
 {

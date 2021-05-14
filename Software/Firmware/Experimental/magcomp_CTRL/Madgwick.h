@@ -23,7 +23,7 @@
 // Variable declaration
 class Madgwick {
   private:
-    double delta_t = 0; // Used to control display output rate
+    float delta_t = 0; // Used to control display output rate
     uint32_t now = 0;        // used to calculate integration interval
     uint32_t last_update = 0; // used to calculate integration interval
     static float invSqrt(float x);
