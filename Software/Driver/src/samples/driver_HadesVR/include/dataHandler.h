@@ -75,21 +75,20 @@ struct HMDPacket
 	int16_t tracker1_QuatX;
 	int16_t tracker1_QuatY;
 	int16_t tracker1_QuatZ;
+	uint8_t tracker1_vBat;
 
 	int16_t tracker2_QuatW;
 	int16_t tracker2_QuatX;
 	int16_t tracker2_QuatY;
 	int16_t tracker2_QuatZ;
+	uint8_t tracker2_vBat;
 
 	int16_t tracker3_QuatW;
 	int16_t tracker3_QuatX;
 	int16_t tracker3_QuatY;
 	int16_t tracker3_QuatZ;
-
-	uint8_t tracker1_vBat;
-	uint8_t tracker2_vBat;
 	uint8_t tracker3_vBat;
-
+	
 	uint8_t Padding[19];
 };
 
@@ -175,7 +174,6 @@ private:
 
 	Quaternion HMDConfigOffset = Quaternion::Identity();
 
-	bool InitCentring = false;
 	bool HIDInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
 

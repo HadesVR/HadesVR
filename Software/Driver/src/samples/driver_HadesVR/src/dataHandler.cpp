@@ -31,7 +31,6 @@
 
 void CdataHandler::SetCentering()
 {
-
 	HMDOffset.W = HMDData.qW;
 	HMDOffset.Y = -HMDData.qY;
 
@@ -40,6 +39,41 @@ void CdataHandler::SetCentering()
 
 	Ctrl2Offset.W = Ctrl2Data.qW;
 	Ctrl2Offset.Y = -Ctrl2Data.qY;
+
+	if (Ctrl1Offset.W == 0 && Ctrl1Offset.Y == 0) {
+		Ctrl1Offset.W = 1;
+		Ctrl1Offset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
+	}
+
+
+	if (Ctrl2Offset.W == 0 && Ctrl2Offset.Y == 0) {
+		Ctrl2Offset.W = 1;
+		Ctrl2Offset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
+	}
+
+
+	if (HMDOffset.W == 0 && HMDOffset.Y == 0) {
+		HMDOffset.W = 1;
+		HMDOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float, HMDOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float, HMDOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float, HMDOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float, HMDOffset.Y);
+	}
 }
 
 inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat, Quaternion configOffset)
@@ -62,7 +96,7 @@ void CdataHandler::ReadHIDData()
 	HMDPacket* DataHMD = (HMDPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
 	int r;
-	DriverLog("ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
+	DriverLog("[HID] ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
 	while (HIDConnected) {
 		r = hid_read(hHID, packet_buffer, 64); //Result should be greater than 0.
 		if (r > 0) {
@@ -125,13 +159,6 @@ void CdataHandler::ReadHIDData()
 				Ctrl2Data.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
 				Ctrl2Data.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
 				break;
-			}
-			if (InitCentring == false)
-			{
-				if (HMDData.qW != 0 || HMDData.qX != 0 && Ctrl1Data.qW != 0 || Ctrl1Data.qX != 0) {
-					SetCentering();
-					InitCentring = true;
-				}
 			}
 		}
 	}
@@ -281,7 +308,7 @@ bool CdataHandler::connectToPSMOVE()
 	{
 		if (PSM_AllocateHmdListener(hmdList.hmd_id[0]) == PSMResult_Success && PSM_StartHmdDataStream(hmdList.hmd_id[0], data_stream_flags, PSM_DEFAULT_TIMEOUT) == PSMResult_Success) 
 		{
-			DriverLog("HMD Allocated successfully!");
+			DriverLog("[PsMoveData] HMD Allocated successfully!");
 			HMDAllocated = true;
 		}
 	}
@@ -289,14 +316,14 @@ bool CdataHandler::connectToPSMOVE()
 	//controllers
 	if (PSM_AllocateControllerListener(controllerList.controller_id[0]) == PSMResult_Success && PSM_StartControllerDataStream(controllerList.controller_id[0], data_stream_flags, PSM_DEFAULT_TIMEOUT) == PSMResult_Success)
 	{
-		DriverLog("Controller %d allocated successfully!", controllerList.controller_id[0]);
+		DriverLog("[PsMoveData] Controller %d allocated successfully!", controllerList.controller_id[0]);
 		ctrl1Allocated = true;
 	}
 	
 
 	if (PSM_AllocateControllerListener(controllerList.controller_id[1]) == PSMResult_Success && PSM_StartControllerDataStream(controllerList.controller_id[1], data_stream_flags, PSM_DEFAULT_TIMEOUT) == PSMResult_Success)
 	{
-		DriverLog("Controller %d allocated successfully!", controllerList.controller_id[1]);
+		DriverLog("[PsMoveData] Controller %d allocated successfully!", controllerList.controller_id[1]);
 		ctrl2Allocated = true;
 	}
 	
@@ -337,6 +364,36 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		CTRL2ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_RollOffset_Float) * 3.14159265358979323846 / 180);
 
 		HMDConfigOffset =  Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * 3.14159265358979323846 / 180);
+
+		HMDOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float);
+		HMDOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float);
+
+		Ctrl1Offset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float);
+		Ctrl1Offset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float);
+
+		Ctrl2Offset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float);
+		Ctrl2Offset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float);
+
+		if (Ctrl1Offset.W == 0 && Ctrl1Offset.Y == 0) {
+			Ctrl1Offset.W = 1;
+			Ctrl1Offset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
+		}
+		if (Ctrl2Offset.W == 0 && Ctrl2Offset.Y == 0) {
+			Ctrl2Offset.W = 1;
+			Ctrl2Offset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
+		}
+		if (HMDOffset.W == 0 && HMDOffset.Y == 0) {
+			HMDOffset.W = 1;
+			HMDOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float, HMDOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float, HMDOffset.Y);
+		}
+
+		DriverLog("[Settings] Loaded Calibration settings");
 	}
 }
 

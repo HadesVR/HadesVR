@@ -63,3 +63,18 @@ static const char* const k_pch_Tracker_Section = "Trackers";
 
 static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
 static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_Calibration_Section = "HadesVRCalibration";
+
+static const char* const k_pch_Calibration_HMDW_Float = "HMDW";
+static const char* const k_pch_Calibration_HMDY_Float = "HMDY";
+
+static const char* const k_pch_Calibration_CONT1W_Float = "CONT1W";
+static const char* const k_pch_Calibration_CONT1Y_Float = "CONT1Y";
+
+static const char* const k_pch_Calibration_CONT2W_Float = "CONT2W";
+static const char* const k_pch_Calibration_CONT2Y_Float = "CONT2Y";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
