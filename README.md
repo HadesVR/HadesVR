@@ -25,14 +25,13 @@ You can use the setup in:
 * Controller only mode: where if you already have a headset, you can use only the controllers part of the setup (you'll need to build an [RF receiver](docs/RFReceiver.md) to replace the HadesVR headset's built in one).
 
 ## What it can and cannot do:
-* This driver partly supports Phone VR (RiftCat, etc): you'll get 6dof tracking for your controllers but only 3dof for your headset, meaning you'll have to stand still.
 * This driver can emulate Wand and Index controllers.
-* You can *sort of* play Beat Saber with this setup, as yaw drift is still an issue, the more you wack your controllers around the more they drift.
 * This setup cannot do Inside out tracking.
 * This driver cannot do Full body tracking ~~**yet**~~.
+* Yes this thing plays beatsaber though I'm not sure how viable it is for expert+ diff...
 
 # Custom hardware
-Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#controllers), for more info on the custom pcbs and 3d printable parts!
+Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#Controllers), for more info on the custom pcbs and 3d printable parts!
 
 Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with regular Arduino boards!
 
@@ -55,8 +54,10 @@ Me being awful at beatsaber demo:
 - Write the joystick calibration sketches
 
 ### Project TODO:
+- HadesVR basic HMD PCB design and code to bundle with the wand controllers.
 - hardware design for the HadesVR Wand controllers and trackers
     - _Being worked on!_
 - full body tracking maybe?
+    - _Coming up after the wand controllers._
 - Fix the 3d printable tabs
 - Figure out a better way to mount the tp4056 that doesnt involve hot glue
