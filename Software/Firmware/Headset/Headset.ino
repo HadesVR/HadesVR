@@ -31,6 +31,8 @@ float magScale[3] {0, 0, 0};
 
 const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
+const uint64_t trackerPipe = 0xF0F0F0F0C3LL;
+
 //#define SERIAL_DEBUG
 #define HID_UPDATE_RATE     10              //send data every 10ms for a 100hz update rate.
 //==========================================================================================================
@@ -286,7 +288,7 @@ const unsigned char dmp_memory[DMP_CODE_SIZE] PROGMEM = {
 int period = HID_UPDATE_RATE;
 unsigned long TimeNow = 0;
 
-static const uint8_t _hidReportDescriptor[] PROGMEM = {
+static const uint8_t USB_HID_Descriptor[] PROGMEM = {
 
   0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
   0x09, 0x00,         // USAGE (Undefined)
@@ -301,7 +303,6 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
   0x09, 0x00,         //   USAGE (Undefined)
   0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
   0xc0
-
 };
 
 struct HMDPacket
@@ -312,24 +313,24 @@ struct HMDPacket
   float HMDQuatY;
   float HMDQuatZ;
 
-  uint16_t tracker1_QuatW;
-  uint16_t tracker1_QuatX;
-  uint16_t tracker1_QuatY;
-  uint16_t tracker1_QuatZ;
-
-  uint16_t tracker2_QuatW;
-  uint16_t tracker2_QuatX;
-  uint16_t tracker2_QuatY;
-  uint16_t tracker2_QuatZ;
-
-  uint16_t tracker3_QuatW;
-  uint16_t tracker3_QuatX;
-  uint16_t tracker3_QuatY;
-  uint16_t tracker3_QuatZ;
-
+  int16_t tracker1_QuatW;
+  int16_t tracker1_QuatX;
+  int16_t tracker1_QuatY;
+  int16_t tracker1_QuatZ;
   uint8_t tracker1_vBat;
+
+  int16_t tracker2_QuatW;
+  int16_t tracker2_QuatX;
+  int16_t tracker2_QuatY;
+  int16_t tracker2_QuatZ;
   uint8_t tracker2_vBat;
+
+  int16_t tracker3_QuatW;
+  int16_t tracker3_QuatX;
+  int16_t tracker3_QuatY;
+  int16_t tracker3_QuatZ;
   uint8_t tracker3_vBat;
+  
 };
 
 struct ControllerPacket
@@ -379,15 +380,18 @@ void setup() {
   
   pinMode(CALPIN,INPUT_PULLUP);
 
-  static HIDSubDescriptor node (_hidReportDescriptor, sizeof(_hidReportDescriptor));
+  static HIDSubDescriptor node (USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
   HID().AppendDescriptor(&node);
   mRes = getMres();
+  
 #ifdef SERIAL_DEBUG
   Serial.begin(38400);
   while (!Serial){;}
 #endif
+
   radio.begin();
   radio.setPayloadSize(40);
+  radio.openReadingPipe(3, trackerPipe);
   radio.openReadingPipe(2, leftCtrlPipe);
   radio.openReadingPipe(1, rightCtrlPipe);
   radio.setAutoAck(false);
@@ -485,12 +489,15 @@ void loop() {
 
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
-      radio.read(&ContData.Ctrl1_QuatW, 30);
+      radio.read(&ContData.Ctrl1_QuatW, 30);        //receive right controller data
       newCtrlData = true;
     }
     if (pipenum == 2) {
-      radio.read(&ContData.Ctrl2_QuatW, 30);
+      radio.read(&ContData.Ctrl2_QuatW, 30);        //receive left controller data
       newCtrlData = true;
+    }
+    if (pipenum == 3){
+      radio.read(&HMDData.tracker1_QuatW, 27);      //recive all 3 trackers' data
     }
   }
 
