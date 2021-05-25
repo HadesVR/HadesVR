@@ -49,13 +49,13 @@ static const char* const k_pch_Controllers_Section = "Controllers";
 static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
 static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
 
-static const char* const k_pch_Controller1_YawOffset_Float = "CTRL1YawOffset";
-static const char* const k_pch_Controller1_PitchOffset_Float = "CTRL1PitchOffset";
-static const char* const k_pch_Controller1_RollOffset_Float = "CTRL1RollOffset";
+static const char* const k_pch_Controller1_YawOffset_Float = "CTRLRightYawOffset";
+static const char* const k_pch_Controller1_PitchOffset_Float = "CTRLRightPitchOffset";
+static const char* const k_pch_Controller1_RollOffset_Float = "CTRLRightRollOffset";
 
-static const char* const k_pch_Controller2_YawOffset_Float = "CTRL2YawOffset";
-static const char* const k_pch_Controller2_PitchOffset_Float = "CTRL2PitchOffset";
-static const char* const k_pch_Controller2_RollOffset_Float = "CTRL2RollOffset";
+static const char* const k_pch_Controller2_YawOffset_Float = "CTRLLeftYawOffset";
+static const char* const k_pch_Controller2_PitchOffset_Float = "CTRLLeftPitchOffset";
+static const char* const k_pch_Controller2_RollOffset_Float = "CTRLLeftRollOffset";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,16 +65,26 @@ static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
 static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-static const char* const k_pch_Calibration_Section = "HadesVRCalibration";
+//this all goes in the steamvr.vrsettings file
+static const char* const k_pch_Calibration_Section = "HadesVR_Calibration";
 
 static const char* const k_pch_Calibration_HMDW_Float = "HMDW";
 static const char* const k_pch_Calibration_HMDY_Float = "HMDY";
 
-static const char* const k_pch_Calibration_CONT1W_Float = "CONT1W";
-static const char* const k_pch_Calibration_CONT1Y_Float = "CONT1Y";
+static const char* const k_pch_Calibration_CONT1W_Float = "CONTRightW";
+static const char* const k_pch_Calibration_CONT1Y_Float = "CONTRightY";
 
-static const char* const k_pch_Calibration_CONT2W_Float = "CONT2W";
-static const char* const k_pch_Calibration_CONT2Y_Float = "CONT2Y";
+static const char* const k_pch_Calibration_CONT2W_Float = "CONTLeftW";
+static const char* const k_pch_Calibration_CONT2Y_Float = "CONTLeftY";
+
+
+static const char* const k_pch_Calibration_TRKWaistW_Float = "TRKWaistW";
+static const char* const k_pch_Calibration_TRKWaistY_Float = "TRKWaistY";
+
+static const char* const k_pch_Calibration_TRKLeftW_Float = "TRKLeftW";
+static const char* const k_pch_Calibration_TRKLeftY_Float = "TRKLeftY";
+
+static const char* const k_pch_Calibration_TRKRightW_Float = "TRKRightW";
+static const char* const k_pch_Calibration_TRKRightY_Float = "TRKRightY";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

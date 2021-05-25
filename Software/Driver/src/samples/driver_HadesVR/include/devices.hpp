@@ -26,7 +26,9 @@
 vr::VRInputComponentHandle_t HButtonsCtrlRight[11], HAnalogCtrlRight[12];
 vr::VRInputComponentHandle_t HButtonsCtrlLeft[11], HAnalogCtrlLeft[12];
 
+THMD HMD;
 TController RightCtrl, LeftCtrl;
+TTracker WaistTrk, LeftTrk, RightTrk;
 
 static CdataHandler dH;
 
@@ -233,7 +235,7 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 
 		break;
 
-	case 10:
+	case 100:
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_WillDriftInYaw_Bool, false);
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceIsWireless_Bool, true);
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DeviceIsCharging_Bool, false);
@@ -278,6 +280,10 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 			vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_ControllerType_String, "vive_tracker_right_foot");
 			break;
 		}
+		break;
+
+	default:
+		DriverLog("[ERROR] Unable to initialize device type n° %d: Device type does not exist!", DeviceType);
 		break;
 	}
 }
@@ -466,6 +472,10 @@ void updateDevice(int DeviceType, int DeviceIndex)
 		}
 
 		break;
+
+	default:
+		DriverLog("[ERROR] Unable to update device type n° %d: Device type does not exist!", DeviceType);
+		break;
 	}
 }
 
@@ -506,6 +516,10 @@ void updateFingerTracking(int DeviceType, int DeviceIndex, vr::VRInputComponentH
 			}
 		}
 		break;
+
+	default:
+		DriverLog("[ERROR] Unable to update finger tracking on device type n° %d: Device type does not exist!", DeviceType);
+		break;
 	}
 
 	vr::VRDriverInput()->UpdateSkeletonComponent(m_skeletonHandle, vr::VRSkeletalMotionRange_WithController, m_handBones, fingerTracking::NUM_BONES);
@@ -514,12 +528,12 @@ void updateFingerTracking(int DeviceType, int DeviceIndex, vr::VRInputComponentH
 }
 
 
-std::string getDeviceSerial(int contType, int contIndex) {
+std::string getDeviceSerial(int type, int index) {
 	
-	switch (contType) 
+	switch (type) 
 	{
 	case 0:
-		if (contIndex == 1) {
+		if (index == 1) {
 			return "LHR-E217CD01";
 		}
 		else
@@ -528,7 +542,7 @@ std::string getDeviceSerial(int contType, int contIndex) {
 		}
 		break;
 	case 1:
-		if (contIndex == 1) {
+		if (index == 1) {
 			return "LHR-F94B3BD9";
 		}
 		else 
@@ -537,17 +551,17 @@ std::string getDeviceSerial(int contType, int contIndex) {
 		}
 		break;
 
-	case 10:
-		switch (contIndex) 
+	case 100:
+		switch (index) 
 		{
 		case 1:
-			return "AAA-00000000";
+			return "TRK-000WAIST";
 			break;
 		case 2:
-			return "AAA-00000001";
+			return "TRK-LEFTFOOT";
 			break;
 		case 3:
-			return "AAA-00000002";
+			return "TRK-RIGHFOOT";
 			break;
 		}
 		break;

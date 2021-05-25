@@ -74,8 +74,6 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 
 HMODULE hDll;
 
-THMD HMDdata;
-
 bool HMDConnected = false, ctrlsConnected = false, trackersConnected = false;
 
 int controllerMode, trackerMode;
@@ -369,21 +367,17 @@ public:
 		pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
 
 		if (HMDConnected) {
-
-			//hmd data
-			dH.GetHMDData(&HMDdata);
-
 			//Set head tracking rotation
 			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = HMDdata.qW;
-			HMDQuat.x = HMDdata.qX;
-			HMDQuat.y = HMDdata.qY;
-			HMDQuat.z = HMDdata.qZ;
+			HMDQuat.w = HMD.qW;
+			HMDQuat.x = HMD.qX;
+			HMDQuat.y = HMD.qY;
+			HMDQuat.z = HMD.qZ;
 			pose.qRotation = HMDQuat;
 			//Set head position tracking
-			pose.vecPosition[0] = HMDdata.X;
-			pose.vecPosition[1] = HMDdata.Z;
-			pose.vecPosition[2] = HMDdata.Y;
+			pose.vecPosition[0] = HMD.X;
+			pose.vecPosition[1] = HMD.Z;
+			pose.vecPosition[2] = HMD.Y;
 		}
 
 		return pose;
@@ -685,7 +679,7 @@ public:
 			break;
 		}
 
-		initDevice(10, TrackerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle);
+		initDevice(100, TrackerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle);
 
 		return VRInitError_None;
 	}
@@ -756,7 +750,7 @@ public:
 			TrackerWaistLastPos[1] = pose.vecPosition[1];
 			TrackerWaistLastPos[2] = pose.vecPosition[2];
 			//Rotation
-			pose.qRotation = retquat(RightCtrl.qW, RightCtrl.qX, RightCtrl.qY, RightCtrl.qZ);
+			pose.qRotation = retquat(WaistTrk.qW, WaistTrk.qX, WaistTrk.qY, WaistTrk.qZ);
 			break;
 		case 2:
 			//Left foot tracker
@@ -771,7 +765,7 @@ public:
 			TrackerLeftFootLastPos[1] = pose.vecPosition[1];
 			TrackerLeftFootLastPos[2] = pose.vecPosition[2];
 			//rotation
-			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
+			pose.qRotation = retquat(LeftTrk.qW, LeftTrk.qX, LeftTrk.qY, LeftTrk.qZ);
 			break;
 		case 3:
 			//Right foot tracker
@@ -787,7 +781,7 @@ public:
 			TrackerRightFootLastPos[2] = pose.vecPosition[2];
 
 			//rotation
-			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
+			pose.qRotation = retquat(RightTrk.qW, RightTrk.qX, RightTrk.qY, RightTrk.qZ);
 			break;
 		}
 
@@ -821,9 +815,9 @@ public:
 
 	void UpdateDeviceBattery()
 	{
-		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerWaist_t), vr::Prop_DeviceBatteryPercentage_Float, 1.f);
-		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerLeftFoot_t), vr::Prop_DeviceBatteryPercentage_Float, 1.f);
-		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerRightFoot_t), vr::Prop_DeviceBatteryPercentage_Float, 1.f);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerWaist_t), vr::Prop_DeviceBatteryPercentage_Float, WaistTrk.vBat);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerLeftFoot_t), vr::Prop_DeviceBatteryPercentage_Float, LeftTrk.vBat);
+		vr::VRProperties()->SetFloatProperty(vr::VRProperties()->TrackedDeviceToPropertyContainer(TrackerRightFoot_t), vr::Prop_DeviceBatteryPercentage_Float, RightTrk.vBat);
 	}
 
 	void ProcessEvent(const vr::VREvent_t& vrEvent)
@@ -842,7 +836,7 @@ public:
 	}
 
 	std::string GetSerialNumber() const {
-		return getDeviceSerial(10, TrackerIndex);
+		return getDeviceSerial(100, TrackerIndex);
 	}
 
 private:
@@ -884,7 +878,7 @@ private:
 	std::thread* m_ptBatteryUpdateThread;
 	bool ctrlsEnabled = false, HMDEnabled = false, trackersEnabled = false;
 	
-	C_HMDDeviceDriver *m_pNullHmdLatest = nullptr;
+	C_HMDDeviceDriver *m_pHmd = nullptr;
 
 	C_ControllerDriver *m_pControllerRight = nullptr;
 	C_ControllerDriver *m_pControllerLeft = nullptr;
@@ -947,8 +941,8 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 
 	if (HMDConnected) 
 	{
-		m_pNullHmdLatest = new C_HMDDeviceDriver();
-		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pNullHmdLatest->GetSerialNumber().c_str(), vr::TrackedDeviceClass_HMD, m_pNullHmdLatest);
+		m_pHmd = new C_HMDDeviceDriver();
+		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pHmd->GetSerialNumber().c_str(), vr::TrackedDeviceClass_HMD, m_pHmd);
 	}
 
 	if (ctrlsConnected) 
@@ -994,8 +988,8 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 void CServerDriver_Sample::Cleanup() 
 {
 	if (HMDConnected) {
-		delete m_pNullHmdLatest;
-		m_pNullHmdLatest = NULL;
+		delete m_pHmd;
+		m_pHmd = NULL;
 	}
 
 	if (ctrlsConnected) {
@@ -1058,9 +1052,11 @@ void CServerDriver_Sample::RunFrame()
 	deltaTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()) - lastMillis;
 	lastMillis = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
-	if ( m_pNullHmdLatest )
+	if ( m_pHmd )
 	{
-		m_pNullHmdLatest->RunFrame();
+		dH.GetHMDData(&HMD);
+
+		m_pHmd->RunFrame();
 	}
 	if (ctrlsConnected) 
 	{
@@ -1090,6 +1086,8 @@ void CServerDriver_Sample::RunFrame()
 	}
 	if (trackersConnected) 
 	{
+		dH.GetTrackersData(&WaistTrk, &LeftTrk, &RightTrk);
+
 		if (m_pTrackerWaist) 
 		{
 			m_pTrackerWaist->RunFrame();

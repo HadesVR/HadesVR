@@ -140,7 +140,8 @@ public:
 	void SerialStreamStart();
 	void PSMUpdate();
 	void GetHMDData(THMD* HMD);
-	void GetControllersData(TController* FirstController, TController* SecondController);
+	void GetControllersData(TController* RightController, TController* LeftController);
+	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	bool connectToPSMOVE();
 	void StartData(int32_t PID, int32_t VID);
 	void CdataHandler::stopData();
@@ -154,20 +155,23 @@ public:
 private:
 
 	_HMDData	HMDData;
-	_Controller Ctrl1Data;
-	_Controller Ctrl2Data;
-	_TrackerData Tracker1;
-	_TrackerData Tracker2;
-	_TrackerData Tracker3;
+	_Controller RightCtrlData;
+	_Controller LeftCtrlData;
+	_TrackerData TrackerWaistData;
+	_TrackerData TrackerLeftData;
+	_TrackerData TrackerRightData;
 	
 
 	uint8_t packet_buffer[64];
 
 	float lerp(const float a, const float b, const float f);
 
-	Quaternion Ctrl1Offset = Quaternion::Identity();
-	Quaternion Ctrl2Offset = Quaternion::Identity();
 	Quaternion HMDOffset = Quaternion::Identity();
+	Quaternion RightCtrlOffset = Quaternion::Identity();
+	Quaternion LeftCtrlOffset = Quaternion::Identity();
+	Quaternion WaistTrackerOffset = Quaternion::Identity();
+	Quaternion LeftTrackerOffset = Quaternion::Identity();
+	Quaternion RightTrackerOffset = Quaternion::Identity();
 
 	Quaternion CTRL1ConfigOffset = Quaternion::Identity();
 	Quaternion CTRL2ConfigOffset = Quaternion::Identity();
@@ -181,7 +185,7 @@ private:
 
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
-	PSMVector3f hmdPos, ctrl1Pos, ctrl2Pos;
+	PSMVector3f hmdPos, ctrlRightPos, ctrlLeftPos;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

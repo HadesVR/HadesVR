@@ -1,68 +1,13 @@
 #include "dataHandler.h"
 
-#define HMDQW          0
-#define HMDQX          1
-#define HMDQY          2
-#define HMDQZ          3
-#define CTRL1QW        4
-#define CTRL1QX        5
-#define CTRL1QY        6
-#define CTRL1QZ        7
-#define CTRL1BTN       8
-#define CTRL1TRIGG     9
-#define CTRL1AXISX     10
-#define CTRL1AXISY     11
-#define CTRL1TRACKY	   12
-#define CTRL1VBAT      13
-#define CTRL2QW        14
-#define CTRL2QX        15
-#define CTRL2QY        16
-#define CTRL2QZ        17
-#define CTRL2BTN       18
-#define CTRL2TRIGG     19
-#define CTRL2AXISX     20
-#define CTRL2AXISY     21
-#define CTRL2TRACKY	   22
-#define CTRL2VBAT      23
-#define CHECKSUM       24
-
-#define SUCCESS 0
-#define FAILURE 1
-
 void CdataHandler::SetCentering()
 {
+	/// <summary>
+	/// HMD
+	/// </summary>
+
 	HMDOffset.W = HMDData.qW;
 	HMDOffset.Y = -HMDData.qY;
-
-	Ctrl1Offset.W = Ctrl1Data.qW;
-	Ctrl1Offset.Y = -Ctrl1Data.qY;
-
-	Ctrl2Offset.W = Ctrl2Data.qW;
-	Ctrl2Offset.Y = -Ctrl2Data.qY;
-
-	if (Ctrl1Offset.W == 0 && Ctrl1Offset.Y == 0) {
-		Ctrl1Offset.W = 1;
-		Ctrl1Offset.Y = 0;
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
-	}
-	else {
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
-	}
-
-
-	if (Ctrl2Offset.W == 0 && Ctrl2Offset.Y == 0) {
-		Ctrl2Offset.W = 1;
-		Ctrl2Offset.Y = 0;
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
-	}
-	else {
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
-		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
-	}
-
 
 	if (HMDOffset.W == 0 && HMDOffset.Y == 0) {
 		HMDOffset.W = 1;
@@ -74,6 +19,86 @@ void CdataHandler::SetCentering()
 		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float, HMDOffset.W);
 		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float, HMDOffset.Y);
 	}
+
+	/// <summary>
+	///				Controllers
+	/// </summary>
+
+	RightCtrlOffset.W = RightCtrlData.qW;
+	RightCtrlOffset.Y = -RightCtrlData.qY;
+
+	LeftCtrlOffset.W = LeftCtrlData.qW;
+	LeftCtrlOffset.Y = -LeftCtrlData.qY;
+
+	if (RightCtrlOffset.W == 0 && RightCtrlOffset.Y == 0) {
+		RightCtrlOffset.W = 1;
+		RightCtrlOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, RightCtrlOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, RightCtrlOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, RightCtrlOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, RightCtrlOffset.Y);
+	}
+
+	if (LeftCtrlOffset.W == 0 && LeftCtrlOffset.Y == 0) {
+		LeftCtrlOffset.W = 1;
+		LeftCtrlOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, LeftCtrlOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, LeftCtrlOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, LeftCtrlOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, LeftCtrlOffset.Y);
+	}
+
+	/// <summary>
+	///					Trackers
+	/// </summary>
+
+	WaistTrackerOffset.W = TrackerWaistData.qW;
+	WaistTrackerOffset.Y = -TrackerWaistData.qY;
+
+	LeftTrackerOffset.W = TrackerLeftData.qW;
+	LeftTrackerOffset.Y = -TrackerLeftData.qY;
+
+	RightTrackerOffset.W = TrackerRightData.qW;
+	RightTrackerOffset.Y = -TrackerRightData.qY;
+
+	if (WaistTrackerOffset.W == 0 && WaistTrackerOffset.Y == 0) {
+		WaistTrackerOffset.W = 1;
+		WaistTrackerOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistW_Float, WaistTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistY_Float, WaistTrackerOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistW_Float, WaistTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistY_Float, WaistTrackerOffset.Y);
+	}
+
+	if (LeftTrackerOffset.W == 0 && LeftTrackerOffset.Y == 0) {
+		LeftTrackerOffset.W = 1;
+		LeftTrackerOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftW_Float, LeftTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftY_Float, LeftTrackerOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftW_Float, LeftTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftY_Float, LeftTrackerOffset.Y);
+	}
+
+	if (RightTrackerOffset.W == 0 && RightTrackerOffset.Y == 0) {
+		RightTrackerOffset.W = 1;
+		RightTrackerOffset.Y = 0;
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float, RightTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float, RightTrackerOffset.Y);
+	}
+	else {
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float, RightTrackerOffset.W);
+		vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float, RightTrackerOffset.Y);
+	}
+
+
 }
 
 inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat, Quaternion configOffset)
@@ -108,56 +133,56 @@ void CdataHandler::ReadHIDData()
 				HMDData.qY = DataHMD->HMDQuatY;
 				HMDData.qZ = DataHMD->HMDQuatZ;
 
-				Tracker1.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
-				Tracker1.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
-				Tracker1.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
-				Tracker1.qZ = (float)(DataHMD->tracker1_QuatZ) / 32767;
-				Tracker1.vBat = (float)(DataHMD->tracker1_vBat) / 255;
+				TrackerWaistData.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
+				TrackerWaistData.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
+				TrackerWaistData.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
+				TrackerWaistData.qZ = (float)(DataHMD->tracker1_QuatZ) / 32767;
+				TrackerWaistData.vBat = (float)(DataHMD->tracker1_vBat) / 255;
 
-				Tracker2.qW = (float)(DataHMD->tracker2_QuatW) / 32767;
-				Tracker2.qX = (float)(DataHMD->tracker2_QuatX) / 32767;
-				Tracker2.qY = (float)(DataHMD->tracker2_QuatY) / 32767;
-				Tracker2.qZ = (float)(DataHMD->tracker2_QuatZ) / 32767;
-				Tracker2.vBat = (float)(DataHMD->tracker2_vBat) / 255;
+				TrackerLeftData.qW = (float)(DataHMD->tracker2_QuatW) / 32767;
+				TrackerLeftData.qX = (float)(DataHMD->tracker2_QuatX) / 32767;
+				TrackerLeftData.qY = (float)(DataHMD->tracker2_QuatY) / 32767;
+				TrackerLeftData.qZ = (float)(DataHMD->tracker2_QuatZ) / 32767;
+				TrackerLeftData.vBat = (float)(DataHMD->tracker2_vBat) / 255;
 
-				Tracker3.qW = (float)(DataHMD->tracker3_QuatW) / 32767;
-				Tracker3.qX = (float)(DataHMD->tracker3_QuatX) / 32767;
-				Tracker3.qY = (float)(DataHMD->tracker3_QuatY) / 32767;
-				Tracker3.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
-				Tracker3.vBat = (float)(DataHMD->tracker3_vBat) / 255;
+				TrackerRightData.qW = (float)(DataHMD->tracker3_QuatW) / 32767;
+				TrackerRightData.qX = (float)(DataHMD->tracker3_QuatX) / 32767;
+				TrackerRightData.qY = (float)(DataHMD->tracker3_QuatY) / 32767;
+				TrackerRightData.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
+				TrackerRightData.vBat = (float)(DataHMD->tracker3_vBat) / 255;
 				break;
 			case 2:
-				Ctrl1Data.qW = DataCtrl->Ctrl1_QuatW;
-				Ctrl1Data.qX = DataCtrl->Ctrl1_QuatX;
-				Ctrl1Data.qY = DataCtrl->Ctrl1_QuatY;
-				Ctrl1Data.qZ = DataCtrl->Ctrl1_QuatZ;
-				Ctrl1Data.Buttons = DataCtrl->Ctrl1_Buttons;
-				Ctrl1Data.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255;
-				Ctrl1Data.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127;
-				Ctrl1Data.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127;
-				Ctrl1Data.TrackpY = (float)(DataCtrl->Ctrl1_trackY) / 127;
-				Ctrl1Data.vBat = (float)(DataCtrl->Ctrl1_vBat) / 255;
-				Ctrl1Data.FingThumb = (float)(DataCtrl->Ctrl1_THUMB) / 255;
-				Ctrl1Data.FingIndex = (float)(DataCtrl->Ctrl1_INDEX) / 255;
-				Ctrl1Data.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255;
-				Ctrl1Data.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255;
-				Ctrl1Data.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255;
+				RightCtrlData.qW = DataCtrl->Ctrl1_QuatW;
+				RightCtrlData.qX = DataCtrl->Ctrl1_QuatX;
+				RightCtrlData.qY = DataCtrl->Ctrl1_QuatY;
+				RightCtrlData.qZ = DataCtrl->Ctrl1_QuatZ;
+				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
+				RightCtrlData.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255;
+				RightCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127;
+				RightCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127;
+				RightCtrlData.TrackpY = (float)(DataCtrl->Ctrl1_trackY) / 127;
+				RightCtrlData.vBat = (float)(DataCtrl->Ctrl1_vBat) / 255;
+				RightCtrlData.FingThumb = (float)(DataCtrl->Ctrl1_THUMB) / 255;
+				RightCtrlData.FingIndex = (float)(DataCtrl->Ctrl1_INDEX) / 255;
+				RightCtrlData.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255;
+				RightCtrlData.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255;
+				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255;
 
-				Ctrl2Data.qW = DataCtrl->Ctrl2_QuatW;
-				Ctrl2Data.qX = DataCtrl->Ctrl2_QuatX;
-				Ctrl2Data.qY = DataCtrl->Ctrl2_QuatY;
-				Ctrl2Data.qZ = DataCtrl->Ctrl2_QuatZ;
-				Ctrl2Data.Buttons = DataCtrl->Ctrl2_Buttons;
-				Ctrl2Data.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255;
-				Ctrl2Data.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127;
-				Ctrl2Data.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127;
-				Ctrl2Data.TrackpY = (float)(DataCtrl->Ctrl2_trackY) / 127;
-				Ctrl2Data.vBat = (float)(DataCtrl->Ctrl2_vBat) / 255;
-				Ctrl2Data.FingThumb = (float)(DataCtrl->Ctrl2_THUMB) / 255;
-				Ctrl2Data.FingIndex = (float)(DataCtrl->Ctrl2_INDEX) / 255;
-				Ctrl2Data.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255;
-				Ctrl2Data.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
-				Ctrl2Data.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
+				LeftCtrlData.qW = DataCtrl->Ctrl2_QuatW;
+				LeftCtrlData.qX = DataCtrl->Ctrl2_QuatX;
+				LeftCtrlData.qY = DataCtrl->Ctrl2_QuatY;
+				LeftCtrlData.qZ = DataCtrl->Ctrl2_QuatZ;
+				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
+				LeftCtrlData.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255;
+				LeftCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127;
+				LeftCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127;
+				LeftCtrlData.TrackpY = (float)(DataCtrl->Ctrl2_trackY) / 127;
+				LeftCtrlData.vBat = (float)(DataCtrl->Ctrl2_vBat) / 255;
+				LeftCtrlData.FingThumb = (float)(DataCtrl->Ctrl2_THUMB) / 255;
+				LeftCtrlData.FingIndex = (float)(DataCtrl->Ctrl2_INDEX) / 255;
+				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255;
+				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
+				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
 				break;
 			}
 		}
@@ -166,13 +191,19 @@ void CdataHandler::ReadHIDData()
 
 void CdataHandler::PSMUpdate()
 {
-	while (PSMConnected && HMDAllocated && ctrl1Allocated && ctrl2Allocated) {
+	while (PSMConnected) {
 		
 		PSM_Update();
 
-		PSM_GetHmdPosition(hmdList.hmd_id[0], &hmdPos);
-		PSM_GetControllerPosition(controllerList.controller_id[0], &ctrl1Pos);
-		PSM_GetControllerPosition(controllerList.controller_id[1], &ctrl2Pos);
+		if (HMDAllocated) {
+			PSM_GetHmdPosition(hmdList.hmd_id[0], &hmdPos);
+		}
+		if (ctrl1Allocated) {
+			PSM_GetControllerPosition(controllerList.controller_id[0], &ctrlRightPos);
+		}
+		if (ctrl2Allocated) {
+			PSM_GetControllerPosition(controllerList.controller_id[1], &ctrlLeftPos);
+		}
 
 	}
 }
@@ -205,70 +236,124 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		SetCentering();
 }
 
-void CdataHandler::GetControllersData(TController* FirstController, TController* SecondController)
+void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
 
-		Quaternion Ctrl1Quat = SetOffsetQuat(Ctrl1Data.qW, Ctrl1Data.qX, Ctrl1Data.qY, Ctrl1Data.qZ, Ctrl1Offset, CTRL1ConfigOffset);
-		Quaternion Ctrl2Quat = SetOffsetQuat(Ctrl2Data.qW, Ctrl2Data.qX, Ctrl2Data.qY, Ctrl2Data.qZ, Ctrl2Offset, CTRL2ConfigOffset);
+		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.qW, RightCtrlData.qX, RightCtrlData.qY, RightCtrlData.qZ, RightCtrlOffset, CTRL1ConfigOffset);
+		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.qW, LeftCtrlData.qX, LeftCtrlData.qY, LeftCtrlData.qZ, LeftCtrlOffset, CTRL2ConfigOffset);
 		
-		FirstController->qW = Ctrl1Quat.W;
-		FirstController->qX = Ctrl1Quat.X;
-		FirstController->qY = Ctrl1Quat.Y;
-		FirstController->qZ = Ctrl1Quat.Z;
+		RightController->qW = CtrlRightQuat.W;
+		RightController->qX = CtrlRightQuat.X;
+		RightController->qY = CtrlRightQuat.Y;
+		RightController->qZ = CtrlRightQuat.Z;
 
-		FirstController->Buttons  = Ctrl1Data.Buttons;
-		FirstController->Trigger  = Ctrl1Data.Trigger;
-		FirstController->JoyAxisX = Ctrl1Data.JoyAxisX;
-		FirstController->JoyAxisY = Ctrl1Data.JoyAxisY;
-		FirstController->TrackpY  = Ctrl1Data.TrackpY;
-		FirstController->vBat     = Ctrl1Data.vBat;
+		RightController->Buttons  = RightCtrlData.Buttons;
+		RightController->Trigger  = RightCtrlData.Trigger;
+		RightController->JoyAxisX = RightCtrlData.JoyAxisX;
+		RightController->JoyAxisY = RightCtrlData.JoyAxisY;
+		RightController->TrackpY  = RightCtrlData.TrackpY;
+		RightController->vBat     = RightCtrlData.vBat;
 
-		FirstController->FingThumb = Ctrl1Data.FingThumb;
-		FirstController->FingIndex = Ctrl1Data.FingIndex;
-		FirstController->FingMiddl = Ctrl1Data.FingMiddl;
-		FirstController->FingRing  = Ctrl1Data.FingRing;
-		FirstController->FingPinky = Ctrl1Data.FingPinky;
+		RightController->FingThumb = RightCtrlData.FingThumb;
+		RightController->FingIndex = RightCtrlData.FingIndex;
+		RightController->FingMiddl = RightCtrlData.FingMiddl;
+		RightController->FingRing  = RightCtrlData.FingRing;
+		RightController->FingPinky = RightCtrlData.FingPinky;
 
 
-		SecondController->qW = Ctrl2Quat.W;
-		SecondController->qX = Ctrl2Quat.X;
-		SecondController->qY = Ctrl2Quat.Y;
-		SecondController->qZ = Ctrl2Quat.Z;
+		LeftController->qW = CtrlLeftQuat.W;
+		LeftController->qX = CtrlLeftQuat.X;
+		LeftController->qY = CtrlLeftQuat.Y;
+		LeftController->qZ = CtrlLeftQuat.Z;
 
-		SecondController->Buttons  = Ctrl2Data.Buttons;
-		SecondController->Trigger  = Ctrl2Data.Trigger;
-		SecondController->JoyAxisX = Ctrl2Data.JoyAxisX;
-		SecondController->JoyAxisY = Ctrl2Data.JoyAxisY;
-		SecondController->TrackpY  = Ctrl2Data.TrackpY;
-		SecondController->vBat     = Ctrl2Data.vBat;
+		LeftController->Buttons  = LeftCtrlData.Buttons;
+		LeftController->Trigger  = LeftCtrlData.Trigger;
+		LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;
+		LeftController->JoyAxisY = LeftCtrlData.JoyAxisY;
+		LeftController->TrackpY  = LeftCtrlData.TrackpY;
+		LeftController->vBat     = LeftCtrlData.vBat;
 
-		SecondController->FingThumb = Ctrl2Data.FingThumb;
-		SecondController->FingIndex = Ctrl2Data.FingIndex;
-		SecondController->FingMiddl = Ctrl2Data.FingMiddl;
-		SecondController->FingRing  = Ctrl2Data.FingRing;
-		SecondController->FingPinky = Ctrl2Data.FingPinky;
+		LeftController->FingThumb = LeftCtrlData.FingThumb;
+		LeftController->FingIndex = LeftCtrlData.FingIndex;
+		LeftController->FingMiddl = LeftCtrlData.FingMiddl;
+		LeftController->FingRing  = LeftCtrlData.FingRing;
+		LeftController->FingPinky = LeftCtrlData.FingPinky;
 
 		if (PSMConnected) {		//PSM POSITION
 
-			FirstController->X = ctrl1Pos.x * k_fScalePSMoveAPIToMeters;
-			FirstController->Y = ctrl1Pos.z * k_fScalePSMoveAPIToMeters;
-			FirstController->Z = ctrl1Pos.y * k_fScalePSMoveAPIToMeters;
+			RightController->X = ctrlRightPos.x * k_fScalePSMoveAPIToMeters;
+			RightController->Y = ctrlRightPos.z * k_fScalePSMoveAPIToMeters;
+			RightController->Z = ctrlRightPos.y * k_fScalePSMoveAPIToMeters;
 
-			SecondController->X = ctrl2Pos.x * k_fScalePSMoveAPIToMeters;
-			SecondController->Y = ctrl2Pos.z * k_fScalePSMoveAPIToMeters;
-			SecondController->Z = ctrl2Pos.y * k_fScalePSMoveAPIToMeters;
+			LeftController->X = ctrlLeftPos.x * k_fScalePSMoveAPIToMeters;
+			LeftController->Y = ctrlLeftPos.z * k_fScalePSMoveAPIToMeters;
+			LeftController->Z = ctrlLeftPos.y * k_fScalePSMoveAPIToMeters;
 
 		}
 		else {
-			FirstController->X = 0.1;
-			FirstController->Y = -0.3;
-			FirstController->Z = -0.2;
+			RightController->X = 0.1;
+			RightController->Y = -0.3;
+			RightController->Z = -0.2;
 
-			SecondController->X = -0.1;
-			SecondController->Y = -0.3;
-			SecondController->Z = -0.2;
+			LeftController->X = -0.1;
+			LeftController->Y = -0.3;
+			LeftController->Z = -0.2;
 		}
+	}
+}
+
+void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker) 
+{
+	if (HIDConnected) {
+		Quaternion TRKWaistQuat = SetOffsetQuat(TrackerWaistData.qW, TrackerWaistData.qX, TrackerWaistData.qY, TrackerWaistData.qZ, WaistTrackerOffset, Quaternion::Identity());
+		Quaternion TRKLeftQuat = SetOffsetQuat(TrackerLeftData.qW, TrackerLeftData.qX, TrackerLeftData.qY, TrackerLeftData.qZ, LeftTrackerOffset, Quaternion::Identity());
+		Quaternion TRKRightQuat = SetOffsetQuat(TrackerRightData.qW, TrackerRightData.qX, TrackerRightData.qY, TrackerRightData.qZ, RightTrackerOffset, Quaternion::Identity());
+
+		waistTracker->qW = TRKWaistQuat.W;
+		waistTracker->qX = TRKWaistQuat.X;
+		waistTracker->qY = TRKWaistQuat.Y;
+		waistTracker->qZ = TRKWaistQuat.Z;
+		waistTracker->vBat = TrackerWaistData.vBat;
+
+		leftTracker->qW = TRKLeftQuat.W;
+		leftTracker->qX = TRKLeftQuat.X;
+		leftTracker->qY = TRKLeftQuat.Y;
+		leftTracker->qZ = TRKLeftQuat.Z;
+		leftTracker->vBat = TrackerLeftData.vBat;
+
+		rightTracker->qW = TRKRightQuat.W;
+		rightTracker->qX = TRKRightQuat.X;
+		rightTracker->qY = TRKRightQuat.Y;
+		rightTracker->qZ = TRKRightQuat.Z;
+		rightTracker->vBat = TrackerRightData.vBat;
+	}
+
+	if (PSMConnected) {
+		waistTracker->X = 0;
+		waistTracker->Y = 0;
+		waistTracker->Z = 0;
+											//todo: psm stuff
+		leftTracker->X = 0;
+		leftTracker->Y = 0;
+		leftTracker->Z = 0;
+
+		rightTracker->X = 0;
+		rightTracker->Y = 0;
+		rightTracker->Z = 0;
+	}
+	else {
+		waistTracker->X = 0;
+		waistTracker->Y = 0;
+		waistTracker->Z = 0;
+
+		leftTracker->X = 0;
+		leftTracker->Y = 0;
+		leftTracker->Z = 0;
+
+		rightTracker->X = 0;
+		rightTracker->Y = 0;
+		rightTracker->Z = 0;
 	}
 }
 
@@ -360,38 +445,69 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		HIDConnected = true;
 		pHIDthread = new std::thread(this->ReadHIDEnter, this);
 
+
+		HMDConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * 3.14159265358979323846 / 180);
+
 		CTRL1ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller1_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller1_RollOffset_Float) * 3.14159265358979323846 / 180);
 		CTRL2ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Controller2_RollOffset_Float) * 3.14159265358979323846 / 180);
-
-		HMDConfigOffset =  Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * 3.14159265358979323846 / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * 3.14159265358979323846 / 180);
+		
 
 		HMDOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float);
 		HMDOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float);
 
-		Ctrl1Offset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float);
-		Ctrl1Offset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float);
+		RightCtrlOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float);
+		RightCtrlOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float);
 
-		Ctrl2Offset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float);
-		Ctrl2Offset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float);
+		LeftCtrlOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float);
+		LeftCtrlOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float);
 
-		if (Ctrl1Offset.W == 0 && Ctrl1Offset.Y == 0) {
-			Ctrl1Offset.W = 1;
-			Ctrl1Offset.Y = 0;
-			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, Ctrl1Offset.W);
-			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, Ctrl1Offset.Y);
-		}
-		if (Ctrl2Offset.W == 0 && Ctrl2Offset.Y == 0) {
-			Ctrl2Offset.W = 1;
-			Ctrl2Offset.Y = 0;
-			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, Ctrl2Offset.W);
-			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, Ctrl2Offset.Y);
-		}
+		WaistTrackerOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistW_Float);
+		WaistTrackerOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistY_Float);
+
+		LeftTrackerOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftW_Float);
+		LeftTrackerOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftY_Float);
+
+		RightTrackerOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float);
+		RightTrackerOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float);
+
+
 		if (HMDOffset.W == 0 && HMDOffset.Y == 0) {
 			HMDOffset.W = 1;
 			HMDOffset.Y = 0;
 			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float, HMDOffset.W);
 			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float, HMDOffset.Y);
 		}
+		if (RightCtrlOffset.W == 0 && RightCtrlOffset.Y == 0) {
+			RightCtrlOffset.W = 1;
+			RightCtrlOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1W_Float, RightCtrlOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT1Y_Float, RightCtrlOffset.Y);
+		}
+		if (LeftCtrlOffset.W == 0 && LeftCtrlOffset.Y == 0) {
+			LeftCtrlOffset.W = 1;
+			LeftCtrlOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2W_Float, LeftCtrlOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONT2Y_Float, LeftCtrlOffset.Y);
+		}
+		if (WaistTrackerOffset.W == 0 && WaistTrackerOffset.Y == 0) {
+			WaistTrackerOffset.W = 1;
+			WaistTrackerOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistW_Float, WaistTrackerOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistY_Float, WaistTrackerOffset.Y);
+		}
+		if (LeftTrackerOffset.W == 0 && LeftTrackerOffset.Y == 0) {
+			LeftTrackerOffset.W = 1;
+			LeftTrackerOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftW_Float, LeftTrackerOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKLeftY_Float, LeftTrackerOffset.Y);
+		}
+		if (RightTrackerOffset.W == 0 && RightTrackerOffset.Y == 0) {
+			RightTrackerOffset.W = 1;
+			RightTrackerOffset.Y = 0;
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float, RightTrackerOffset.W);
+			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float, RightTrackerOffset.Y);
+		}
+
 
 		DriverLog("[Settings] Loaded Calibration settings");
 	}
