@@ -31,7 +31,11 @@ You can use the setup in:
 * Yes this thing plays beatsaber though I'm not sure how viable it is for expert+ diff...
 
 # Custom hardware
+
+## ⚠️Important disclaimer: the index controller is not an easy build: it relies on a lot of SMD components, stuff has to be assambled in order or else you won't be able to flash the bootloader and the 3d printable parts are all a bit crappy and hard to fit together properly. With that being said:
+
 Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#Controllers), for more info on the custom pcbs and 3d printable parts!
+
 
 Or maybe you want to design your own, check out the [pinouts](docs/ControllerPinouts.md) for building the controllers with regular Arduino boards!
 
