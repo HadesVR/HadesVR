@@ -32,7 +32,9 @@ You can use the setup in:
 
 # Custom hardware
 
-## ⚠️Important disclaimer: the index controller is not an easy build: it relies on a lot of SMD components, stuff has to be assambled in order or else you won't be able to flash the bootloader and the 3d printable parts are all a bit crappy and hard to fit together properly. With that being said:
+### ⚠️Important disclaimer: the index controller is not an easy build: it relies on a lot of SMD components, stuff has to be assambled in order or else you won't be able to flash the bootloader and the 3d printable parts are all a bit crappy and hard to fit together properly. 
+
+#### I'm also working on an easier to build type of controllers that emulate the vive wands, made only out of through hole components though it's not ready yet (mainly missing the 3d printable shell at the moment). With that being said:
 
 Thinking of building your own set of controllers? check out the [guide](docs/DocsIndex.md#Controllers), for more info on the custom pcbs and 3d printable parts!
 
