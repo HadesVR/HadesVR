@@ -32,6 +32,9 @@ You can use the setup in:
 
 # Custom hardware
 
+As of right now the custom hardware available is:
+* [HadesVR Basic HMD PCB](https://github.com/HadesVR/Basic-HMD-PCB) 
+
 ### ⚠️Important disclaimer: the index controller is not an easy build: it relies on a lot of SMD components, stuff has to be assambled in order or else you won't be able to flash the bootloader and the 3d printable parts are all a bit crappy and hard to fit together properly. 
 
 #### I'm also working on an easier to build type of controllers that emulate the vive wands, made only out of through hole components though it's not ready yet (mainly missing the 3d printable shell at the moment). With that being said:
