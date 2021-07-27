@@ -22,18 +22,15 @@ TODO: Hyperlink everything and create the docs etc.
 - [Uploading the firmware](RFReceiver.md#uploading-the-firmware)
 - [Getting HID values](RFReceiver.md#getting-hid-values)
 
-## Controllers
+## [Controllers](Controllers.md)
 
-- Controller types
-- Wand controller
+- [Wand controller]
     - Hardware needed
     - Circuit schematic
-    - Joystick calibration
 - Index Controller
     - Hardware needed
     - Circuit schematic
-    - Joystick calibration
-    - Capacitive sensor calibration
+- Calibration
 
 
 ## Trackers
