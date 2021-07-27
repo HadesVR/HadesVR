@@ -23,7 +23,7 @@
 //==========================================================================================================
 
 #define MPU9250_ADDRESS     0x68            //ADO 0
-#define CALPIN              5               //pin to start mag calibration at power on
+#define CALPIN              4               //pin to start mag calibration at power on
 
 #define SysPin              4
 #define MenuPin             3
