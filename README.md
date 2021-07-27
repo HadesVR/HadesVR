@@ -41,7 +41,7 @@ As of right now the custom hardware available is:
 
 #### I'm also working on an easier to build type of controllers that emulate the vive wands, made only out of through hole components though it's not ready yet (mainly missing the 3d printable shell at the moment). With that being said:
 
-Or maybe you want to DIY your own controllers? check out the [Controllers docs](DocsIndex.md#Controllers) for building the controllers with regular Arduino boards!
+Or maybe you want to DIY your own controllers? check out the [Controllers docs](DocsIndex.md#controllers) for building the controllers with regular Arduino boards!
 
 # Demos
 
