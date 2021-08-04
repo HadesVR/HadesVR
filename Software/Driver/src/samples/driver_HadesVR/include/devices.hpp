@@ -13,11 +13,11 @@
 #define INDEX_TrackpadTouch    0x0040
 #define INDEX_ThumbStickTouch  0x0080
 
-#define HTC_SysClick		0x0001
-#define HTC_MenuClick		0x0004
-#define HTC_ThumbstickClick 0x0020
-#define HTC_GripClick		0x0080
-#define HTC_ThumbstickTouch 0x0800
+#define HTC_SysClick        0x0001
+#define HTC_MenuClick		0x0002
+#define HTC_ThumbstickClick 0x0004
+#define HTC_GripClick		0x0008
+#define HTC_ThumbstickTouch 0x0010
 
 #include "openvr/openvr_driver.h"
 #include "dataHandler.h"
