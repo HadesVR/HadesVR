@@ -79,7 +79,8 @@ float dmpHDG = 0;
 float offsetHDG = 0;
 float DMPquat[4];
 
-static float ax, ay, az, mx, my, mz;
+static float mx, my, mz;
+static short ax, ay, az;
 
 enum class MFS { M14BITS, M16BITS }; // 0.6mG, 0.15mG per LSB
 static float mRes;
@@ -298,20 +299,23 @@ const unsigned char dmp_memory[DMP_CODE_SIZE] PROGMEM = {
 
 #define Mmode 0x06                    // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 
-#define HTC_SysClick    0x0001
-#define HTC_MenuClick   0x0004
-#define HTC_ThumbstickClick 0x0020
-#define HTC_GripClick   0x0080
-#define HTC_ThumbstickTouch 0x0800
+#define HTC_SysClick        0x0001
+#define HTC_MenuClick       0x0002
+#define HTC_ThumbstickClick 0x0004
+#define HTC_GripClick       0x0008
+#define HTC_ThumbstickTouch 0x0010
 
 int period = RADIO_DATA_RATE;
 unsigned long TimeNow = 0;
 
 struct ctrlData {
-  float qW;
-  float qX;
-  float qY;
-  float qZ;
+  int16_t qW;
+  int16_t qX;
+  int16_t qY;
+  int16_t qZ;
+  int16_t accX;
+  int16_t accY;
+  int16_t accZ;
   uint32_t BTN;
   uint8_t  trigg;
   int8_t  axisX;
@@ -475,10 +479,13 @@ void loop() {
 
     data.BTN = btn;
     data.vBAT = map(analogRead(VbatPin), 787, BatLevelMax, 0, 255);
-    data.qW = q._f.w;
-    data.qX = q._f.y;
-    data.qY = q._f.z;
-    data.qZ = q._f.x;
+    data.qW = (int16_t)(q._f.w * 32767.f);
+    data.qX = (int16_t)(q._f.y * 32767.f);
+    data.qY = (int16_t)(q._f.z * 32767.f);
+    data.qZ = (int16_t)(q._f.x * 32767.f);
+    data.accX = ax;
+    data.accY = ay;
+    data.accZ = az;
     radio.stopListening();
     radio.write(&data, sizeof(ctrlData));
     radio.startListening();
@@ -840,15 +847,15 @@ int readDMP(long *quat)
             ((long)fifo_data[14] << 8) | fifo_data[15];
   ii += 16;
 
-  accel[0] = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
-  accel[1] = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
-  accel[2] = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
+  ay = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
+  ax = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
+  az = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
   ii += 6;
-
+/*
   ax = (float)accel[1] * 4.0 / 32768.0;
   ay = (float)accel[0] * 4.0 / 32768.0;
   az = (float)accel[2] * 4.0 / 32768.0;
-
+*/
   return 0;
 }
 
