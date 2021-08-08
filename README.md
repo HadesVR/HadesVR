@@ -33,7 +33,11 @@ You can use the setup in:
 # Custom hardware
 
 As of right now the custom hardware available is:
+
+### ⚠️Both the Basic HMD and Wand Controllers are missing the 3d printable parts right now. 
 * [HadesVR Basic HMD PCB](https://github.com/HadesVR/Basic-HMD-PCB) 
+* [HadesVR Wand Controllers](https://github.com/HadesVR/Wand-Controller)
+
 
 ### ⚠️Important disclaimer: the index controller is not an easy build: it relies on a lot of SMD components, stuff has to be assambled in order or else you won't be able to flash the bootloader and the 3d printable parts are all a bit crappy and hard to fit together properly. 
 
