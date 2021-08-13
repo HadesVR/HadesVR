@@ -33,7 +33,7 @@ const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
 const uint64_t trackerPipe = 0xF0F0F0F0C3LL;
 
-#define SERIAL_DEBUG
+//#define SERIAL_DEBUG
 //==========================================================================================================
 
 
@@ -507,7 +507,7 @@ void loop() {
     if (pipenum == 1) {
       radio.read(&ContData.Ctrl1_QuatW, 28);        //receive right controller data
       newCtrlData = true;
-    }
+    } 
     if (pipenum == 2) {
       radio.read(&ContData.Ctrl2_QuatW, 28);        //receive left controller data
       newCtrlData = true;
@@ -522,8 +522,6 @@ void loop() {
     HID().SendReport(1, &ContData, 63);
     newCtrlData = false;
   }
-
-
 }
 
 void initMPU()
