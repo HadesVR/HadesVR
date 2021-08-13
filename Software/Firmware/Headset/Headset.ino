@@ -33,8 +33,7 @@ const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
 const uint64_t trackerPipe = 0xF0F0F0F0C3LL;
 
-//#define SERIAL_DEBUG
-#define HID_UPDATE_RATE     10              //send data every 10ms for a 100hz update rate.
+#define SERIAL_DEBUG
 //==========================================================================================================
 
 
@@ -285,9 +284,6 @@ const unsigned char dmp_memory[DMP_CODE_SIZE] PROGMEM = {
 
 #define Mmode 0x06                    // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 
-int period = HID_UPDATE_RATE;
-unsigned long TimeNow = 0;
-
 static const uint8_t USB_HID_Descriptor[] PROGMEM = {
 
   0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
@@ -313,24 +309,33 @@ struct HMDPacket
   float HMDQuatY;
   float HMDQuatZ;
 
+  int16_t accX;
+  int16_t accY;
+  int16_t accZ;
+
+  uint16_t HMDData;
+
   int16_t tracker1_QuatW;
   int16_t tracker1_QuatX;
   int16_t tracker1_QuatY;
   int16_t tracker1_QuatZ;
   uint8_t tracker1_vBat;
+  uint8_t tracker1_data;
 
   int16_t tracker2_QuatW;
   int16_t tracker2_QuatX;
   int16_t tracker2_QuatY;
   int16_t tracker2_QuatZ;
   uint8_t tracker2_vBat;
+  uint8_t tracker2_data;
 
   int16_t tracker3_QuatW;
   int16_t tracker3_QuatX;
   int16_t tracker3_QuatY;
   int16_t tracker3_QuatZ;
   uint8_t tracker3_vBat;
-  
+  uint8_t tracker3_data;
+
 };
 
 struct ControllerPacket
@@ -343,7 +348,7 @@ struct ControllerPacket
   int16_t Ctrl1_AccelX;
   int16_t Ctrl1_AccelY;
   int16_t Ctrl1_AccelZ;
-  uint32_t Ctrl1_Buttons;
+  uint16_t Ctrl1_Buttons;
   uint8_t Ctrl1_Trigger;
   int8_t Ctrl1_axisX;
   int8_t Ctrl1_axisY;
@@ -354,6 +359,7 @@ struct ControllerPacket
   uint8_t Ctrl1_MIDDLE;
   uint8_t Ctrl1_RING;
   uint8_t Ctrl1_PINKY;
+  uint16_t Ctrl1_Data;
 
   int16_t Ctrl2_QuatW;
   int16_t Ctrl2_QuatX;
@@ -362,7 +368,7 @@ struct ControllerPacket
   int16_t Ctrl2_AccelX;
   int16_t Ctrl2_AccelY;
   int16_t Ctrl2_AccelZ;
-  uint32_t Ctrl2_Buttons;
+  uint16_t Ctrl2_Buttons;
   uint8_t Ctrl2_Trigger;
   int8_t Ctrl2_axisX;
   int8_t Ctrl2_axisY;
@@ -373,6 +379,7 @@ struct ControllerPacket
   uint8_t Ctrl2_MIDDLE;
   uint8_t Ctrl2_RING;
   uint8_t Ctrl2_PINKY;
+  uint16_t Ctrl2_Data;
 };
 
 
@@ -383,16 +390,18 @@ bool newCtrlData = false;
 RF24 radio(9, 10); // CE, CSN on Blue Pill
 
 void setup() {
-  
-  pinMode(CALPIN,INPUT_PULLUP);
+
+  pinMode(CALPIN, INPUT_PULLUP);
 
   static HIDSubDescriptor node (USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
   HID().AppendDescriptor(&node);
   mRes = getMres();
-  
+
 #ifdef SERIAL_DEBUG
   Serial.begin(38400);
-  while (!Serial){;}
+  while (!Serial) {
+    ;
+  }
 #endif
 
   radio.begin();
@@ -486,7 +495,8 @@ void loop() {
   uint8_t pipenum;
   updateMPU();
 
-//  Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
+  //  Serial.print("accX: "); Serial.print((float)HMDData.accX * 4.0 / 32768.0); Serial.print(" accY: "); Serial.print((float)HMDData.accY * 4.0 / 32768.0); Serial.print(" accZ: "); Serial.println((float)HMDData.accZ * 4.0 / 32768.0);
+  //  Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
 
   HMDData.HMDQuatW = q._f.w;
   HMDData.HMDQuatX = q._f.y;
@@ -502,19 +512,17 @@ void loop() {
       radio.read(&ContData.Ctrl2_QuatW, 28);        //receive left controller data
       newCtrlData = true;
     }
-    if (pipenum == 3){
+    if (pipenum == 3) {
       radio.read(&HMDData.tracker1_QuatW, 27);      //recive all 3 trackers' data
     }
   }
 
-  if (millis() > TimeNow + period)
-  {
-    HID().SendReport(1, &HMDData, 63);
-    if (newCtrlData) {
-      HID().SendReport(1, &ContData, 63);
-      newCtrlData = false;
-    }
+  HID().SendReport(1, &HMDData, 63);
+  if (newCtrlData) {
+    HID().SendReport(1, &ContData, 63);
+    newCtrlData = false;
   }
+
 
 }
 
@@ -880,15 +888,16 @@ int readDMP(long *quat)
             ((long)fifo_data[14] << 8) | fifo_data[15];
   ii += 16;
 
-  accel[0] = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
-  accel[1] = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
-  accel[2] = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
+  HMDData.accX = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
+  HMDData.accY = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
+  HMDData.accZ = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
   ii += 6;
 
-  ay = (float)accel[1] * 4.0 / 32768.0;
-  ax = (float)accel[0] * 4.0 / 32768.0;
-  az = (float)accel[2] * 4.0 / 32768.0;
-
+  /*
+    ay = (float)accel[1] * 4.0 / 32768.0;
+    ax = (float)accel[0] * 4.0 / 32768.0;
+    az = (float)accel[2] * 4.0 / 32768.0;
+  */
   return 0;
 }
 
