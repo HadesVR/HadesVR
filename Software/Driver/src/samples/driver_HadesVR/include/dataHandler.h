@@ -25,6 +25,10 @@ typedef struct _HMDData
 	double	qX;
 	double	qY;
 	double  qZ;
+	float   accelX;
+	float   accelY;
+	float   accelZ;
+	uint16_t Data;
 } THMD, * PHMD;
 
 typedef struct _Controller
@@ -36,7 +40,10 @@ typedef struct _Controller
 	double	qX;
 	double	qY;
 	double  qZ;
-	uint32_t Buttons;
+	float   accelX;
+	float   accelY;
+	float   accelZ;
+	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
 	float	JoyAxisY;
@@ -47,6 +54,7 @@ typedef struct _Controller
 	float	FingMiddl;
 	float	FingRing;
 	float	FingPinky;
+	uint16_t Data;
 } TController, * PController;
 
 typedef struct _TrackerData
@@ -66,30 +74,40 @@ typedef struct _TrackerData
 struct HMDPacket
 {
 	uint8_t HIDID;			//this is fucking stupid
-	uint8_t PacketID;
+	uint8_t  PacketID;
 	float HMDQuatW;
 	float HMDQuatX;
 	float HMDQuatY;
 	float HMDQuatZ;
+
+	int16_t accX;
+	int16_t accY;
+	int16_t accZ;
+
+	uint16_t HMDData;
+
 	int16_t tracker1_QuatW;
 	int16_t tracker1_QuatX;
 	int16_t tracker1_QuatY;
 	int16_t tracker1_QuatZ;
 	uint8_t tracker1_vBat;
+	uint8_t tracker1_data;
 
 	int16_t tracker2_QuatW;
 	int16_t tracker2_QuatX;
 	int16_t tracker2_QuatY;
 	int16_t tracker2_QuatZ;
 	uint8_t tracker2_vBat;
+	uint8_t tracker2_data;
 
 	int16_t tracker3_QuatW;
 	int16_t tracker3_QuatX;
 	int16_t tracker3_QuatY;
 	int16_t tracker3_QuatZ;
 	uint8_t tracker3_vBat;
-	
-	uint8_t Padding[19];
+	uint8_t tracker3_data;
+
+	uint8_t Padding[8];
 };
 
 struct ControllerPacket
@@ -103,7 +121,7 @@ struct ControllerPacket
 	int16_t Ctrl1_AccelX;
 	int16_t Ctrl1_AccelY;
 	int16_t Ctrl1_AccelZ;
-	uint32_t Ctrl1_Buttons;
+	uint16_t Ctrl1_Buttons;
 	uint8_t Ctrl1_Trigger;
 	int8_t Ctrl1_axisX;
 	int8_t Ctrl1_axisY;
@@ -114,6 +132,7 @@ struct ControllerPacket
 	uint8_t Ctrl1_MIDDLE;
 	uint8_t Ctrl1_RING;
 	uint8_t Ctrl1_PINKY;
+	uint16_t Ctrl1_Data;
 
 	int16_t Ctrl2_QuatW;
 	int16_t Ctrl2_QuatX;
@@ -122,7 +141,7 @@ struct ControllerPacket
 	int16_t Ctrl2_AccelX;
 	int16_t Ctrl2_AccelY;
 	int16_t Ctrl2_AccelZ;
-	uint32_t Ctrl2_Buttons;
+	uint16_t Ctrl2_Buttons;
 	uint8_t Ctrl2_Trigger;
 	int8_t Ctrl2_axisX;
 	int8_t Ctrl2_axisY;
@@ -133,7 +152,8 @@ struct ControllerPacket
 	uint8_t Ctrl2_MIDDLE;
 	uint8_t Ctrl2_RING;
 	uint8_t Ctrl2_PINKY;
-	uint8_t Padding[2];
+	uint16_t Ctrl2_Data;
+	uint8_t Padding[6];
 };
 
 #pragma pack(pop)

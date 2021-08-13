@@ -133,6 +133,12 @@ void CdataHandler::ReadHIDData()
 				HMDData.qY = DataHMD->HMDQuatY;
 				HMDData.qZ = DataHMD->HMDQuatZ;
 
+				HMDData.accelX = (float)(DataHMD->accX) * 4.0 / 32768.0;
+				HMDData.accelY = (float)(DataHMD->accY) * 4.0 / 32768.0;
+				HMDData.accelZ = (float)(DataHMD->accZ) * 4.0 / 32768.0;
+
+				HMDData.Data = DataHMD->HMDData;
+
 				TrackerWaistData.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
 				TrackerWaistData.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
 				TrackerWaistData.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
@@ -151,12 +157,20 @@ void CdataHandler::ReadHIDData()
 				TrackerRightData.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
 				TrackerRightData.vBat = (float)(DataHMD->tracker3_vBat) / 255;
 				break;
+
 			case 2:
 				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767;
 				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767;
 				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767;
 				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767;
+
+				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) * 4.0 / 32768.0;
+				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) * 4.0 / 32768.0;
+				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) * 4.0 / 32768.0;
+
+				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
+
 				RightCtrlData.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255;
 				RightCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127;
 				RightCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127;
@@ -167,12 +181,20 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255;
 				RightCtrlData.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255;
 				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255;
+				
 
 				LeftCtrlData.qW = (float)(DataCtrl->Ctrl2_QuatW) / 32767;
 				LeftCtrlData.qX = (float)(DataCtrl->Ctrl2_QuatX) / 32767;
 				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767;
 				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767;
+
+				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) * 4.0 / 32768.0;
+				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) * 4.0 / 32768.0;
+				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) * 4.0 / 32768.0;
+
+				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
+
 				LeftCtrlData.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255;
 				LeftCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127;
 				LeftCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127;
@@ -183,6 +205,7 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255;
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
+				
 				break;
 			}
 		}
