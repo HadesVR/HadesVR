@@ -51,8 +51,6 @@
 
 uint64_t Pipe = 0xF0F0F0F0E1LL; //right
 //uint64_t Pipe = 0xF0F0F0F0D2LL; //left
-
-#define RADIO_DATA_RATE     10              //send data every 10ms for a 100hz update rate.
 //==========================================================================================================
 
 
@@ -313,9 +311,6 @@ const unsigned char dmp_memory[DMP_CODE_SIZE] PROGMEM = {
 #define IB_TrackpadTouch    0x0040
 #define IB_ThumbStickTouch  0x0080
 
-int period = RADIO_DATA_RATE;
-unsigned long TimeNow = 0;
-
 struct ctrlData {
   int16_t qW;
   int16_t qX;
@@ -324,7 +319,7 @@ struct ctrlData {
   int16_t accX;
   int16_t accY;
   int16_t accZ;
-  uint32_t BTN;
+  uint16_t BTN;
   uint8_t  trigg;
   int8_t  axisX;
   int8_t  axisY;
@@ -335,6 +330,7 @@ struct ctrlData {
   uint8_t  fingerMiddle;
   uint8_t  fingerRing;
   uint8_t  fingerPinky;
+  uint16_t Data;
 };
 ctrlData data;
 
@@ -342,6 +338,7 @@ int tracky;
 int trackoutput;
 int axisX;
 int axisY;
+bool joyTouch = false;
 
 RF24 radio(9, 10); // CE, CSN on Blue Pill
 
@@ -441,6 +438,16 @@ void setup() {
   data.fingerMiddle = 0;
   data.fingerRing = 0;
   data.fingerPinky = 0;
+  data.Data = 0x4B3;
+
+  /*
+    data.Data |= 0x03;  //non diy index controller identifier
+    data.Data |= 0x10;  //controller reports accelerometer values
+    data.Data |= 0x20;  //controller does support hand tracking
+    //data.Data |= 0x40;  //handtracking type is analog
+    data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
+    data.Data |= 0x400; //controller reports battery %
+  */
 
 }
 
@@ -449,111 +456,110 @@ void loop() {
   updateMPU();
 
   //Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
-
-  if (millis() > TimeNow + period) {
-    TimeNow = millis();
-    int btn = 0;
-    tracky = analogRead(TrackpadPin);
-    if (tracky > 560) {
-      trackoutput = 1;
-      btn |= IB_TrackpadTouch;
-    }
-    if (tracky < 300 && tracky > 100) {
-      trackoutput = 0;
-      btn |= IB_TrackpadTouch;
-    }
-    if (tracky == 0) {
-      trackoutput = -1;
-      btn |= IB_TrackpadTouch;
-    }
-    if (tracky < 550 && tracky > 400) {
-      trackoutput = 0;
-    }
-
-    axisX = analogRead(JoyXPin);
-    axisY = analogRead(JoyYPin);
-
-    if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-      data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
-      btn |= IB_ThumbStickTouch;
-    } else {
-      data.axisX = 0;
-    }
-
-    if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-      data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
-      btn |= IB_ThumbStickTouch;
-    } else {
-      data.axisY = 0;
-    }
-
-
-    if (analogRead(TriggerPin) < 1000) {
-      data.trigg = map(analogRead(TriggerPin), 1024, 0, 0, 255);
-      data.fingerIndex = map(analogRead(TriggerPin), 1024, 0, 0, 255);
-    }
-    else {
-      data.trigg = 0;
-      data.fingerIndex = 0;
-    }
-
-
-    if (!digitalRead(APin)) {
-      btn |= IB_AClick;
-      btn |= IB_ATouch;
-    }
-    if (!digitalRead(BPin)) {
-      btn |= IB_BClick;
-      btn |= IB_BTouch;
-    }
-    if (!digitalRead(SysPin)) {
-      btn |= IB_SYSClick;
-    }
-    if (!digitalRead(JoyClickPin)) {
-      btn |= IB_ThumbStickClick;
-    }
-    //  if (digitalRead(FingerIndexPin)) {
-    //    data.fingerIndex = 255;
-    //  }
-    //  else {
-    //    data.fingerIndex = 0;
-    //  }
-    if (digitalRead(FingerMiddlePin)) {
-      data.fingerMiddle = 255;
-    }
-    else {
-      data.fingerMiddle = 0;
-    }
-    if (digitalRead(FingerRingPin)) {
-      data.fingerRing = 255;
-    }
-    else {
-      data.fingerRing = 0;
-    }
-    if (digitalRead(FingerPinkyPin)) {
-      data.fingerPinky = 255;
-    }
-    else {
-      data.fingerPinky = 0;
-    }
-
-
-    data.BTN = btn;
-    data.trackY = (trackoutput * 127);
-    data.vBAT = (map(analogRead(VbatPin), 787, BatLevelMax, 0, 255));
-    data.qW = (int16_t)(q._f.w * 32767.f);
-    data.qX = (int16_t)(q._f.y * 32767.f);
-    data.qY = (int16_t)(q._f.z * 32767.f);
-    data.qZ = (int16_t)(q._f.x * 32767.f);
-    data.accX = ax;
-    data.accY = ay;
-    data.accZ = az;
-    radio.stopListening();
-    radio.write(&data, sizeof(ctrlData));
-    radio.startListening();
+  joyTouch = false;
+  int btn = 0;
+  tracky = analogRead(TrackpadPin);
+  if (tracky > 560) {
+    trackoutput = 1;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky < 300 && tracky > 100) {
+    trackoutput = 0;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky == 0) {
+    trackoutput = -1;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky < 550 && tracky > 400) {
+    trackoutput = 0;
   }
 
+  axisX = analogRead(JoyXPin);
+  axisY = analogRead(JoyYPin);
+
+  if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
+    data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
+    btn |= IB_ThumbStickTouch;
+    joyTouch = true;
+  } else {
+    data.axisX = 0;
+  }
+
+  if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
+    data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
+    btn |= IB_ThumbStickTouch;
+    joyTouch = true;
+  } else {
+    data.axisY = 0;
+  }
+
+
+  if (analogRead(TriggerPin) < 1000) {
+    data.trigg = map(analogRead(TriggerPin), 1024, 0, 0, 255);
+    data.fingerIndex = map(analogRead(TriggerPin), 1024, 0, 0, 255);
+  }
+  else {
+    data.trigg = 0;
+    data.fingerIndex = 0;
+  }
+
+
+  if (!digitalRead(APin)) {
+    btn |= IB_AClick;
+    btn |= IB_ATouch;
+  }
+  if (!digitalRead(BPin)) {
+    btn |= IB_BClick;
+    btn |= IB_BTouch;
+  }
+  if (!digitalRead(SysPin)) {
+    btn |= IB_SYSClick;
+  }
+  if (!digitalRead(JoyClickPin)) {
+    btn |= IB_ThumbStickClick;
+  }
+  //  if (digitalRead(FingerIndexPin)) {
+  //    data.fingerIndex = 255;
+  //  }
+  //  else {
+  //    data.fingerIndex = 0;
+  //  }
+  if (digitalRead(FingerMiddlePin)) {
+    data.fingerMiddle = 255;
+  }
+  else {
+    data.fingerMiddle = 0;
+  }
+  if (digitalRead(FingerRingPin)) {
+    data.fingerRing = 255;
+  }
+  else {
+    data.fingerRing = 0;
+  }
+  if (digitalRead(FingerPinkyPin)) {
+    data.fingerPinky = 255;
+  }
+  else {
+    data.fingerPinky = 0;
+  }
+
+
+  data.BTN = btn;
+  data.trackY = (trackoutput * 127);
+  data.vBAT = (map(analogRead(VbatPin), 787, BatLevelMax, 0, 255));
+  data.qW = (int16_t)(q._f.w * 32767.f);
+  data.qX = (int16_t)(q._f.y * 32767.f);
+  data.qY = (int16_t)(q._f.z * 32767.f);
+  data.qZ = (int16_t)(q._f.x * 32767.f);
+  data.accX = ax;
+  data.accY = ay;
+  data.accZ = az;
+  radio.stopListening();
+  radio.write(&data, sizeof(ctrlData));
+  radio.startListening();
 }
+
 
 void initMPU()
 {
@@ -799,7 +805,7 @@ int updateMPU()
   q._f.x *= tmp;
   q._f.z *= tmp;
 
-  if (DMPquat[1] > -0.03f && DMPquat[1] < 0.03f && DMPquat[2] > -0.04f && DMPquat[2] < 0.04f)   //get a new offset if relatively level
+  if (DMPquat[1] > -0.03f && DMPquat[1] < 0.03f && DMPquat[2] > -0.04f && DMPquat[2] < 0.04f && joyTouch == true)   //get a new offset if relatively level
   {
     updateMag();
 
@@ -812,7 +818,7 @@ int updateMPU()
     newOffset = (magHDG - dmpHDG);
 
     tmp = (newOffset - offsetHDG);
-    
+
 #ifdef SERIAL_DEBUG
     Serial.print("wanna get to ");
     Serial.print(magHDG * 180 / M_PI);
@@ -841,6 +847,10 @@ int updateMPU()
     {
       offsetHDG += tmp * 0.04f;
     }
+    else if (tmp > -0.26f && tmp < 0.26f)
+    {
+      offsetHDG += tmp * 0.1f;
+    }
     else
     {
       offsetHDG += tmp;                 //go fast if distance target is too far off.
@@ -861,7 +871,7 @@ int updateMPU()
 
     siny_cosp = 2 * (q._f.w * q._f.z + q._f.x * q._f.y);
     cosy_cosp = 1 - 2 * (q._f.y * q._f.y + q._f.z * q._f.z);
-    
+
     dmpHDG = atan2(siny_cosp, cosy_cosp);
     Serial.print(" offset for an ouput of ");
     Serial.println(dmpHDG * 180 / M_PI);
@@ -913,11 +923,11 @@ int readDMP(long *quat)
   ax = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
   az = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
   ii += 6;
-/*
-  ax = (float)accel[1] * 4.0 / 32768.0;
-  ay = (float)accel[0] * 4.0 / 32768.0;
-  az = (float)accel[2] * 4.0 / 32768.0;
-*/
+  /*
+    ax = (float)accel[1] * 4.0 / 32768.0;
+    ay = (float)accel[0] * 4.0 / 32768.0;
+    az = (float)accel[2] * 4.0 / 32768.0;
+  */
   return 0;
 }
 
