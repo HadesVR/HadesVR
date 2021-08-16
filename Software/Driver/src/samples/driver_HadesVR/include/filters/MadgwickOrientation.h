@@ -19,7 +19,7 @@
 #define __MadgwickOrientation_h__
 #include <math.h>
 #include <stdint.h>
-
+#include <chrono>
 
 //--------------------------------------------------------------------------------------------
 // Variable declaration
