@@ -8,6 +8,7 @@
 #include <atlstr.h> 
 #include <math.h>
 
+#include "filters/MadgwickOrientation.h"
 #include "Quaternion.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
 #include "hidapi/hidapi.h"
@@ -248,6 +249,7 @@ private:
 	Quaternion HMDConfigOffset = Quaternion::Identity();
 
 	bool HIDInit = false;
+	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
 
 	float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
@@ -255,6 +257,8 @@ private:
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
 	PSMVector3f hmdPos, ctrlRightPos, ctrlLeftPos;
+
+	Madgwick filter;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
