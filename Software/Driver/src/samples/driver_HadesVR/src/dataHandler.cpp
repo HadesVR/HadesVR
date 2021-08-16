@@ -118,7 +118,8 @@ inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quat
 
 void CdataHandler::ReadHIDData()
 {
-	HMDPacket* DataHMD = (HMDPacket*)packet_buffer;
+	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
+	HMDRAWPacket* DataHMDRAW = (HMDRAWPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
 	int r;
 	DriverLog("[HID] ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
@@ -128,34 +129,34 @@ void CdataHandler::ReadHIDData()
 			switch (packet_buffer[1])
 			{
 			case 1:
-				HMDData.qW = DataHMD->HMDQuatW;
-				HMDData.qX = DataHMD->HMDQuatX;
-				HMDData.qY = DataHMD->HMDQuatY;
-				HMDData.qZ = DataHMD->HMDQuatZ;
+				HMDData.qW = DataHMDQuat->HMDQuatW;
+				HMDData.qX = DataHMDQuat->HMDQuatX;
+				HMDData.qY = DataHMDQuat->HMDQuatY;
+				HMDData.qZ = DataHMDQuat->HMDQuatZ;
 
-				HMDData.accelX = (float)(DataHMD->accX) * 4.0 / 32768.0;
-				HMDData.accelY = (float)(DataHMD->accY) * 4.0 / 32768.0;
-				HMDData.accelZ = (float)(DataHMD->accZ) * 4.0 / 32768.0;
+				HMDData.accelX = (float)(DataHMDQuat->accX) * 4.0 / 32768.0;
+				HMDData.accelY = (float)(DataHMDQuat->accY) * 4.0 / 32768.0;
+				HMDData.accelZ = (float)(DataHMDQuat->accZ) * 4.0 / 32768.0;
 
-				HMDData.Data = DataHMD->HMDData;
+				HMDData.Data = DataHMDQuat->HMDData;
 
-				TrackerWaistData.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
-				TrackerWaistData.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
-				TrackerWaistData.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
-				TrackerWaistData.qZ = (float)(DataHMD->tracker1_QuatZ) / 32767;
-				TrackerWaistData.vBat = (float)(DataHMD->tracker1_vBat) / 255;
+				TrackerWaistData.qW = (float)(DataHMDQuat->tracker1_QuatW) / 32767;
+				TrackerWaistData.qX = (float)(DataHMDQuat->tracker1_QuatX) / 32767;
+				TrackerWaistData.qY = (float)(DataHMDQuat->tracker1_QuatY) / 32767;
+				TrackerWaistData.qZ = (float)(DataHMDQuat->tracker1_QuatZ) / 32767;
+				TrackerWaistData.vBat = (float)(DataHMDQuat->tracker1_vBat) / 255;
 
-				TrackerLeftData.qW = (float)(DataHMD->tracker2_QuatW) / 32767;
-				TrackerLeftData.qX = (float)(DataHMD->tracker2_QuatX) / 32767;
-				TrackerLeftData.qY = (float)(DataHMD->tracker2_QuatY) / 32767;
-				TrackerLeftData.qZ = (float)(DataHMD->tracker2_QuatZ) / 32767;
-				TrackerLeftData.vBat = (float)(DataHMD->tracker2_vBat) / 255;
+				TrackerLeftData.qW = (float)(DataHMDQuat->tracker2_QuatW) / 32767;
+				TrackerLeftData.qX = (float)(DataHMDQuat->tracker2_QuatX) / 32767;
+				TrackerLeftData.qY = (float)(DataHMDQuat->tracker2_QuatY) / 32767;
+				TrackerLeftData.qZ = (float)(DataHMDQuat->tracker2_QuatZ) / 32767;
+				TrackerLeftData.vBat = (float)(DataHMDQuat->tracker2_vBat) / 255;
 
-				TrackerRightData.qW = (float)(DataHMD->tracker3_QuatW) / 32767;
-				TrackerRightData.qX = (float)(DataHMD->tracker3_QuatX) / 32767;
-				TrackerRightData.qY = (float)(DataHMD->tracker3_QuatY) / 32767;
-				TrackerRightData.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
-				TrackerRightData.vBat = (float)(DataHMD->tracker3_vBat) / 255;
+				TrackerRightData.qW = (float)(DataHMDQuat->tracker3_QuatW) / 32767;
+				TrackerRightData.qX = (float)(DataHMDQuat->tracker3_QuatX) / 32767;
+				TrackerRightData.qY = (float)(DataHMDQuat->tracker3_QuatY) / 32767;
+				TrackerRightData.qZ = (float)(DataHMDQuat->tracker3_QuatZ) / 32767;
+				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255;
 				break;
 
 			case 2:
@@ -206,6 +207,38 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
 				
+				break;
+
+			case 3:
+				/*
+				HMDData.qW = DataHMDRAW->HMDQuatW;
+				HMDData.qX = DataHMDRAW->HMDQuatX;
+				HMDData.qY = DataHMDRAW->HMDQuatY;
+				HMDData.qZ = DataHMDRAW->HMDQuatZ;
+				*/
+				HMDData.accelX = (float)(DataHMDRAW->AccX) * 4.0 / 32768.0;
+				HMDData.accelY = (float)(DataHMDRAW->AccY) * 4.0 / 32768.0;
+				HMDData.accelZ = (float)(DataHMDRAW->AccZ) * 4.0 / 32768.0;
+
+				HMDData.Data = DataHMDRAW->HMDData;
+
+				TrackerWaistData.qW = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
+				TrackerWaistData.qX = (float)(DataHMDRAW->tracker1_QuatX) / 32767;
+				TrackerWaistData.qY = (float)(DataHMDRAW->tracker1_QuatY) / 32767;
+				TrackerWaistData.qZ = (float)(DataHMDRAW->tracker1_QuatZ) / 32767;
+				TrackerWaistData.vBat = (float)(DataHMDRAW->tracker1_vBat) / 255;
+
+				TrackerLeftData.qW = (float)(DataHMDRAW->tracker2_QuatW) / 32767;
+				TrackerLeftData.qX = (float)(DataHMDRAW->tracker2_QuatX) / 32767;
+				TrackerLeftData.qY = (float)(DataHMDRAW->tracker2_QuatY) / 32767;
+				TrackerLeftData.qZ = (float)(DataHMDRAW->tracker2_QuatZ) / 32767;
+				TrackerLeftData.vBat = (float)(DataHMDRAW->tracker2_vBat) / 255;
+
+				TrackerRightData.qW = (float)(DataHMDRAW->tracker3_QuatW) / 32767;
+				TrackerRightData.qX = (float)(DataHMDRAW->tracker3_QuatX) / 32767;
+				TrackerRightData.qY = (float)(DataHMDRAW->tracker3_QuatY) / 32767;
+				TrackerRightData.qZ = (float)(DataHMDRAW->tracker3_QuatZ) / 32767;
+				TrackerRightData.vBat = (float)(DataHMDRAW->tracker3_vBat) / 255;
 				break;
 			}
 		}
