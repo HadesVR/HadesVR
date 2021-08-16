@@ -210,15 +210,35 @@ void CdataHandler::ReadHIDData()
 				break;
 
 			case 3:
-				/*
-				HMDData.qW = DataHMDRAW->HMDQuatW;
-				HMDData.qX = DataHMDRAW->HMDQuatX;
-				HMDData.qY = DataHMDRAW->HMDQuatY;
-				HMDData.qZ = DataHMDRAW->HMDQuatZ;
-				*/
-				HMDData.accelX = (float)(DataHMDRAW->AccX) * 4.0 / 32768.0;
-				HMDData.accelY = (float)(DataHMDRAW->AccY) * 4.0 / 32768.0;
-				HMDData.accelZ = (float)(DataHMDRAW->AccZ) * 4.0 / 32768.0;
+
+				if (!orientationFilterInit) {		//init filter
+					filter.begin();
+					orientationFilterInit = true;
+				}
+				//get data and scale it properly
+				float accX = (float)(DataHMDRAW->AccX) / 2048;
+				float accY = (float)(DataHMDRAW->AccY) / 2048;
+				float accZ = (float)(DataHMDRAW->AccZ) / 2048;
+				
+				float gyX = (float)(DataHMDRAW->GyroX / 16);
+				float gyY = (float)(DataHMDRAW->GyroY / 16);
+				float gyZ = (float)(DataHMDRAW->GyroZ / 16);
+
+				float magX = (float)(DataHMDRAW->MagX / 5);
+				float magY = (float)(DataHMDRAW->MagX / 5);
+				float magZ = (float)(DataHMDRAW->MagX / 5);
+
+				//update filter
+				filter.update(gyX, gyY, gyZ, accX, accY, accZ, magX, magY, magZ);
+
+				HMDData.qW = filter.getQuatW();
+				HMDData.qX = filter.getQuatY();
+				HMDData.qY = filter.getQuatZ();
+				HMDData.qZ = filter.getQuatX();
+
+				HMDData.accelX = accX;
+				HMDData.accelY = accY;
+				HMDData.accelZ = accZ;
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
