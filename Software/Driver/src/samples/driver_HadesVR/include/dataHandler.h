@@ -260,6 +260,7 @@ private:
 
 	Madgwick filter;
 	int readsFromInit = 0;
+	float filterBeta = 0.05f;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
