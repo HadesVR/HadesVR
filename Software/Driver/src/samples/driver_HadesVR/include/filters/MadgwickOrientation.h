@@ -38,6 +38,7 @@ class Madgwick {
     // Function declarations
   public:
     Madgwick(void);
+    void setBeta(float _beta);
     void begin() { }
     void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
     void updateIMU(float gx, float gy, float gz, float ax, float ay, float az);

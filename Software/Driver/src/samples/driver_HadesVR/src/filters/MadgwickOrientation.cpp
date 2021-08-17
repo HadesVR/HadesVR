@@ -23,12 +23,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <chrono>
-//-------------------------------------------------------------------------------------------
-// Definitions
-
-#define sampleFreqDef   512.0f          // sample frequency in Hz
-#define betaDef         0.1f            // 2 * proportional gain
-
 
 //============================================================================================
 // Functions
@@ -38,12 +32,15 @@
 
 
 Madgwick::Madgwick() {
-	beta = betaDef;
 	q0 = 1.0f;
 	q1 = 0.0f;
 	q2 = 0.0f;
 	q3 = 0.0f;
 }
+
+void Madgwick::setBeta(float _beta) {
+	beta = _beta;
+};
 
 void Madgwick::update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
 	float recipNorm;
@@ -244,6 +241,5 @@ float Madgwick::invSqrt(float x) {
 	y = y * (1.5f - (halfx * y * y));
 	return y;
 }
-
 
 //-------------------------------------------------------------------------------------------
