@@ -118,7 +118,8 @@ inline Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quat
 
 void CdataHandler::ReadHIDData()
 {
-	HMDPacket* DataHMD = (HMDPacket*)packet_buffer;
+	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
+	HMDRAWPacket* DataHMDRAW = (HMDRAWPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
 	int r;
 	DriverLog("[HID] ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
@@ -128,34 +129,34 @@ void CdataHandler::ReadHIDData()
 			switch (packet_buffer[1])
 			{
 			case 1:
-				HMDData.qW = DataHMD->HMDQuatW;
-				HMDData.qX = DataHMD->HMDQuatX;
-				HMDData.qY = DataHMD->HMDQuatY;
-				HMDData.qZ = DataHMD->HMDQuatZ;
+				HMDData.qW = DataHMDQuat->HMDQuatW;
+				HMDData.qX = DataHMDQuat->HMDQuatX;
+				HMDData.qY = DataHMDQuat->HMDQuatY;
+				HMDData.qZ = DataHMDQuat->HMDQuatZ;
 
-				HMDData.accelX = (float)(DataHMD->accX) * 4.0 / 32768.0;
-				HMDData.accelY = (float)(DataHMD->accY) * 4.0 / 32768.0;
-				HMDData.accelZ = (float)(DataHMD->accZ) * 4.0 / 32768.0;
+				HMDData.accelX = (float)(DataHMDQuat->accX) * 4.0 / 32768.0;
+				HMDData.accelY = (float)(DataHMDQuat->accY) * 4.0 / 32768.0;
+				HMDData.accelZ = (float)(DataHMDQuat->accZ) * 4.0 / 32768.0;
 
-				HMDData.Data = DataHMD->HMDData;
+				HMDData.Data = DataHMDQuat->HMDData;
 
-				TrackerWaistData.qW = (float)(DataHMD->tracker1_QuatW) / 32767;
-				TrackerWaistData.qX = (float)(DataHMD->tracker1_QuatX) / 32767;
-				TrackerWaistData.qY = (float)(DataHMD->tracker1_QuatY) / 32767;
-				TrackerWaistData.qZ = (float)(DataHMD->tracker1_QuatZ) / 32767;
-				TrackerWaistData.vBat = (float)(DataHMD->tracker1_vBat) / 255;
+				TrackerWaistData.qW = (float)(DataHMDQuat->tracker1_QuatW) / 32767;
+				TrackerWaistData.qX = (float)(DataHMDQuat->tracker1_QuatX) / 32767;
+				TrackerWaistData.qY = (float)(DataHMDQuat->tracker1_QuatY) / 32767;
+				TrackerWaistData.qZ = (float)(DataHMDQuat->tracker1_QuatZ) / 32767;
+				TrackerWaistData.vBat = (float)(DataHMDQuat->tracker1_vBat) / 255;
 
-				TrackerLeftData.qW = (float)(DataHMD->tracker2_QuatW) / 32767;
-				TrackerLeftData.qX = (float)(DataHMD->tracker2_QuatX) / 32767;
-				TrackerLeftData.qY = (float)(DataHMD->tracker2_QuatY) / 32767;
-				TrackerLeftData.qZ = (float)(DataHMD->tracker2_QuatZ) / 32767;
-				TrackerLeftData.vBat = (float)(DataHMD->tracker2_vBat) / 255;
+				TrackerLeftData.qW = (float)(DataHMDQuat->tracker2_QuatW) / 32767;
+				TrackerLeftData.qX = (float)(DataHMDQuat->tracker2_QuatX) / 32767;
+				TrackerLeftData.qY = (float)(DataHMDQuat->tracker2_QuatY) / 32767;
+				TrackerLeftData.qZ = (float)(DataHMDQuat->tracker2_QuatZ) / 32767;
+				TrackerLeftData.vBat = (float)(DataHMDQuat->tracker2_vBat) / 255;
 
-				TrackerRightData.qW = (float)(DataHMD->tracker3_QuatW) / 32767;
-				TrackerRightData.qX = (float)(DataHMD->tracker3_QuatX) / 32767;
-				TrackerRightData.qY = (float)(DataHMD->tracker3_QuatY) / 32767;
-				TrackerRightData.qZ = (float)(DataHMD->tracker3_QuatZ) / 32767;
-				TrackerRightData.vBat = (float)(DataHMD->tracker3_vBat) / 255;
+				TrackerRightData.qW = (float)(DataHMDQuat->tracker3_QuatW) / 32767;
+				TrackerRightData.qX = (float)(DataHMDQuat->tracker3_QuatX) / 32767;
+				TrackerRightData.qY = (float)(DataHMDQuat->tracker3_QuatY) / 32767;
+				TrackerRightData.qZ = (float)(DataHMDQuat->tracker3_QuatZ) / 32767;
+				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255;
 				break;
 
 			case 2:
@@ -206,6 +207,70 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
 				
+				break;
+
+			case 3:
+
+				if (!orientationFilterInit) {		//init filter
+					filter.begin();
+					filter.setBeta(2.f);
+					DriverLog("[Madgwick] Revving up the filter and redlining it to a beta of 2");
+					orientationFilterInit = true;
+				}
+
+				if (readsFromInit < 1000) {
+					readsFromInit++;
+					if (readsFromInit == 1000) {
+						filter.setBeta(0.05f);
+						DriverLog("[Madgwick] first 1000 readings done! switching to more accurate beta value. of %f", 0.05f);
+					}
+				}
+
+				//get data and scale it properly
+				float accX = (float)(DataHMDRAW->AccX) / 2048;
+				float accY = (float)(DataHMDRAW->AccY) / 2048;
+				float accZ = (float)(DataHMDRAW->AccZ) / 2048;
+				
+				float gyX = (float)(DataHMDRAW->GyroX / 16);
+				float gyY = (float)(DataHMDRAW->GyroY / 16);
+				float gyZ = (float)(DataHMDRAW->GyroZ / 16);
+
+
+				float magX = (float)(DataHMDRAW->MagX / 5);
+				float magY = (float)(DataHMDRAW->MagY / 5);
+				float magZ = (float)(DataHMDRAW->MagZ / 5);
+
+				//update filter
+				filter.update(gyX, gyY, gyZ, accX, accY, accZ, magY, magX, -magZ);
+
+				HMDData.qW = filter.getQuatW();
+				HMDData.qX = filter.getQuatY();
+				HMDData.qY = filter.getQuatZ();
+				HMDData.qZ = filter.getQuatX();
+
+				HMDData.accelX = accX;
+				HMDData.accelY = accY;
+				HMDData.accelZ = accZ;
+
+				HMDData.Data = DataHMDRAW->HMDData;
+
+				TrackerWaistData.qW = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
+				TrackerWaistData.qX = (float)(DataHMDRAW->tracker1_QuatX) / 32767;
+				TrackerWaistData.qY = (float)(DataHMDRAW->tracker1_QuatY) / 32767;
+				TrackerWaistData.qZ = (float)(DataHMDRAW->tracker1_QuatZ) / 32767;
+				TrackerWaistData.vBat = (float)(DataHMDRAW->tracker1_vBat) / 255;
+
+				TrackerLeftData.qW = (float)(DataHMDRAW->tracker2_QuatW) / 32767;
+				TrackerLeftData.qX = (float)(DataHMDRAW->tracker2_QuatX) / 32767;
+				TrackerLeftData.qY = (float)(DataHMDRAW->tracker2_QuatY) / 32767;
+				TrackerLeftData.qZ = (float)(DataHMDRAW->tracker2_QuatZ) / 32767;
+				TrackerLeftData.vBat = (float)(DataHMDRAW->tracker2_vBat) / 255;
+
+				TrackerRightData.qW = (float)(DataHMDRAW->tracker3_QuatW) / 32767;
+				TrackerRightData.qX = (float)(DataHMDRAW->tracker3_QuatX) / 32767;
+				TrackerRightData.qY = (float)(DataHMDRAW->tracker3_QuatY) / 32767;
+				TrackerRightData.qZ = (float)(DataHMDRAW->tracker3_QuatZ) / 32767;
+				TrackerRightData.vBat = (float)(DataHMDRAW->tracker3_vBat) / 255;
 				break;
 			}
 		}

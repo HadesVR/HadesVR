@@ -59,6 +59,7 @@
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />
     <ClInclude Include="include\devices.hpp" />
+    <ClInclude Include="include\filters\MadgwickOrientation.h" />
     <ClInclude Include="include\HandTracking.h" />
     <ClInclude Include="include\settingsAPIKeys.h" />
   </ItemGroup>
@@ -66,6 +67,7 @@
     <ClCompile Include="src\dataHandler.cpp" />
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />
+    <ClCompile Include="src\filters\MadgwickOrientation.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

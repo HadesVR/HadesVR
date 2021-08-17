@@ -8,6 +8,7 @@
 #include <atlstr.h> 
 #include <math.h>
 
+#include "filters/MadgwickOrientation.h"
 #include "Quaternion.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
 #include "hidapi/hidapi.h"
@@ -71,7 +72,7 @@ typedef struct _TrackerData
 
 #pragma pack(push, 1)
 
-struct HMDPacket
+struct HMDQuaternionPacket
 {
 	uint8_t HIDID;			//this is fucking stupid
 	uint8_t  PacketID;
@@ -110,9 +111,52 @@ struct HMDPacket
 	uint8_t Padding[8];
 };
 
+struct HMDRAWPacket
+{
+	uint8_t HIDID;		
+	uint8_t  PacketID;
+
+	int16_t AccX;
+	int16_t AccY;
+	int16_t AccZ;
+
+	int16_t GyroX;
+	int16_t GyroY;
+	int16_t GyroZ;
+
+	int16_t MagX;
+	int16_t MagY;
+	int16_t MagZ;
+
+	uint16_t HMDData;
+
+	int16_t tracker1_QuatW;
+	int16_t tracker1_QuatX;
+	int16_t tracker1_QuatY;
+	int16_t tracker1_QuatZ;
+	uint8_t tracker1_vBat;
+	uint8_t tracker1_data;
+
+	int16_t tracker2_QuatW;
+	int16_t tracker2_QuatX;
+	int16_t tracker2_QuatY;
+	int16_t tracker2_QuatZ;
+	uint8_t tracker2_vBat;
+	uint8_t tracker2_data;
+
+	int16_t tracker3_QuatW;
+	int16_t tracker3_QuatX;
+	int16_t tracker3_QuatY;
+	int16_t tracker3_QuatZ;
+	uint8_t tracker3_vBat;
+	uint8_t tracker3_data;
+
+	uint8_t Padding[12];
+};
+
 struct ControllerPacket
 {
-	uint8_t HIDID;			//this is also fucking stupid
+	uint8_t HIDID;			
 	uint8_t PacketID;
 	int16_t Ctrl1_QuatW;
 	int16_t Ctrl1_QuatX;
@@ -205,6 +249,7 @@ private:
 	Quaternion HMDConfigOffset = Quaternion::Identity();
 
 	bool HIDInit = false;
+	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
 
 	float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
@@ -212,6 +257,9 @@ private:
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
 	PSMVector3f hmdPos, ctrlRightPos, ctrlLeftPos;
+
+	Madgwick filter;
+	int readsFromInit = 0;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
