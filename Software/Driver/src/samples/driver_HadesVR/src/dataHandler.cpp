@@ -213,8 +213,19 @@ void CdataHandler::ReadHIDData()
 
 				if (!orientationFilterInit) {		//init filter
 					filter.begin();
+					filter.setBeta(2.f);
+					DriverLog("[Madgwick] Revving up the filter and redlining it to a beta of 2");
 					orientationFilterInit = true;
 				}
+
+				if (readsFromInit < 1000) {
+					readsFromInit++;
+					if (readsFromInit == 1000) {
+						filter.setBeta(0.05f);
+						DriverLog("[Madgwick] first 1000 readings done! switching to more accurate beta value. of %f", 0.05f);
+					}
+				}
+
 				//get data and scale it properly
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
 				float accY = (float)(DataHMDRAW->AccY) / 2048;

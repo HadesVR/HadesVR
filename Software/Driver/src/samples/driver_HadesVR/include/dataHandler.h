@@ -259,6 +259,7 @@ private:
 	PSMVector3f hmdPos, ctrlRightPos, ctrlLeftPos;
 
 	Madgwick filter;
+	int readsFromInit = 0;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
