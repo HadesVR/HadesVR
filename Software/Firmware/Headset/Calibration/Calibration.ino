@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include "RegisterMap.h"
 
-#define MPU9250_ADDRESS 0x68 //ADO 0
+#define MPU9250_ADDRESS 0x68  //ADO 0
 #define USE_EEPROM            //comment this line if your MCU doesn't support EEPROM
 
 #ifdef USE_EEPROM
@@ -16,12 +16,11 @@ struct Calibration {
   int calDone;
   float magBias[3];
   float magScale[3]; // Bias corrections for mag
+  float gyroBias[3]; // bias corrections
+  float accelBias[3]; // bias corrections
 };
 
 Calibration cal;
-
-float x, y, z;
-
 
 static float ax, ay, az, gx, gy, gz, mx, my, mz;
 
@@ -78,7 +77,9 @@ void setup() {
   Serial.println("Entered calibration mode!");
 
   delay(1000);
-
+  Serial.println("Lay IMU on flat surface.");
+  delay(10000);
+  calibrateMPU9250(cal.gyroBias, cal.accelBias);
   Serial.println("Magnetic calibration mode.");
   delay(1000);
   magcalMPU9250(cal.magBias, cal.magScale);
@@ -89,8 +90,11 @@ void setup() {
   EEPROM.put(0, cal);
   delay(3000);
 #endif
+
   Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
   Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
+  Serial.print("GyroBias: "); Serial.print(cal.gyroBias[0], 7); Serial.print(","); Serial.print(cal.gyroBias[1], 7); Serial.print(","); Serial.println(cal.gyroBias[2], 7);
+  Serial.print("AccleBias: "); Serial.print(cal.accelBias[0], 7); Serial.print(","); Serial.print(cal.accelBias[1], 7); Serial.print(","); Serial.println(cal.accelBias[2], 7);
 
 }
 
