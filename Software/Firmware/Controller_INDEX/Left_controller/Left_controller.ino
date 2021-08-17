@@ -805,7 +805,7 @@ int updateMPU()
   q._f.x *= tmp;
   q._f.z *= tmp;
 
-  if (DMPquat[1] > -0.03f && DMPquat[1] < 0.03f && DMPquat[2] > -0.04f && DMPquat[2] < 0.04f && joyTouch == true)   //get a new offset if relatively level
+  if (DMPquat[1] > -0.03f && DMPquat[1] < 0.03f && DMPquat[2] > -0.04f && DMPquat[2] < 0.04f && !joyTouch)   //get a new offset if relatively level
   {
     updateMag();
 
