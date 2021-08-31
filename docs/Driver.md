@@ -53,6 +53,7 @@ The driver configuration is divided into a couple sections for tidyness, these a
 | ------  | ------ |------     |
 | serialNumber  | string | The serial number of the HMD     |
 | EnableHMD  | bool | Enables or disables the HMD part of the driver.|
+| FilterBeta |float| Beta value of the madgwick filter, by default 0.05, smaller values will result in less jitter but will decrease the speed of the drift correction part of the filter. |
 |HMDYawOffset|float| Yaw offset of the HMD in degrees|
 |HMDPitchOffset|float| Pitch offset of the HMD in degrees|
 |HMDRollOffset|float| Roll offset of the HMD in degres|
@@ -62,12 +63,12 @@ The driver configuration is divided into a couple sections for tidyness, these a
 | ------  | ------ |------     |
 | EnableControllers  | bool | Variable to enable or disable controllers.     |
 | ControllerMode  | int | Sets the controller type, 0 being Knuckles controllers and 1 being wand controllers.     |
-|CTRL1YawOffset | float | Yaw offset of the Right controller in degrees|
-|CTRL1PitchOffset | float | Pitch offset of the Right controller in degrees|
-|CTRL1RollOffset | float | Roll offset of the Right controller in degrees|
-|CTRL2YawOffset | float | Yaw offset of the Left controller in degrees|
-|CTRL2PitchOffset | float | Pitch offset of the Left controller in degrees|
-|CTRL2RollOffset | float | Roll offset of the Left controller in degrees|
+|CTRLRightYawOffset | float | Yaw offset of the Right controller in degrees|
+|CTRLRightPitchOffset | float | Pitch offset of the Right controller in degrees|
+|CTRLRightRollOffset | float | Roll offset of the Right controller in degrees|
+|CTRLLeftYawOffset | float | Yaw offset of the Left controller in degrees|
+|CTRLLeftPitchOffset | float | Pitch offset of the Left controller in degrees|
+|CTRLLeftRollOffset | float | Roll offset of the Left controller in degrees|
 
 ### "Trackers" section where you'll find:
 |Parameter|Type    |Description|
