@@ -241,7 +241,7 @@ void CdataHandler::ReadHIDData()
 				float magZ = (float)(DataHMDRAW->MagZ / 5);
 
 				//update filter
-				filter.update(gyX, gyY, gyZ, accX, accY, accZ, magY, magX, -magZ);
+				filter.update(gyX, gyY, gyZ, accX, accY, accZ, magX, magY, magZ);
 
 				HMDData.qW = filter.getQuatW();
 				HMDData.qX = filter.getQuatY();
