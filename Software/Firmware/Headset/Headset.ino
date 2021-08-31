@@ -302,9 +302,9 @@ void loop() {
   HMDRawData.GyroY = (short)(gy * 16);
   HMDRawData.GyroZ = (short)(gz * 16);
 
-  HMDRawData.MagX = (short)(mx * 5);
-  HMDRawData.MagY = (short)(my * 5);
-  HMDRawData.MagZ = (short)(mz * 5);
+  HMDRawData.MagX = (short)(my * 5);
+  HMDRawData.MagY = (short)(mx * 5);
+  HMDRawData.MagZ = (short)(-mz * 5);
 
   Serial.print("ax: ");
   Serial.println(ax);
