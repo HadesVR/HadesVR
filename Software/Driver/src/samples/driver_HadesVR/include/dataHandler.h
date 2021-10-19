@@ -225,6 +225,9 @@ public:
 	std::thread* pHIDthread = NULL;
 	std::thread* pPSMUpdatethread = NULL;
 
+	int psmsUpdateRate = 60;
+	int psmsMillisecondPeriod;
+
 private:
 
 	_HMDData	HMDData;
@@ -265,11 +268,10 @@ private:
 	PosData ctrlRightPosData;
 	PosData ctrlLeftPosData;
 
-
-
 	Madgwick HMDfilter;
 	int readsFromInit = 0;
 	float filterBeta = 0.05f;
+
 
 
 	double deltatime = 0;

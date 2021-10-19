@@ -283,21 +283,43 @@ void CdataHandler::ReadHIDData()
 
 void CdataHandler::PSMUpdate()
 {
+
+	float oldHMDPosX = 0;
+	float oldHMDPosY = 0;
+	float oldHMDPosZ = 0;
+
+	std::chrono::steady_clock::time_point lastPSMSUpdate;
+
 	while (PSMConnected) {
 		
 		PSM_Update();
 
+		auto now = std::chrono::high_resolution_clock::now();
+		deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastPSMSUpdate).count() / 1000000.0f;
+		lastPSMSUpdate = now;
+
 		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 
-			hmdPosData.posX = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
-			hmdPosData.posY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
-			hmdPosData.posZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
+			float HMDposX = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
+			float HMDposY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
+			float HMDposZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
 
-			hmdPosData.vx = 0;
-			hmdPosData.vz = 0;
-			hmdPosData.vy = 0;
+			if (oldHMDPosX != HMDposX && oldHMDPosY != HMDposY) {
+				hmdPosData.posX = HMDposX;
+				hmdPosData.posY = HMDposY;
+				hmdPosData.posZ = HMDposZ;
 
+				//calculate new velocity from both tracked points.
+				hmdPosData.vx = (oldHMDPosX - HMDposX) / deltatime;
+				hmdPosData.vy = (oldHMDPosY - HMDposY) / deltatime;
+				hmdPosData.vz = (oldHMDPosZ - HMDposZ) / deltatime;
+
+				//update old velocity
+				oldHMDPosX = HMDposX;
+				oldHMDPosY = HMDposY;
+				oldHMDPosZ = HMDposZ;
+			}
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
@@ -305,8 +327,8 @@ void CdataHandler::PSMUpdate()
 		if (ctrl2Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 		}
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(12));
+		//no need to update this as often as we do.
+		std::this_thread::sleep_for(std::chrono::milliseconds(psmsMillisecondPeriod));
 	}
 }
 
@@ -570,7 +592,7 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 {
 	if (HIDInit == false) {
 		
-		connectToPSMOVE();
+		
 		int result;
 		result = hid_init(); //Result should be 0.
 		if (result) {
@@ -649,9 +671,14 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float, RightTrackerOffset.W);
 			vr::VRSettings()->SetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float, RightTrackerOffset.Y);
 		}
-
-
 		DriverLog("[Settings] Loaded Calibration settings");
+
+		//get tracker update rate
+		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
+		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate )* 1000.f);
+		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
+		connectToPSMOVE();
+
 	}
 }
 
