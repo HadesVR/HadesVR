@@ -87,7 +87,8 @@ int comPort = 3;
 double FirstCtrlLastPos[3] = { 0, 0, 0 }, SecondCtrlLastPos[3] = { 0, 0, 0 };
 double TrackerWaistLastPos[3] = { 0, 0, 0 }, TrackerLeftFootLastPos[3] = { 0, 0, 0 }, TrackerRightFootLastPos[3] = { 0, 0, 0 };
 
-milliseconds deltaTime;
+milliseconds deltaTime ;
+static milliseconds lastMillis;
 
 //-----------------------------------------------------------------------------
 // Purpose: HMD mess over here
@@ -1048,7 +1049,6 @@ void CServerDriver_Sample::Cleanup()
 void CServerDriver_Sample::RunFrame()
 {
 	//Velocity
-	static milliseconds lastMillis = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 	deltaTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()) - lastMillis;
 	lastMillis = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
