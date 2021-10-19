@@ -306,9 +306,6 @@ void loop() {
   HMDRawData.MagY = (short)(mx * 5);
   HMDRawData.MagZ = (short)(-mz * 5);
 
-  Serial.print("ax: ");
-  Serial.println(ax);
-
   HID().SendReport(1, &HMDRawData, 63);
 
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!

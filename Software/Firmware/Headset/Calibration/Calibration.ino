@@ -52,7 +52,6 @@ void setup() {
 
   if (readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250) == MPU9250_WHOAMI_DEFAULT_VALUE)
   {
-
     Serial.println("MPU9250 is online");
     initMPU();
 
@@ -71,15 +70,21 @@ void setup() {
   {
     Serial.print("Could not connect to MPU9250: 0x");
     Serial.println(readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250), HEX);
+
+    Serial.println("Check IMU wiring and restart!");
+    while (1) {
+      ;
+    }
   }
 
 
   Serial.println("Entered calibration mode!");
 
   delay(1000);
-  Serial.println("Lay IMU on flat surface.");
+  Serial.println("Lay IMU on flat surface for a moment...");
   delay(10000);
   calibrateMPU9250(cal.gyroBias, cal.accelBias);
+  Serial.println("Done!");
   Serial.println("Magnetic calibration mode.");
   delay(1000);
   magcalMPU9250(cal.magBias, cal.magScale);
