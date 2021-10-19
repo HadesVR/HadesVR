@@ -5,6 +5,7 @@
 
 #include <windows.h>
 #include <thread>
+#include <chrono>
 #include <atlstr.h> 
 #include <math.h>
 
@@ -16,6 +17,7 @@
 #include "settingsAPIKeys.h"
 
 using namespace ATL;
+using namespace std::chrono;
 
 typedef struct _HMDData
 {
@@ -26,9 +28,6 @@ typedef struct _HMDData
 	double	qX;
 	double	qY;
 	double  qZ;
-	float   accelX;
-	float   accelY;
-	float   accelZ;
 	uint16_t Data;
 } THMD, * PHMD;
 
@@ -41,9 +40,6 @@ typedef struct _Controller
 	double	qX;
 	double	qY;
 	double  qZ;
-	float   accelX;
-	float   accelY;
-	float   accelZ;
 	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
@@ -256,11 +252,17 @@ private:
 
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
-	PSMVector3f hmdPos, ctrlRightPos, ctrlLeftPos;
+	PSMVector3f psmHmdPos, psmCtrlRightPos, psmCtrlLeftPos;
 
-	Madgwick filter;
+	Madgwick HMDfilter;
 	int readsFromInit = 0;
 	float filterBeta = 0.05f;
+
+	double deltatime = 0;
+	std::chrono::steady_clock::time_point lastHMDUpdate;
+	std::chrono::steady_clock::time_point lastCTRLUpdate;
+
+	float HMDPosX, HMDPosY, HMDPosZ;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

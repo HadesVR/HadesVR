@@ -128,15 +128,11 @@ void CdataHandler::ReadHIDData()
 		if (r > 0) {
 			switch (packet_buffer[1])
 			{
-			case 1:
+			case 1:		//HMD quaternion packet
 				HMDData.qW = DataHMDQuat->HMDQuatW;
 				HMDData.qX = DataHMDQuat->HMDQuatX;
 				HMDData.qY = DataHMDQuat->HMDQuatY;
 				HMDData.qZ = DataHMDQuat->HMDQuatZ;
-
-				HMDData.accelX = (float)(DataHMDQuat->accX) * 4.0 / 32768.0;
-				HMDData.accelY = (float)(DataHMDQuat->accY) * 4.0 / 32768.0;
-				HMDData.accelZ = (float)(DataHMDQuat->accZ) * 4.0 / 32768.0;
 
 				HMDData.Data = DataHMDQuat->HMDData;
 
@@ -159,15 +155,17 @@ void CdataHandler::ReadHIDData()
 				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255;
 				break;
 
-			case 2:
+			case 2:		//Controller quaternion packet
 				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767;
 				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767;
 				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767;
 				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767;
 
+				/*
 				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) * 4.0 / 32768.0;
 				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) * 4.0 / 32768.0;
 				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) * 4.0 / 32768.0;
+				*/
 
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
@@ -189,9 +187,11 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767;
 				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767;
 
+				/*
 				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) * 4.0 / 32768.0;
 				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) * 4.0 / 32768.0;
 				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) * 4.0 / 32768.0;
+				*/
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
@@ -209,48 +209,55 @@ void CdataHandler::ReadHIDData()
 				
 				break;
 
-			case 3:
+			case 3:		//hmd IMU packet
 
 				if (!orientationFilterInit) {		//init filter
-					filter.begin();
-					filter.setBeta(2.f);
+					HMDfilter.begin();
+					HMDfilter.setBeta(2.f);
 					DriverLog("[Madgwick] Revving up the filter and redlining it to a beta of 2");
 					orientationFilterInit = true;
 				}
 
 				if (readsFromInit < 1000) {
 					readsFromInit++;
-					if (readsFromInit == 1000) {
-						filter.setBeta(filterBeta);
+					if (readsFromInit == 100) {
+						HMDfilter.setBeta(filterBeta);
 						DriverLog("[Madgwick] first 1000 readings done! switching to more accurate beta value. of %f", filterBeta);
 					}
 				}
 
-				//get data and scale it properly
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
 				float accY = (float)(DataHMDRAW->AccY) / 2048;
 				float accZ = (float)(DataHMDRAW->AccZ) / 2048;
+
+				//get data and scale it properly. Then update the filter.
+				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
+					accX, accY, accZ,
+					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
+
+				//Apply rotation to the HMD
+				float quatW = HMDfilter.getQuatW();
+				float quatX = HMDfilter.getQuatX();
+				float quatY = HMDfilter.getQuatY();
+				float quatZ = HMDfilter.getQuatZ();
+
+				HMDData.qW = quatW;
+				HMDData.qX = quatY;
+				HMDData.qY = quatZ;
+				HMDData.qZ = quatX;
+
+				//Rotate gravity vector
+				float lin_ax = accX - (2.0f * (quatX * quatZ - quatW * quatY));
+				float lin_ay = accY - (2.0f * (quatW * quatX + quatY * quatZ));
+				float lin_az = accZ - (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
+
 				
-				float gyX = (float)(DataHMDRAW->GyroX / 16);
-				float gyY = (float)(DataHMDRAW->GyroY / 16);
-				float gyZ = (float)(DataHMDRAW->GyroZ / 16);
 
+				auto now = std::chrono::high_resolution_clock::now();
+				deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastHMDUpdate).count() / 1000000.0f;
+				lastHMDUpdate = now;
 
-				float magX = (float)(DataHMDRAW->MagX / 5);
-				float magY = (float)(DataHMDRAW->MagY / 5);
-				float magZ = (float)(DataHMDRAW->MagZ / 5);
-
-				//update filter
-				filter.update(gyX, gyY, gyZ, accX, accY, accZ, magX, magY, magZ);
-
-				HMDData.qW = filter.getQuatW();
-				HMDData.qX = filter.getQuatY();
-				HMDData.qY = filter.getQuatZ();
-				HMDData.qZ = filter.getQuatX();
-
-				HMDData.accelX = accX;
-				HMDData.accelY = accY;
-				HMDData.accelZ = accZ;
+				DriverLog("[Debug] ax: %f ay: %f az: %f, deltatime: %f", lin_ax, lin_ay, lin_az, deltatime);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -284,13 +291,13 @@ void CdataHandler::PSMUpdate()
 		PSM_Update();
 
 		if (HMDAllocated) {
-			PSM_GetHmdPosition(hmdList.hmd_id[0], &hmdPos);
+			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 		}
 		if (ctrl1Allocated) {
-			PSM_GetControllerPosition(controllerList.controller_id[0], &ctrlRightPos);
+			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 		}
 		if (ctrl2Allocated) {
-			PSM_GetControllerPosition(controllerList.controller_id[1], &ctrlLeftPos);
+			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 		}
 
 	}
@@ -304,9 +311,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		if (PSMConnected) {			//PSM POSITION
 
-			HMD->X = hmdPos.x * k_fScalePSMoveAPIToMeters;
-			HMD->Y = hmdPos.z * k_fScalePSMoveAPIToMeters;
-			HMD->Z = hmdPos.y * k_fScalePSMoveAPIToMeters;
+			HMD->X = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
+			HMD->Y = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
+			HMD->Z = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
 		}
 		else {
 			HMD->X = 0;
@@ -320,8 +327,13 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		HMD->qZ = HMDQuat.Z;
 
 	}
-	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0)
+	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0) {
 		SetCentering();
+	}
+		
+	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
+
+	}
 }
 
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
@@ -370,13 +382,13 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 
-			RightController->X = ctrlRightPos.x * k_fScalePSMoveAPIToMeters;
-			RightController->Y = ctrlRightPos.z * k_fScalePSMoveAPIToMeters;
-			RightController->Z = ctrlRightPos.y * k_fScalePSMoveAPIToMeters;
+			RightController->X = psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters;
+			RightController->Y = psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters;
+			RightController->Z = psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters;
 
-			LeftController->X = ctrlLeftPos.x * k_fScalePSMoveAPIToMeters;
-			LeftController->Y = ctrlLeftPos.z * k_fScalePSMoveAPIToMeters;
-			LeftController->Z = ctrlLeftPos.y * k_fScalePSMoveAPIToMeters;
+			LeftController->X = psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters;
+			LeftController->Y = psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters;
+			LeftController->Z = psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters;
 
 		}
 		else {
