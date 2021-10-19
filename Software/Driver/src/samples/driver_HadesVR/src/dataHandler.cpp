@@ -218,12 +218,18 @@ void CdataHandler::ReadHIDData()
 					orientationFilterInit = true;
 				}
 
-				if (readsFromInit < 1000) {
+				if (readsFromInit < 2000) {
 					readsFromInit++;
-					if (readsFromInit == 100) {
+					if (readsFromInit == 2000) {
 						HMDfilter.setBeta(filterBeta);
-						DriverLog("[Madgwick] first 1000 readings done! switching to more accurate beta value. of %f", filterBeta);
+						DriverLog("[Madgwick] first 2000 readings done! switching to more accurate beta value. of %f", filterBeta);
 					}
+					hmdPosData.vx = 0;
+					hmdPosData.vy = 0;
+					hmdPosData.vz = 0;
+					hmdPosData.posX = 0;
+					hmdPosData.posY = 0;
+					hmdPosData.posZ = 0;
 				}
 
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
@@ -246,16 +252,9 @@ void CdataHandler::ReadHIDData()
 				HMDData.qY = quatZ;
 				HMDData.qZ = quatX;
 
-				//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
-				float lin_ax = accX - (2.0f * (quatX * quatZ - quatW * quatY));
-				float lin_ay = accY - (2.0f * (quatW * quatX + quatY * quatZ));
-				float lin_az = accZ - (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
+				CalcAccelPosition(quatW, quatX, quatY, quatZ, accX, accY, accZ, hmdPosData, lastHMDUpdate);
 
-				auto now = std::chrono::high_resolution_clock::now();
-				deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastHMDUpdate).count() / 1000000.0f;
-				lastHMDUpdate = now;
-
-				//DriverLog("[Debug] ax: %f ay: %f az: %f, deltatime: %f", lin_ax, lin_ay, lin_az, deltatime);
+				//DriverLog("[Debug] x: %f y: %f z: %f, deltatime: %f", hmdPosData.posX, hmdPosData.posY, hmdPosData.posZ, deltatime);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -290,6 +289,15 @@ void CdataHandler::PSMUpdate()
 
 		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
+
+			hmdPosData.posX = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
+			hmdPosData.posY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
+			hmdPosData.posZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
+
+			hmdPosData.vx = 0;
+			hmdPosData.vz = 0;
+			hmdPosData.vy = 0;
+
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
@@ -298,6 +306,7 @@ void CdataHandler::PSMUpdate()
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 		}
 
+		std::this_thread::sleep_for(std::chrono::milliseconds(12));
 	}
 }
 
@@ -309,15 +318,16 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		if (PSMConnected) {			//PSM POSITION
 
-			HMD->X = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
-			HMD->Y = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
-			HMD->Z = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
+			HMD->X = hmdPosData.posX;
+			HMD->Y = hmdPosData.posY;
+			HMD->Z = hmdPosData.posZ;
 		}
 		else {
 			HMD->X = 0;
 			HMD->Y = 0;
 			HMD->Z = 0;
 		}
+		
 
 		HMD->qW = HMDQuat.W;
 		HMD->qX = HMDQuat.X;
@@ -330,7 +340,13 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	}
 		
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
+		hmdPosData.posX = 0;
+		hmdPosData.posY = 0;
+		hmdPosData.posZ = 0;
 
+		hmdPosData.vx = 0;
+		hmdPosData.vy = 0;
+		hmdPosData.vz = 0;
 	}
 }
 
@@ -453,6 +469,34 @@ void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker
 		rightTracker->Y = 0;
 		rightTracker->Z = 0;
 	}
+}
+
+void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos, std::chrono::steady_clock::time_point &lastUpdate) {
+
+	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
+	float lin_ax = accelX - (2.0f * (quatX * quatZ - quatW * quatY));
+	float lin_ay = accelY - (2.0f * (quatW * quatX + quatY * quatZ));
+	float lin_az = accelZ - (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
+
+	//convert to m/s^2
+	lin_ax *= 9.80665f;
+	lin_ay *= 9.80665f;
+	lin_az *= 9.80665f;
+
+	//get time delta
+	auto now = std::chrono::high_resolution_clock::now();
+	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
+	lastUpdate = now;
+
+	//integrate to get velocity
+	pos.vx += (lin_ay * deltatime);
+	pos.vy += (lin_ax * deltatime);
+	pos.vz += (lin_az * deltatime);
+
+	//integrate to get position
+	pos.posX += pos.vx * deltatime;
+	pos.posY += pos.vy * deltatime;
+	pos.posZ += pos.vz * deltatime;
 }
 
 float CdataHandler::lerp(const float a, const float b, const float f) {

@@ -199,6 +199,12 @@ struct ControllerPacket
 #pragma pack(pop)
 
 
+struct PosData 
+{
+	float posX, posY, posZ = 0;
+	float vx, vy, vz = 0;
+};
+
 class CdataHandler {
 public:
 	void SetCentering();
@@ -208,6 +214,7 @@ public:
 	void GetHMDData(THMD* HMD);
 	void GetControllersData(TController* RightController, TController* LeftController);
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
+	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos, std::chrono::steady_clock::time_point &lastUpdate);
 	bool connectToPSMOVE();
 	void StartData(int32_t PID, int32_t VID);
 	void CdataHandler::stopData();
@@ -254,15 +261,20 @@ private:
 	PSMHmdList hmdList;
 	PSMVector3f psmHmdPos, psmCtrlRightPos, psmCtrlLeftPos;
 
+	PosData hmdPosData;
+	PosData ctrlRightPosData;
+	PosData ctrlLeftPosData;
+
+
+
 	Madgwick HMDfilter;
 	int readsFromInit = 0;
 	float filterBeta = 0.05f;
 
+
 	double deltatime = 0;
 	std::chrono::steady_clock::time_point lastHMDUpdate;
 	std::chrono::steady_clock::time_point lastCTRLUpdate;
-
-	float HMDPosX, HMDPosY, HMDPosZ;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();
