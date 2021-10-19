@@ -246,18 +246,16 @@ void CdataHandler::ReadHIDData()
 				HMDData.qY = quatZ;
 				HMDData.qZ = quatX;
 
-				//Rotate gravity vector
+				//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
 				float lin_ax = accX - (2.0f * (quatX * quatZ - quatW * quatY));
 				float lin_ay = accY - (2.0f * (quatW * quatX + quatY * quatZ));
 				float lin_az = accZ - (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
-
-				
 
 				auto now = std::chrono::high_resolution_clock::now();
 				deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastHMDUpdate).count() / 1000000.0f;
 				lastHMDUpdate = now;
 
-				DriverLog("[Debug] ax: %f ay: %f az: %f, deltatime: %f", lin_ax, lin_ay, lin_az, deltatime);
+				//DriverLog("[Debug] ax: %f ay: %f az: %f, deltatime: %f", lin_ax, lin_ay, lin_az, deltatime);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
