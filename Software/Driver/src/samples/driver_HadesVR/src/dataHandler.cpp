@@ -224,12 +224,7 @@ void CdataHandler::ReadHIDData()
 						HMDfilter.setBeta(filterBeta);
 						DriverLog("[Madgwick] first 2000 readings done! switching to more accurate beta value. of %f", filterBeta);
 					}
-					hmdPosData.vx = 0;
-					hmdPosData.vy = 0;
-					hmdPosData.vz = 0;
-					hmdPosData.posX = 0;
-					hmdPosData.posY = 0;
-					hmdPosData.posZ = 0;
+					hmdPosData = { 0 };
 				}
 
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
@@ -253,8 +248,6 @@ void CdataHandler::ReadHIDData()
 				HMDData.qZ = quatX;
 
 				CalcAccelPosition(quatW, quatX, quatY, quatZ, accX, accY, accZ, hmdPosData, lastHMDUpdate);
-
-				//DriverLog("[Debug] x: %f y: %f z: %f, deltatime: %f", hmdPosData.posX, hmdPosData.posY, hmdPosData.posZ, deltatime);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -283,11 +276,6 @@ void CdataHandler::ReadHIDData()
 
 void CdataHandler::PSMUpdate()
 {
-
-	float oldHMDPosX = 0;
-	float oldHMDPosY = 0;
-	float oldHMDPosZ = 0;
-
 	std::chrono::steady_clock::time_point lastPSMSUpdate;
 
 	while (PSMConnected) {
@@ -305,20 +293,21 @@ void CdataHandler::PSMUpdate()
 			float HMDposY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
 			float HMDposZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
 
-			if (oldHMDPosX != HMDposX && oldHMDPosY != HMDposY) {
-				hmdPosData.posX = HMDposX;
-				hmdPosData.posY = HMDposY;
-				hmdPosData.posZ = HMDposZ;
+			if (hmdPosData.oldPosX != HMDposX && hmdPosData.oldPosY != HMDposY) {
 
-				//calculate new velocity from both tracked points.
-				hmdPosData.vx = (oldHMDPosX - HMDposX) / deltatime;
-				hmdPosData.vy = (oldHMDPosY - HMDposY) / deltatime;
-				hmdPosData.vz = (oldHMDPosZ - HMDposZ) / deltatime;
+				//update position
+				hmdPosData.oldPosX = HMDposX;
+				hmdPosData.oldPosY = HMDposY;
+				hmdPosData.oldPosZ = HMDposZ;
 
-				//update old velocity
-				oldHMDPosX = HMDposX;
-				oldHMDPosY = HMDposY;
-				oldHMDPosZ = HMDposZ;
+				//decay
+				hmdPosData.vx *= 0.5f;
+				hmdPosData.vy *= 0.5f;
+				hmdPosData.vz *= 0.5f;
+
+				hmdPosData.oldvX = hmdPosData.vx;
+				hmdPosData.oldvY = hmdPosData.vy;
+				hmdPosData.oldvZ = hmdPosData.vz;
 			}
 		}
 		if (ctrl1Allocated) {
@@ -362,13 +351,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	}
 		
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
-		hmdPosData.posX = 0;
-		hmdPosData.posY = 0;
-		hmdPosData.posZ = 0;
-
-		hmdPosData.vx = 0;
-		hmdPosData.vy = 0;
-		hmdPosData.vz = 0;
+		hmdPosData = { 0 };
 	}
 }
 
@@ -494,6 +477,11 @@ void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker
 }
 
 void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos, std::chrono::steady_clock::time_point &lastUpdate) {
+	
+	//get time delta
+	auto now = std::chrono::high_resolution_clock::now();
+	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
+	lastUpdate = now;
 
 	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
 	float lin_ax = accelX - (2.0f * (quatX * quatZ - quatW * quatY));
@@ -505,20 +493,23 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	lin_ay *= 9.80665f;
 	lin_az *= 9.80665f;
 
-	//get time delta
-	auto now = std::chrono::high_resolution_clock::now();
-	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
-	lastUpdate = now;
-
 	//integrate to get velocity
 	pos.vx += (lin_ay * deltatime);
 	pos.vy += (lin_ax * deltatime);
 	pos.vz += (lin_az * deltatime);
 
 	//integrate to get position
-	pos.posX += pos.vx * deltatime;
-	pos.posY += pos.vy * deltatime;
-	pos.posZ += pos.vz * deltatime;
+	pos.posX = ((pos.vx + pos.oldvX) * 0.5f) * deltatime + pos.oldPosX;
+	pos.posY = ((pos.vy + pos.oldvY) * 0.5f) * deltatime + pos.oldPosY;
+	pos.posZ = ((pos.vz + pos.oldvZ) * 0.5f) * deltatime + pos.oldPosZ;
+
+	pos.oldvX = pos.vx;
+	pos.oldvY = pos.vy;
+	pos.oldvZ = pos.vz;
+
+	pos.oldPosX = pos.posX;
+	pos.oldPosY = pos.posY;
+	pos.oldPosZ = pos.posZ;
 }
 
 float CdataHandler::lerp(const float a, const float b, const float f) {

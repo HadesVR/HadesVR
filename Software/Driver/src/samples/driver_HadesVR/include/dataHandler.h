@@ -67,7 +67,6 @@ typedef struct _TrackerData
 } TTracker, * PTracker;
 
 #pragma pack(push, 1)
-
 struct HMDQuaternionPacket
 {
 	uint8_t HIDID;			//this is fucking stupid
@@ -195,14 +194,15 @@ struct ControllerPacket
 	uint16_t Ctrl2_Data;
 	uint8_t Padding[6];
 };
-
 #pragma pack(pop)
 
 
 struct PosData 
 {
-	float posX, posY, posZ = 0;
-	float vx, vy, vz = 0;
+	float oldPosX = 0, oldPosY = 0, oldPosZ = 0;
+	float posX = 0, posY = 0, posZ = 0;
+	float vx = 0, vy = 0, vz = 0;
+	float oldvX = 0, oldvY = 0, oldvZ = 0;
 };
 
 class CdataHandler {
