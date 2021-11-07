@@ -456,7 +456,7 @@ void loop() {
   updateMPU();
 
   //Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
-  
+  joyTouch = false;
   int btn = 0;
   tracky = analogRead(TrackpadPin);
   if (tracky > 560) {
@@ -555,6 +555,19 @@ void loop() {
   data.accX = ax;
   data.accY = ay;
   data.accZ = az;
+
+  Serial.print("qW: ");
+  Serial.print(q._f.w);
+  
+  Serial.print(" qX: ");
+  Serial.print(q._f.y);
+  
+  Serial.print(" qY: ");
+  Serial.print(q._f.z);
+  
+  Serial.print(" qZ: ");
+  Serial.println(q._f.x);
+  
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
   radio.startListening();
