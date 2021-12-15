@@ -4,6 +4,8 @@
 # HadesVR       [![Release](https://img.shields.io/github/v/release/HadesVR/HadesVR.svg)](../../releases/latest)
 HadesVR is a SteamVR compatible VR setup made for tinkerers. 
 
+![Discord](docs/img/Discord.png)
+
 The setup includes DIY controllers that are capable of emulating HTC vive wands or most aspects of the Valve Index Knuckles controllers (including finger tracking!). It also includes tracking electronics for a Headset, including an integrated wireless receiver to receive the controllers' data.
 
 There's also custom controller hardware like 3d printable shells (still a bit of a WIP) with their respective custom PCBs to build your own Knuckles controllers.
@@ -49,24 +51,17 @@ Or maybe you want to DIY your own controllers? check out the [Controllers docs](
 
 # Demos
 
-6dof tracking and individual finger tracking demo:
+Finger tracking!
 
-![6dof](docs/img/6dof.gif)
-
+![fingerT](docs/img/fingerT.gif)
 
 Me being awful at beatsaber demo:
 
 ![beatsaber](docs/img/Beatsaber.gif)
 
+Half-Life: Alyx:
 
-# To-do list:
+![hla](docs/img/hla.gif)
 
-### Github TODO:
-- update docs
-
-### Project TODO:
-- get cmake working with the project
-- hardware design for the HadesVR Wand controllers and trackers
-    - _Currently missing 3d model... will get to it when I fix my printer_
-- full body tracking maybe?
-    - _might be coming up after the wand controllers._
+# Trello
+I used to have a crappy little TODO list here but I'm gonna try to use [trello for HadesVR work](https://trello.com/b/4Ogw6SMk/hadesvr-stuff)
