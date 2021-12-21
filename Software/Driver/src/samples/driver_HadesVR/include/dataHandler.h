@@ -16,6 +16,8 @@
 #include "driverlog.h"
 #include "settingsAPIKeys.h"
 
+#define E_Num 2.7182818284f
+
 using namespace ATL;
 using namespace std::chrono;
 
@@ -40,6 +42,9 @@ typedef struct _Controller
 	double	qX;
 	double	qY;
 	double  qZ;
+	float accelX;
+	float accelY;
+	float accelZ;
 	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
@@ -203,6 +208,8 @@ struct PosData
 	float posX = 0, posY = 0, posZ = 0;
 	float vx = 0, vy = 0, vz = 0;
 	float oldvX = 0, oldvY = 0, oldvZ = 0;
+
+	std::chrono::steady_clock::time_point lastUpdate;
 };
 
 class CdataHandler {
@@ -214,7 +221,8 @@ public:
 	void GetHMDData(THMD* HMD);
 	void GetControllersData(TController* RightController, TController* LeftController);
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
-	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos, std::chrono::steady_clock::time_point &lastUpdate);
+	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos);
+	void FusePos(PosData &pos, float x, float y, float z, float smooth);
 	bool connectToPSMOVE();
 	void StartData(int32_t PID, int32_t VID);
 	void CdataHandler::stopData();
@@ -271,12 +279,10 @@ private:
 	Madgwick HMDfilter;
 	int readsFromInit = 0;
 	float filterBeta = 0.05f;
-
-
-
 	double deltatime = 0;
-	std::chrono::steady_clock::time_point lastHMDUpdate;
-	std::chrono::steady_clock::time_point lastCTRLUpdate;
+
+	float ContSmoothK = 35.f;
+	float HMDSmoothK = 17.5f;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

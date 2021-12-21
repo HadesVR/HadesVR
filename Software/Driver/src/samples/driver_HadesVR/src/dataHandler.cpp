@@ -156,16 +156,17 @@ void CdataHandler::ReadHIDData()
 				break;
 
 			case 2:		//Controller quaternion packet
+
 				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767;
 				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767;
 				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767;
 				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767;
 
-				/*
 				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) * 4.0 / 32768.0;
 				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) * 4.0 / 32768.0;
 				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) * 4.0 / 32768.0;
-				*/
+
+				//CalcAccelPosition(RightCtrlData.qW, RightCtrlData.qY, RightCtrlData.qZ, RightCtrlData.qX, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
 
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
@@ -247,7 +248,7 @@ void CdataHandler::ReadHIDData()
 				HMDData.qY = quatZ;
 				HMDData.qZ = quatX;
 
-				CalcAccelPosition(quatW, quatX, quatY, quatZ, accX, accY, accZ, hmdPosData, lastHMDUpdate);
+				CalcAccelPosition(quatW, quatX, quatY, quatZ, accX, accY, accZ, hmdPosData);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -293,28 +294,28 @@ void CdataHandler::PSMUpdate()
 			float HMDposY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
 			float HMDposZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
 
-			if (hmdPosData.oldPosX != HMDposX && hmdPosData.oldPosY != HMDposY) {
+			FusePos(hmdPosData, HMDposX, HMDposY, HMDposZ, HMDSmoothK);
 
-				//update position
-				hmdPosData.oldPosX = HMDposX;
-				hmdPosData.oldPosY = HMDposY;
-				hmdPosData.oldPosZ = HMDposZ;
-
-				//decay
-				hmdPosData.vx *= 0.5f;
-				hmdPosData.vy *= 0.5f;
-				hmdPosData.vz *= 0.5f;
-
-				hmdPosData.oldvX = hmdPosData.vx;
-				hmdPosData.oldvY = hmdPosData.vy;
-				hmdPosData.oldvZ = hmdPosData.vz;
-			}
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
+
+			float CtrlRightPosX = psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters;
+			float CtrlRightPosY = psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters;
+			float CtrlRightPosZ = psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters;
+
+			FusePos(ctrlRightPosData, CtrlRightPosX, CtrlRightPosY, CtrlRightPosZ, ContSmoothK);
+
 		}
 		if (ctrl2Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
+
+			float CtrlLeftPosX = psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters;
+			float CtrlLeftPosY = psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters;
+			float CtrlLeftPosZ = psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters;
+
+			FusePos(ctrlLeftPosData, CtrlLeftPosX, CtrlLeftPosY, CtrlLeftPosZ, ContSmoothK);
+			
 		}
 		//no need to update this as often as we do.
 		std::this_thread::sleep_for(std::chrono::milliseconds(psmsMillisecondPeriod));
@@ -352,6 +353,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		hmdPosData = { 0 };
+		ctrlRightPosData = { 0 };
 	}
 }
 
@@ -399,16 +401,17 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		LeftController->FingRing  = LeftCtrlData.FingRing;
 		LeftController->FingPinky = LeftCtrlData.FingPinky;
 
+
 		if (PSMConnected) {		//PSM POSITION
 
-			RightController->X = psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters;
-			RightController->Y = psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters;
-			RightController->Z = psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters;
+			RightController->X = ctrlRightPosData.posX;
+			RightController->Y = ctrlRightPosData.posY;
+			RightController->Z = ctrlRightPosData.posZ;
 
-			LeftController->X = psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters;
-			LeftController->Y = psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters;
-			LeftController->Z = psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters;
-
+			LeftController->X = ctrlLeftPosData.posX;
+			LeftController->Y = ctrlLeftPosData.posY;
+			LeftController->Z = ctrlLeftPosData.posZ;
+			
 		}
 		else {
 			RightController->X = 0.1;
@@ -476,12 +479,12 @@ void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker
 	}
 }
 
-void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos, std::chrono::steady_clock::time_point &lastUpdate) {
+void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos) {
 	
 	//get time delta
 	auto now = std::chrono::high_resolution_clock::now();
-	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
-	lastUpdate = now;
+	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - pos.lastUpdate).count() / 1000000.0f;
+	pos.lastUpdate = now;
 
 	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
 	float lin_ax = accelX - (2.0f * (quatX * quatZ - quatW * quatY));
@@ -503,6 +506,41 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.posY = ((pos.vy + pos.oldvY) * 0.5f) * deltatime + pos.oldPosY;
 	pos.posZ = ((pos.vz + pos.oldvZ) * 0.5f) * deltatime + pos.oldPosZ;
 
+	pos.oldvX = pos.vx;
+	pos.oldvY = pos.vy;
+	pos.oldvZ = pos.vz;
+
+	pos.oldPosX = pos.posX;
+	pos.oldPosY = pos.posY;
+	pos.oldPosZ = pos.posZ;
+}
+
+void CdataHandler::FusePos(PosData &pos, float x, float y, float z, float smooth) {
+
+	float diffX = pos.posX - x;
+	float diffY = pos.posY - y;
+	float diffZ = pos.posZ - z;
+
+	float fabsfdiffX = fabsf(diffX);
+	float fabsfdiffY = fabsf(diffY);
+	float fabsfdiffZ = fabsf(diffZ);
+
+	//I have no idea, this is technically a high pass filter but think of it as a low pass one, plug "f\left(x\right)=\left(1-e^{-kx}\right)" into desmos to see how it works, let k be between 1 and 100.
+	float outX = diffX * (1 - pow(E_Num, -smooth * fabsfdiffX));
+	float outY = diffY * (1 - pow(E_Num, -smooth * fabsfdiffY));
+	float outZ = diffZ * (1 - pow(E_Num, -smooth * fabsfdiffZ));
+	
+	//update position
+	pos.posX += -outX;
+	pos.posY += -outY;
+	pos.posZ += -outZ;
+
+	//decay
+	pos.vx *= 0.5f;
+	pos.vy *= 0.5f;
+	pos.vz *= 0.5f;
+
+	//store old stuff
 	pos.oldvX = pos.vx;
 	pos.oldvY = pos.vy;
 	pos.oldvZ = pos.vz;
@@ -664,7 +702,9 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		}
 		DriverLog("[Settings] Loaded Calibration settings");
 
-		//get tracker update rate
+		//get tracker update rate and smoothness thing
+		ContSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_CTRL_Float);
+		HMDSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_HMD_Float);
 		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
 		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate )* 1000.f);
 		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);

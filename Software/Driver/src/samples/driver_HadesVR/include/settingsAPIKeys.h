@@ -31,6 +31,10 @@ static const char* const k_pch_Driver_Section = "Driver";
 static const char* const k_pch_HID_PID_Int32 = "HID_PID";
 static const char* const k_pch_HID_VID_Int32 = "HID_VID";
 static const char* const k_pch_PSMS_UPDATE_RATE_Int32 = "PSMSTrackerFrequency";
+static const char* const k_pch_TRACKER_SMOOTH_CTRL_Float = "ControllerSmoothingK";
+static const char* const k_pch_TRACKER_SMOOTH_HMD_Float = "HMDSmoothingK";
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
