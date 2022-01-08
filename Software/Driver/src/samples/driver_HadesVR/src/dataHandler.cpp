@@ -162,9 +162,9 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767;
 				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767;
 
-				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) * 4.0 / 32768.0;
-				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) * 4.0 / 32768.0;
-				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) * 4.0 / 32768.0;
+				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) / 2048;
+				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048;
+				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048;
 
 				//CalcAccelPosition(RightCtrlData.qW, RightCtrlData.qY, RightCtrlData.qZ, RightCtrlData.qX, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
 
@@ -188,11 +188,11 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767;
 				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767;
 
-				/*
-				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) * 4.0 / 32768.0;
-				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) * 4.0 / 32768.0;
-				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) * 4.0 / 32768.0;
-				*/
+				
+				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) / 2048;
+				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) / 2048;
+				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048;
+				
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
@@ -225,7 +225,10 @@ void CdataHandler::ReadHIDData()
 						HMDfilter.setBeta(filterBeta);
 						DriverLog("[Madgwick] first 2000 readings done! switching to more accurate beta value. of %f", filterBeta);
 					}
-					hmdPosData = { 0 };
+					if (PSMConnected) {
+						hmdPosData = { 0 };
+					}
+					
 				}
 
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
@@ -354,6 +357,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		hmdPosData = { 0 };
 		ctrlRightPosData = { 0 };
+		ctrlLeftPosData = { 0 };
 	}
 }
 
