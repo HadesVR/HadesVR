@@ -136,77 +136,82 @@ void CdataHandler::ReadHIDData()
 
 				HMDData.Data = DataHMDQuat->HMDData;
 
-				TrackerWaistData.qW = (float)(DataHMDQuat->tracker1_QuatW) / 32767;
-				TrackerWaistData.qX = (float)(DataHMDQuat->tracker1_QuatX) / 32767;
-				TrackerWaistData.qY = (float)(DataHMDQuat->tracker1_QuatY) / 32767;
-				TrackerWaistData.qZ = (float)(DataHMDQuat->tracker1_QuatZ) / 32767;
-				TrackerWaistData.vBat = (float)(DataHMDQuat->tracker1_vBat) / 255;
+				TrackerWaistData.qW = (float)(DataHMDQuat->tracker1_QuatW) / 32767.f;
+				TrackerWaistData.qX = (float)(DataHMDQuat->tracker1_QuatX) / 32767.f;
+				TrackerWaistData.qY = (float)(DataHMDQuat->tracker1_QuatY) / 32767.f;
+				TrackerWaistData.qZ = (float)(DataHMDQuat->tracker1_QuatZ) / 32767.f;
+				TrackerWaistData.vBat = (float)(DataHMDQuat->tracker1_vBat) / 255.f;
 
-				TrackerLeftData.qW = (float)(DataHMDQuat->tracker2_QuatW) / 32767;
-				TrackerLeftData.qX = (float)(DataHMDQuat->tracker2_QuatX) / 32767;
-				TrackerLeftData.qY = (float)(DataHMDQuat->tracker2_QuatY) / 32767;
-				TrackerLeftData.qZ = (float)(DataHMDQuat->tracker2_QuatZ) / 32767;
-				TrackerLeftData.vBat = (float)(DataHMDQuat->tracker2_vBat) / 255;
+				TrackerLeftData.qW = (float)(DataHMDQuat->tracker2_QuatW) / 32767.f;
+				TrackerLeftData.qX = (float)(DataHMDQuat->tracker2_QuatX) / 32767.f;
+				TrackerLeftData.qY = (float)(DataHMDQuat->tracker2_QuatY) / 32767.f;
+				TrackerLeftData.qZ = (float)(DataHMDQuat->tracker2_QuatZ) / 32767.f;
+				TrackerLeftData.vBat = (float)(DataHMDQuat->tracker2_vBat) / 255.f;
 
-				TrackerRightData.qW = (float)(DataHMDQuat->tracker3_QuatW) / 32767;
-				TrackerRightData.qX = (float)(DataHMDQuat->tracker3_QuatX) / 32767;
-				TrackerRightData.qY = (float)(DataHMDQuat->tracker3_QuatY) / 32767;
-				TrackerRightData.qZ = (float)(DataHMDQuat->tracker3_QuatZ) / 32767;
-				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255;
+				TrackerRightData.qW = (float)(DataHMDQuat->tracker3_QuatW) / 32767.f;
+				TrackerRightData.qX = (float)(DataHMDQuat->tracker3_QuatX) / 32767.f;
+				TrackerRightData.qY = (float)(DataHMDQuat->tracker3_QuatY) / 32767.f;
+				TrackerRightData.qZ = (float)(DataHMDQuat->tracker3_QuatZ) / 32767.f;
+				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255.f;
 				break;
 
 			case 2:		//Controller quaternion packet
 
-				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767;
-				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767;
-				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767;
-				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767;
+				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
+				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
+				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
+				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
-				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) / 2048;
-				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048;
-				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048;
+				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
+				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
+				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
-				//CalcAccelPosition(RightCtrlData.qW, RightCtrlData.qY, RightCtrlData.qZ, RightCtrlData.qX, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
-
+				if (ctrlAccelEnable) {
+					CalcAccelPosition(RightCtrlData.qW, RightCtrlData.qX, RightCtrlData.qZ, RightCtrlData.qY, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
+				}
+				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
 
-				RightCtrlData.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255;
-				RightCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127;
-				RightCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127;
-				RightCtrlData.TrackpY = (float)(DataCtrl->Ctrl1_trackY) / 127;
-				RightCtrlData.vBat = (float)(DataCtrl->Ctrl1_vBat) / 255;
-				RightCtrlData.FingThumb = (float)(DataCtrl->Ctrl1_THUMB) / 255;
-				RightCtrlData.FingIndex = (float)(DataCtrl->Ctrl1_INDEX) / 255;
-				RightCtrlData.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255;
-				RightCtrlData.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255;
-				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255;
+				RightCtrlData.Trigger = (float)(DataCtrl->Ctrl1_Trigger) / 255.f;
+				RightCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl1_axisX) / 127.f;
+				RightCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl1_axisY) / 127.f;
+				RightCtrlData.TrackpY = (float)(DataCtrl->Ctrl1_trackY) / 127.f;
+				RightCtrlData.vBat = (float)(DataCtrl->Ctrl1_vBat) / 255.f;
+				RightCtrlData.FingThumb = (float)(DataCtrl->Ctrl1_THUMB) / 255.f;
+				RightCtrlData.FingIndex = (float)(DataCtrl->Ctrl1_INDEX) / 255.f;
+				RightCtrlData.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255.f;
+				RightCtrlData.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255.f;
+				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255.f;
 				
 
-				LeftCtrlData.qW = (float)(DataCtrl->Ctrl2_QuatW) / 32767;
-				LeftCtrlData.qX = (float)(DataCtrl->Ctrl2_QuatX) / 32767;
-				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767;
-				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767;
+				LeftCtrlData.qW = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
+				LeftCtrlData.qX = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
+				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
+				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 
 				
-				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) / 2048;
-				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) / 2048;
-				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048;
+				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
+				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
+				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
+				if (ctrlAccelEnable) {
+					CalcAccelPosition(LeftCtrlData.qW, LeftCtrlData.qX, LeftCtrlData.qY, LeftCtrlData.qZ, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
+				}
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
 
-				LeftCtrlData.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255;
-				LeftCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127;
-				LeftCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127;
-				LeftCtrlData.TrackpY = (float)(DataCtrl->Ctrl2_trackY) / 127;
-				LeftCtrlData.vBat = (float)(DataCtrl->Ctrl2_vBat) / 255;
-				LeftCtrlData.FingThumb = (float)(DataCtrl->Ctrl2_THUMB) / 255;
-				LeftCtrlData.FingIndex = (float)(DataCtrl->Ctrl2_INDEX) / 255;
-				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255;
-				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255;
-				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255;
+				LeftCtrlData.Trigger = (float)(DataCtrl->Ctrl2_Trigger) / 255.f;
+				LeftCtrlData.JoyAxisX = (float)(DataCtrl->Ctrl2_axisX) / 127.f;
+				LeftCtrlData.JoyAxisY = (float)(DataCtrl->Ctrl2_axisY) / 127.f;
+				LeftCtrlData.TrackpY = (float)(DataCtrl->Ctrl2_trackY) / 127.f;
+				LeftCtrlData.vBat = (float)(DataCtrl->Ctrl2_vBat) / 255.f;
+				LeftCtrlData.FingThumb = (float)(DataCtrl->Ctrl2_THUMB) / 255.f;
+				LeftCtrlData.FingIndex = (float)(DataCtrl->Ctrl2_INDEX) / 255.f;
+				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255.f;
+				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255.f;
+				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
 				
 				break;
 
@@ -226,9 +231,8 @@ void CdataHandler::ReadHIDData()
 						DriverLog("[Madgwick] first 2000 readings done! switching to more accurate beta value. of %f", filterBeta);
 					}
 					if (PSMConnected) {
-						hmdPosData = { 0 };
+						ResetPos(true);
 					}
-					
 				}
 
 				float accX = (float)(DataHMDRAW->AccX) / 2048;
@@ -297,7 +301,7 @@ void CdataHandler::PSMUpdate()
 			float HMDposY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
 			float HMDposZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
 
-			FusePos(hmdPosData, HMDposX, HMDposY, HMDposZ, HMDSmoothK);
+			CalcTrackedPos(hmdPosData, HMDposX, HMDposY, HMDposZ, HMDSmoothK);
 
 		}
 		if (ctrl1Allocated) {
@@ -307,7 +311,7 @@ void CdataHandler::PSMUpdate()
 			float CtrlRightPosY = psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters;
 			float CtrlRightPosZ = psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters;
 
-			FusePos(ctrlRightPosData, CtrlRightPosX, CtrlRightPosY, CtrlRightPosZ, ContSmoothK);
+			CalcTrackedPos(ctrlRightPosData, CtrlRightPosX, CtrlRightPosY, CtrlRightPosZ, ContSmoothK);
 
 		}
 		if (ctrl2Allocated) {
@@ -317,7 +321,7 @@ void CdataHandler::PSMUpdate()
 			float CtrlLeftPosY = psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters;
 			float CtrlLeftPosZ = psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters;
 
-			FusePos(ctrlLeftPosData, CtrlLeftPosX, CtrlLeftPosY, CtrlLeftPosZ, ContSmoothK);
+			CalcTrackedPos(ctrlLeftPosData, CtrlLeftPosX, CtrlLeftPosY, CtrlLeftPosZ, ContSmoothK);
 			
 		}
 		//no need to update this as often as we do.
@@ -355,9 +359,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	}
 		
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
-		hmdPosData = { 0 };
-		ctrlRightPosData = { 0 };
-		ctrlLeftPosData = { 0 };
+		ResetPos(false);
 	}
 }
 
@@ -406,6 +408,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		LeftController->FingPinky = LeftCtrlData.FingPinky;
 
 
+
 		if (PSMConnected) {		//PSM POSITION
 
 			RightController->X = ctrlRightPosData.posX;
@@ -418,10 +421,11 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 			
 		}
 		else {
+
 			RightController->X = 0.1;
 			RightController->Y = -0.3;
 			RightController->Z = -0.2;
-
+			
 			LeftController->X = -0.1;
 			LeftController->Y = -0.3;
 			LeftController->Z = -0.2;
@@ -491,9 +495,13 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.lastUpdate = now;
 
 	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
-	float lin_ax = accelX - (2.0f * (quatX * quatZ - quatW * quatY));
-	float lin_ay = accelY - (2.0f * (quatW * quatX + quatY * quatZ));
-	float lin_az = accelZ - (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
+	float gx = (2.0f * (quatX * quatZ - quatW * quatY));
+	float gy = (2.0f * (quatW * quatX + quatY * quatZ));
+	float gz = (quatW * quatW - quatX * quatX - quatY * quatY + quatZ * quatZ);
+
+	float lin_ax = accelX - gx;
+	float lin_ay = accelY - gy;
+	float lin_az = accelZ - gz;
 
 	//convert to m/s^2
 	lin_ax *= 9.80665f;
@@ -510,6 +518,11 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.posY = ((pos.vy + pos.oldvY) * 0.5f) * deltatime + pos.oldPosY;
 	pos.posZ = ((pos.vz + pos.oldvZ) * 0.5f) * deltatime + pos.oldPosZ;
 
+	//decay
+	pos.vx *= 0.8f;
+	pos.vy *= 0.8f;
+	pos.vz *= 0.8f;
+
 	pos.oldvX = pos.vx;
 	pos.oldvY = pos.vy;
 	pos.oldvZ = pos.vz;
@@ -519,7 +532,7 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.oldPosZ = pos.posZ;
 }
 
-void CdataHandler::FusePos(PosData &pos, float x, float y, float z, float smooth) {
+void CdataHandler::CalcTrackedPos(PosData &pos, float x, float y, float z, float smooth) {
 
 	float diffX = pos.posX - x;
 	float diffY = pos.posY - y;
@@ -539,19 +552,11 @@ void CdataHandler::FusePos(PosData &pos, float x, float y, float z, float smooth
 	pos.posY += -outY;
 	pos.posZ += -outZ;
 
-	//decay
-	pos.vx *= 0.5f;
-	pos.vy *= 0.5f;
-	pos.vz *= 0.5f;
-
-	//store old stuff
-	pos.oldvX = pos.vx;
-	pos.oldvY = pos.vy;
-	pos.oldvZ = pos.vz;
-
 	pos.oldPosX = pos.posX;
 	pos.oldPosY = pos.posY;
 	pos.oldPosZ = pos.posZ;
+
+
 }
 
 float CdataHandler::lerp(const float a, const float b, const float f) {
@@ -706,15 +711,67 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		}
 		DriverLog("[Settings] Loaded Calibration settings");
 
+		//get psms update rate
+		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
+		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate) * 1000.f);
+		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
+		//use ctrl accelerometers?
+		ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
+
 		//get tracker update rate and smoothness thing
 		ContSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_CTRL_Float);
 		HMDSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_HMD_Float);
-		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
-		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate )* 1000.f);
-		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
-		connectToPSMOVE();
 
+		if (ctrlAccelEnable) {
+			ContSmoothK *= 0.1f;
+		}
+		//set initial states for controllers and hmd.
+		ResetPos(false);
+
+		connectToPSMOVE();
 	}
+}
+
+void CdataHandler::ResetPos(bool hmdOnly) {
+	if (!hmdOnly) {
+		ctrlRightPosData.posX = 0.1f;
+		ctrlRightPosData.posY = -0.3f;
+		ctrlRightPosData.posZ = -0.2f;
+		ctrlRightPosData.oldPosX = 0.1f;
+		ctrlRightPosData.oldPosY = -0.3f;
+		ctrlRightPosData.oldPosZ = -0.2f;
+		ctrlRightPosData.vx = 0.f;
+		ctrlRightPosData.vy = 0.f;
+		ctrlRightPosData.vz = 0.f;
+		ctrlRightPosData.oldvX = 0.f;
+		ctrlRightPosData.oldvY = 0.f;
+		ctrlRightPosData.oldvZ = 0.f;
+
+		ctrlLeftPosData.posX = 0.f;
+		ctrlLeftPosData.posY = 0.f;
+		ctrlLeftPosData.posZ = 0.f;
+		ctrlLeftPosData.oldPosX = 0.f;
+		ctrlLeftPosData.oldPosY = 0.f;
+		ctrlLeftPosData.oldPosZ = 0.f;
+		ctrlLeftPosData.vx = 0.f;
+		ctrlLeftPosData.vy = 0.f;
+		ctrlLeftPosData.vz = 0.f;
+		ctrlLeftPosData.oldvX = 0.f;
+		ctrlLeftPosData.oldvY = 0.f;
+		ctrlLeftPosData.oldvZ = 0.f;
+	}
+	hmdPosData.posX = 0.f;
+	hmdPosData.posY = 0.f;
+	hmdPosData.posZ = 0.f;
+	hmdPosData.oldPosX = 0.f;
+	hmdPosData.oldPosY = 0.f;
+	hmdPosData.oldPosZ = 0.f;
+	hmdPosData.vx = 0.f;
+	hmdPosData.vy = 0.f;
+	hmdPosData.vz = 0.f;
+	hmdPosData.oldvX = 0.f;
+	hmdPosData.oldvY = 0.f;
+	hmdPosData.oldvZ = 0.f;
 }
 
 void CdataHandler::stopData() {
