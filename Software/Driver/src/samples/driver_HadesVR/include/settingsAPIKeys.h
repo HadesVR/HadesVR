@@ -56,6 +56,8 @@ static const char* const k_pch_Controllers_Section = "Controllers";
 static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
 static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
 
+static const char* const k_pch_Controller_AccelEnable_Bool = "UseControllerAccelerometers";
+
 static const char* const k_pch_Controller1_YawOffset_Float = "CTRLRightYawOffset";
 static const char* const k_pch_Controller1_PitchOffset_Float = "CTRLRightPitchOffset";
 static const char* const k_pch_Controller1_RollOffset_Float = "CTRLRightRollOffset";

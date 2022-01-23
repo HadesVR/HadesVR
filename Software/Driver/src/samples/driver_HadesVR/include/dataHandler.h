@@ -222,9 +222,10 @@ public:
 	void GetControllersData(TController* RightController, TController* LeftController);
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos);
-	void FusePos(PosData &pos, float x, float y, float z, float smooth);
+	void CalcTrackedPos(PosData &pos, float x, float y, float z, float smooth);
 	bool connectToPSMOVE();
 	void StartData(int32_t PID, int32_t VID);
+	void ResetPos(bool hmdOnly);
 	void CdataHandler::stopData();
 
 	hid_device* hHID;
@@ -265,6 +266,7 @@ private:
 	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
+	bool ctrlAccelEnable = false;
 
 	float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
