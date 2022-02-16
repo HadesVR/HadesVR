@@ -120,7 +120,7 @@ void setup() {
   radio.openReadingPipe(2, leftCtrlPipe);
   radio.openReadingPipe(1, rightCtrlPipe);
   radio.setAutoAck(false);
-  radio.setDataRate(RF24_1MBPS);
+  radio.setDataRate(RF24_2MBPS);
   radio.setPALevel(RF24_PA_LOW);
   radio.startListening();
   HMDData.PacketID = 1;

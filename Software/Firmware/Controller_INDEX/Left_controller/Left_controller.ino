@@ -356,8 +356,8 @@ void setup() {
 #endif
   radio.begin();
   radio.setPayloadSize(32);
-  radio.setPALevel(RF24_PA_HIGH);
-  radio.setDataRate(RF24_1MBPS);
+  radio.setPALevel(RF24_PA_LOW);
+  radio.setDataRate(RF24_2MBPS);
   radio.openWritingPipe(Pipe);
   radio.startListening();
   radio.setAutoAck(false);

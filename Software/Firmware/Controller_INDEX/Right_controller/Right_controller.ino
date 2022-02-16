@@ -44,10 +44,10 @@
 #define JoyXMax             935             //that help on getting these values
 #define JoyYMin             190             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
 #define JoyYMax             900             //if you use these values without changing them you MAY
-#define JoyXDeadZoneMin     515             //get stick drift
-#define JoyXDeadZoneMax     590
-#define JoyYDeadZoneMin     440
-#define JoyYDeadZoneMax     600
+#define JoyXDeadZoneMin     490             //get stick drift
+#define JoyXDeadZoneMax     620
+#define JoyYDeadZoneMin     420
+#define JoyYDeadZoneMax     620
 
 uint64_t Pipe = 0xF0F0F0F0E1LL; //right
 //uint64_t Pipe = 0xF0F0F0F0D2LL; //left
@@ -356,8 +356,8 @@ void setup() {
 #endif
   radio.begin();
   radio.setPayloadSize(32);
-  radio.setPALevel(RF24_PA_HIGH);
-  radio.setDataRate(RF24_1MBPS);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.setDataRate(RF24_2MBPS);
   radio.openWritingPipe(Pipe);
   radio.startListening();
   radio.setAutoAck(false);
@@ -552,10 +552,11 @@ void loop() {
   data.qX = (int16_t)(q._f.y * 32767.f);
   data.qY = (int16_t)(q._f.z * 32767.f);
   data.qZ = (int16_t)(q._f.x * 32767.f);
-  data.accX = ax;
-  data.accY = ay;
-  data.accZ = az;
+  data.accX = ax * 2048;
+  data.accY = ay * 2048;
+  data.accZ = az * 2048;
 
+  #ifdef SERIAL_DEBUG
   Serial.print("qW: ");
   Serial.print(q._f.w);
   
@@ -567,6 +568,7 @@ void loop() {
   
   Serial.print(" qZ: ");
   Serial.println(q._f.x);
+  #endif
   
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
