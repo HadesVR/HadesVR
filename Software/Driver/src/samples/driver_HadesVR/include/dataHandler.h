@@ -16,8 +16,6 @@
 #include "driverlog.h"
 #include "settingsAPIKeys.h"
 
-#define E_Num 2.7182818284f
-
 using namespace ATL;
 using namespace std::chrono;
 
@@ -234,10 +232,7 @@ public:
 	int psmsMillisecondPeriod;
 
 private:
-
-
 	void ResetPos(bool hmdOnly);
-
 	void ReadHIDData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
@@ -253,7 +248,6 @@ private:
 	_TrackerData TrackerLeftData;
 	_TrackerData TrackerRightData;
 	
-
 	uint8_t packet_buffer[64];
 
 	Quaternion HMDOffset = Quaternion::Identity();
@@ -288,8 +282,8 @@ private:
 	float filterBeta = 0.05f;
 	double deltatime = 0;
 
-	float ContSmoothK = 35.f;
-	float HMDSmoothK = 17.5f;
+	float ContSmoothK = 75.f;
+	float HMDSmoothK = 75.f;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

@@ -79,7 +79,7 @@ bool HMDConnected = false, ctrlsConnected = false, trackersConnected = false;
 int controllerMode, trackerMode;
 
 double DegToRad(double f) {
-	return f * (3.14159265358979323846 / 180);
+	return f * (M_PI / 180);
 }
 
 int comPort = 3;
