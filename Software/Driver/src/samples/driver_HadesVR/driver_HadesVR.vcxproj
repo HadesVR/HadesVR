@@ -65,6 +65,7 @@
     <ClInclude Include="include\settingsAPIKeys.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dataHandler_OffsetStuff.cpp" />
     <ClCompile Include="src\dataHandler.cpp" />
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />

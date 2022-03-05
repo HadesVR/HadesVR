@@ -77,22 +77,31 @@ static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
 //this all goes in the steamvr.vrsettings file
 static const char* const k_pch_Calibration_Section = "HadesVR_Calibration";
 
+static const char* const k_pch_Calibration_HMD = "HMD";
 static const char* const k_pch_Calibration_HMDW_Float = "HMDW";
 static const char* const k_pch_Calibration_HMDY_Float = "HMDY";
 
-static const char* const k_pch_Calibration_CONT1W_Float = "CONTRightW";
-static const char* const k_pch_Calibration_CONT1Y_Float = "CONTRightY";
-
-static const char* const k_pch_Calibration_CONT2W_Float = "CONTLeftW";
-static const char* const k_pch_Calibration_CONT2Y_Float = "CONTLeftY";
+static const char* const k_pch_Calibration_CONTRight = "CONTRight";
+static const char* const k_pch_Calibration_CONTRightW_Float = "CONTRightW";
+static const char* const k_pch_Calibration_CONTRightY_Float = "CONTRightY";
 
 
+static const char* const k_pch_Calibration_CONTLeft = "CONTLeft";
+static const char* const k_pch_Calibration_CONTLeftW_Float = "CONTLeftW";
+static const char* const k_pch_Calibration_CONTLeftY_Float = "CONTLeftY";
+
+
+static const char* const k_pch_Calibration_TRKWaist = "TRKWaist";
 static const char* const k_pch_Calibration_TRKWaistW_Float = "TRKWaistW";
 static const char* const k_pch_Calibration_TRKWaistY_Float = "TRKWaistY";
 
+
+static const char* const k_pch_Calibration_TRKLeft = "TRKLeft";
 static const char* const k_pch_Calibration_TRKLeftW_Float = "TRKLeftW";
 static const char* const k_pch_Calibration_TRKLeftY_Float = "TRKLeftY";
 
+
+static const char* const k_pch_Calibration_TRKRight = "TRKRight";
 static const char* const k_pch_Calibration_TRKRightW_Float = "TRKRightW";
 static const char* const k_pch_Calibration_TRKRightY_Float = "TRKRightY";
 

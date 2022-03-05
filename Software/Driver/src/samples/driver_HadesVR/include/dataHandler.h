@@ -204,29 +204,25 @@ struct ControllerPacket
 
 struct PosData 
 {
-	float oldPosX = 0, oldPosY = 0, oldPosZ = 0;
-	float posX = 0, posY = 0, posZ = 0;
-	float vx = 0, vy = 0, vz = 0;
-	float oldvX = 0, oldvY = 0, oldvZ = 0;
+	float oldPosX = 0.f, oldPosY = 0.f, oldPosZ = 0.f;
+	float posX = 0.f, posY = 0.f, posZ = 0.f;
+	float vx = 0.f, vy = 0.f, vz = 0.f;
+	float oldvX = 0.f, oldvY = 0.f, oldvZ = 0.f;
 
 	std::chrono::steady_clock::time_point lastUpdate;
 };
 
 class CdataHandler {
 public:
-	void SetCentering();
-	void ReadHIDData();
-	void SerialStreamStart();
-	void PSMUpdate();
+	
 	void GetHMDData(THMD* HMD);
 	void GetControllersData(TController* RightController, TController* LeftController);
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
-	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos);
-	void CalcTrackedPos(PosData &pos, float x, float y, float z, float smooth);
-	bool connectToPSMOVE();
+	
 	void StartData(int32_t PID, int32_t VID);
-	void ResetPos(bool hmdOnly);
-	void CdataHandler::stopData();
+	void stopData();
+
+	void SetCentering();
 
 	hid_device* hHID;
 	bool HIDConnected = false;
@@ -239,6 +235,17 @@ public:
 
 private:
 
+
+	void ResetPos(bool hmdOnly);
+
+	void ReadHIDData();
+	bool connectToPSMOVE();
+	void PSMUpdate();
+	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos);
+	void CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth);
+	
+	Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat, Quaternion configOffset);
+
 	_HMDData	HMDData;
 	_Controller RightCtrlData;
 	_Controller LeftCtrlData;
@@ -248,8 +255,6 @@ private:
 	
 
 	uint8_t packet_buffer[64];
-
-	float lerp(const float a, const float b, const float f);
 
 	Quaternion HMDOffset = Quaternion::Identity();
 	Quaternion RightCtrlOffset = Quaternion::Identity();
