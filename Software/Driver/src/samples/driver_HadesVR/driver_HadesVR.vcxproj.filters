@@ -6,7 +6,7 @@
     <ClCompile Include="src\driver_main.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
     <ClCompile Include="src\filters\MadgwickOrientation.cpp" />
-    <ClCompile Include="dataHandler_OffsetStuff.cpp" />
+    <ClCompile Include="src\dataHandler_OffsetStuff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />
