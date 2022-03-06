@@ -1,5 +1,8 @@
 #include "dataHandler.h"
 
+/**
+	 Reads HID data and separates the incoming data packet into HMD, controller or tracker data.
+*/
 void CdataHandler::ReadHIDData()
 {
 	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
@@ -50,9 +53,9 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
 				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
-				if (ctrlAccelEnable) {
-					//CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
-				}
+				/*if (ctrlAccelEnable) {
+					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
+				}*/
 				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
@@ -79,9 +82,9 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
 				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
-				if (ctrlAccelEnable) {
-					//CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
-				}
+				/*if (ctrlAccelEnable) {
+					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
+				}*/
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
@@ -157,7 +160,6 @@ void CdataHandler::ReadHIDData()
 		}
 	}
 }
-
 /*
 void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos) {
 
@@ -204,31 +206,30 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.oldPosZ = pos.posZ;
 }
 */
-void CdataHandler::CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth)
-{
-	float diffX = pos.posX - x;
-	float diffY = pos.posY - y;
-	float diffZ = pos.posZ - z;
 
-	float fabsfdiffX = fabsf(diffX);
-	float fabsfdiffY = fabsf(diffY);
-	float fabsfdiffZ = fabsf(diffZ);
+/**
+	 This basically blends between old pos data and new pos data using an exponential curve that is defined by the "smooth" component to avoid high frequency jitter.
+*/
+void CdataHandler::CalcTrackedPos(PosData& pos, Vector3 newPos, float smooth)
+{
+	Vector3 diff = pos.oldPosition - newPos;
+
+	Vector3 absdiff = Vector3(fabsf(diff.X), fabsf(diff.Y), fabsf(diff.Z));
 
 	//I have no idea, this is technically a high pass filter but think of it as a low pass one, plug "f\left(x\right)=\left(1-e^{-kx}\right)" into desmos to see how it works, let k be between 1 and 100.
-	float outX = diffX * (1 - pow(M_E, -smooth * fabsfdiffX));
-	float outY = diffY * (1 - pow(M_E, -smooth * fabsfdiffY));
-	float outZ = diffZ * (1 - pow(M_E, -smooth * fabsfdiffZ));
+	float outX = diff.X * (1 - pow(M_E, -smooth * absdiff.X));
+	float outY = diff.Y * (1 - pow(M_E, -smooth * absdiff.Y));
+	float outZ = diff.Z * (1 - pow(M_E, -smooth * absdiff.Z));
 
 	//update position
-	pos.posX += -outX;
-	pos.posY += -outY;
-	pos.posZ += -outZ;
+	pos.position += Vector3(-outX, -outY, -outZ);
 
-	pos.oldPosX = pos.posX;
-	pos.oldPosY = pos.posY;
-	pos.oldPosZ = pos.posZ;
+	pos.oldPosition = pos.position;
 }
 
+/**
+	 Grabs Final HMD data...
+*/
 void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
@@ -237,14 +238,14 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		if (PSMConnected) {			//PSM POSITION
 
-			HMD->Position = Vector3(hmdPosData.posX, hmdPosData.posY, hmdPosData.posZ);
+			HMD->Position = hmdPosData.position;
 		}
 		else {
 			HMD->Position = Vector3(0, 0, 0);
 		}
 
 		HMD->Rotation = HMDQuat;
-
+		
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000) && !once)
 	{
@@ -260,6 +261,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	}
 }
 
+/**
+	 Grabs Final Controller data...
+*/
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
@@ -301,22 +305,19 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 
-			RightController->Position.X = ctrlRightPosData.posX;
-			RightController->Position.Y = ctrlRightPosData.posY;
-			RightController->Position.Z = ctrlRightPosData.posZ;
-
-			LeftController->Position.X = ctrlLeftPosData.posX;
-			LeftController->Position.Y = ctrlLeftPosData.posY;
-			LeftController->Position.Z = ctrlLeftPosData.posZ;
-
+			RightController->Position = ctrlRightPosData.position;
+			LeftController->Position = ctrlLeftPosData.position;
 		}
 		else {
-			RightController->Position = Vector3(0.1,-0.3,0.2);
+			RightController->Position = Vector3(0.1, -0.3, 0.2);
 			LeftController->Position = Vector3(-0.1, -0.3, 0.2);
 		}
 	}
 }
 
+/**
+	 Grabs Final Tracker data...
+*/
 void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker)
 {/*
 	if (HIDConnected) {
@@ -348,6 +349,10 @@ void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker
 	}*/
 }
 
+/**
+	 Attempts to connect to PSMoveService on the default address and port.
+	 if it succeeds it allocates listeners for Controller and HMDs and starts up the PSMoveUpdate thread which is used for position tracking.
+*/
 bool CdataHandler::connectToPSMOVE()
 {
 	DriverLog("[PsMoveData] Trying to connect to PSMS on ADDRESS %s and PORT %s", PSMOVESERVICE_DEFAULT_ADDRESS, PSMOVESERVICE_DEFAULT_PORT);
@@ -412,6 +417,9 @@ bool CdataHandler::connectToPSMOVE()
 
 }
 
+/**
+	 Updates PSMoveService position tracking data. 
+*/
 void CdataHandler::PSMUpdate()
 {
 	std::chrono::steady_clock::time_point lastPSMSUpdate;
@@ -427,43 +435,40 @@ void CdataHandler::PSMUpdate()
 		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 
-			float HMDposX = psmHmdPos.x * k_fScalePSMoveAPIToMeters;
-			float HMDposY = psmHmdPos.z * k_fScalePSMoveAPIToMeters;
-			float HMDposZ = psmHmdPos.y * k_fScalePSMoveAPIToMeters;
+			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(hmdPosData, HMDposX, HMDposY, HMDposZ, HMDSmoothK);
+			CalcTrackedPos(hmdPosData, PSMSHMDPos, HMDSmoothK);
 
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 
-			float CtrlRightPosX = psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters;
-			float CtrlRightPosY = psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters;
-			float CtrlRightPosZ = psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters;
+			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(ctrlRightPosData, CtrlRightPosX, CtrlRightPosY, CtrlRightPosZ, ContSmoothK);
+			CalcTrackedPos(ctrlRightPosData, PSMSCtrlRightPos, ContSmoothK);
 
 		}
 		if (ctrl2Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 
-			float CtrlLeftPosX = psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters;
-			float CtrlLeftPosY = psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters;
-			float CtrlLeftPosZ = psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters;
+			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(ctrlLeftPosData, CtrlLeftPosX, CtrlLeftPosY, CtrlLeftPosZ, ContSmoothK);
+			CalcTrackedPos(ctrlLeftPosData, PSMSCtrlLeftPos, ContSmoothK);
 
 		}
-		//no need to update this as often as we do.
+		//no need to update this faster than we can capture the images.
 		std::this_thread::sleep_for(std::chrono::milliseconds(psmsMillisecondPeriod));
 	}
 }
 
+/**
+	 Checks for the headset to be connected and if it is it starts an HID connection with it.
+	 Once it does it creates the ReadHID thread and grabs offset calibration data, filter beta, jitter rejection coefficient and PSMS update rate.
+	 Once done it attempts to connect to PSMoveService by calling connectToPSMOVE().
+*/
 void CdataHandler::StartData(int32_t PID, int32_t VID)
 {
 	if (HIDInit == false) {
-		
-		
 		int result;
 		result = hid_init(); //Result should be 0.
 		if (result) {
@@ -513,19 +518,18 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
 		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate) * 1000.f);
 		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
+		
 		//use ctrl accelerometers?
-		ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
+		//ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
+		//CURRENTLY DOES NOTHING I'LL REWORK THIS SOME DAY MAYBE OR SOMETHING
 
 		//get tracker update rate and smoothness thing
 		ContSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_CTRL_Float);
 		HMDSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_HMD_Float);
 
-		if (ctrlAccelEnable) {
-			ContSmoothK *= 0.1f;
-		}
 		//set initial states for controllers and hmd.
 		ResetPos(false);
-
+		//Attempt to connect to psmoveservice
 		connectToPSMOVE();
 	}
 }
