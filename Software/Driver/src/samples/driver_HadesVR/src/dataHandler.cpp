@@ -51,7 +51,7 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
 				if (ctrlAccelEnable) {
-					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
+					//CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
 				}
 				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
@@ -80,7 +80,7 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
 				if (ctrlAccelEnable) {
-					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
+					//CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
 				}
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
@@ -131,7 +131,7 @@ void CdataHandler::ReadHIDData()
 				//Apply rotation to the HMD
 				HMDData.Rotation = HMDfilter.getQuat();
 
-				CalcAccelPosition(HMDData.Rotation.W, HMDData.Rotation.X, HMDData.Rotation.Y, HMDData.Rotation.Z, accX, accY, accZ, hmdPosData);
+				//CalcAccelPosition(HMDData.Rotation.W, HMDData.Rotation.X, HMDData.Rotation.Y, HMDData.Rotation.Z, accX, accY, accZ, hmdPosData);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -158,6 +158,7 @@ void CdataHandler::ReadHIDData()
 	}
 }
 
+/*
 void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos) {
 
 	//get time delta
@@ -179,7 +180,7 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	lin_ay *= 9.80665f;
 	lin_az *= 9.80665f;
 
-	//integrate to get velocity
+	//integrate to get velocity														TODO: REWORK ALL THIS CRAP
 	pos.vx += (lin_ay * deltatime);
 	pos.vy += (lin_ax * deltatime);
 	pos.vz += (lin_az * deltatime);
@@ -202,7 +203,7 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.oldPosY = pos.posY;
 	pos.oldPosZ = pos.posZ;
 }
-
+*/
 void CdataHandler::CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth)
 {
 	float diffX = pos.posX - x;
