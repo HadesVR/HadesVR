@@ -72,8 +72,6 @@ inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
 #define SUCCESS 0
 #define FAILURE 1
 
-HMODULE hDll;
-
 bool HMDConnected = false, ctrlsConnected = false, trackersConnected = false;
 
 int controllerMode, trackerMode;
@@ -1009,11 +1007,6 @@ void CServerDriver_Sample::Cleanup()
 			delete m_pTrackerRightFoot;
 			m_pTrackerRightFoot = NULL;
 		}
-	}
-
-	if (hDll != NULL) {
-		FreeLibrary(hDll);
-		hDll = nullptr;
 	}
 
 	if (dH.HIDConnected) {
