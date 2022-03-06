@@ -370,15 +370,15 @@ public:
 		if (HMDConnected) {
 			//Set head tracking rotation
 			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = HMD.qW;
-			HMDQuat.x = HMD.qX;
-			HMDQuat.y = HMD.qY;
-			HMDQuat.z = HMD.qZ;
+			HMDQuat.w = HMD.Rotation.W;
+			HMDQuat.x = HMD.Rotation.X;
+			HMDQuat.y = HMD.Rotation.Y;
+			HMDQuat.z = HMD.Rotation.Z;
 			pose.qRotation = HMDQuat;
 			//Set head position tracking
-			pose.vecPosition[0] = HMD.X;
-			pose.vecPosition[1] = HMD.Z;
-			pose.vecPosition[2] = HMD.Y;
+			pose.vecPosition[0] = HMD.Position.X;
+			pose.vecPosition[1] = HMD.Position.Z;
+			pose.vecPosition[2] = HMD.Position.Y;
 		}
 
 		return pose;
@@ -538,9 +538,9 @@ public:
 		//Controllers positions and rotations
 		if (ControllerIndex == 1) {
 
-			pose.vecPosition[0] = RightCtrl.X;
-			pose.vecPosition[1] = RightCtrl.Z;
-			pose.vecPosition[2] = RightCtrl.Y;
+			pose.vecPosition[0] = RightCtrl.Position.X;
+			pose.vecPosition[1] = RightCtrl.Position.Z;
+			pose.vecPosition[2] = RightCtrl.Position.Y;
 
 			//Velocity
 			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
@@ -551,13 +551,13 @@ public:
 			FirstCtrlLastPos[2] = pose.vecPosition[2];
 
 			//Rotation first controller
-			pose.qRotation = retquat(RightCtrl.qW, RightCtrl.qX, RightCtrl.qY, RightCtrl.qZ);
+			pose.qRotation = retquat(RightCtrl.Rotation.W, RightCtrl.Rotation.X, RightCtrl.Rotation.Y, RightCtrl.Rotation.Z);
 
 		} else { 
 			//Controller2
-			pose.vecPosition[0] = LeftCtrl.X;
-			pose.vecPosition[1] = LeftCtrl.Z;
-			pose.vecPosition[2] = LeftCtrl.Y;
+			pose.vecPosition[0] = LeftCtrl.Position.X;
+			pose.vecPosition[1] = LeftCtrl.Position.Z;
+			pose.vecPosition[2] = LeftCtrl.Position.Y;
 
 			//Velocity
 			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
@@ -567,7 +567,7 @@ public:
 			SecondCtrlLastPos[1] = pose.vecPosition[1];
 			SecondCtrlLastPos[2] = pose.vecPosition[2];
 
-			pose.qRotation = retquat(LeftCtrl.qW, LeftCtrl.qX, LeftCtrl.qY, LeftCtrl.qZ);
+			pose.qRotation = retquat(LeftCtrl.Rotation.W, LeftCtrl.Rotation.X, LeftCtrl.Rotation.Y, LeftCtrl.Rotation.Z);
 		}
 
 		return pose;
@@ -751,7 +751,7 @@ public:
 			TrackerWaistLastPos[1] = pose.vecPosition[1];
 			TrackerWaistLastPos[2] = pose.vecPosition[2];
 			//Rotation
-			pose.qRotation = retquat(WaistTrk.qW, WaistTrk.qX, WaistTrk.qY, WaistTrk.qZ);
+			pose.qRotation = retquat(WaistTrk.Rotation.W, WaistTrk.Rotation.X, WaistTrk.Rotation.Y, WaistTrk.Rotation.Z);
 			break;
 		case 2:
 			//Left foot tracker
@@ -766,7 +766,7 @@ public:
 			TrackerLeftFootLastPos[1] = pose.vecPosition[1];
 			TrackerLeftFootLastPos[2] = pose.vecPosition[2];
 			//rotation
-			pose.qRotation = retquat(LeftTrk.qW, LeftTrk.qX, LeftTrk.qY, LeftTrk.qZ);
+			pose.qRotation = retquat(LeftTrk.Rotation.W, LeftTrk.Rotation.X, LeftTrk.Rotation.Y, LeftTrk.Rotation.Z);
 			break;
 		case 3:
 			//Right foot tracker
@@ -782,7 +782,7 @@ public:
 			TrackerRightFootLastPos[2] = pose.vecPosition[2];
 
 			//rotation
-			pose.qRotation = retquat(RightTrk.qW, RightTrk.qX, RightTrk.qY, RightTrk.qZ);
+			pose.qRotation = retquat(RightTrk.Rotation.W, RightTrk.Rotation.X, RightTrk.Rotation.Y, RightTrk.Rotation.Z);
 			break;
 		}
 

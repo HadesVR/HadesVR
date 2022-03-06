@@ -11,6 +11,7 @@
 
 #include "filters/MadgwickOrientation.h"
 #include "Quaternion.hpp"
+#include "Vector3.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
 #include "hidapi/hidapi.h"
 #include "driverlog.h"
@@ -21,25 +22,15 @@ using namespace std::chrono;
 
 typedef struct _HMDData
 {
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
+	Vector3 Position;
+	Quaternion Rotation;
 	uint16_t Data;
 } THMD, * PHMD;
 
 typedef struct _Controller
 {
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
+	Vector3 Position;
+	Quaternion Rotation;
 	float accelX;
 	float accelY;
 	float accelZ;
@@ -59,13 +50,8 @@ typedef struct _Controller
 
 typedef struct _TrackerData
 {
-	double	X;
-	double	Y;
-	double	Z;
-	double	qW;
-	double	qX;
-	double	qY;
-	double  qZ;
+	Vector3 Position;
+	Quaternion Rotation;
 	float	vBat;
 } TTracker, * PTracker;
 
@@ -232,14 +218,15 @@ public:
 	int psmsMillisecondPeriod;
 
 private:
-	void ResetPos(bool hmdOnly);
+
+    void ResetPos(bool hmdOnly);
 	void ReadHIDData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
 	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos);
 	void CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth);
 	
-	Quaternion SetOffsetQuat(double qW, double qX, double qY, double qZ, Quaternion offsetQuat, Quaternion configOffset);
+	Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
 
 	_HMDData	HMDData;
 	_Controller RightCtrlData;
@@ -284,6 +271,8 @@ private:
 
 	float ContSmoothK = 75.f;
 	float HMDSmoothK = 75.f;
+
+	int once = 0;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

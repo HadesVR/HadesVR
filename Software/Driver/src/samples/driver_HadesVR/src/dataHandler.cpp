@@ -13,45 +13,45 @@ void CdataHandler::ReadHIDData()
 			switch (packet_buffer[1])
 			{
 			case 1:		//HMD quaternion packet
-				HMDData.qW = DataHMDQuat->HMDQuatW;
-				HMDData.qX = DataHMDQuat->HMDQuatX;
-				HMDData.qY = DataHMDQuat->HMDQuatY;
-				HMDData.qZ = DataHMDQuat->HMDQuatZ;
+				HMDData.Rotation.W = DataHMDQuat->HMDQuatW;
+				HMDData.Rotation.X = DataHMDQuat->HMDQuatX;
+				HMDData.Rotation.Y = DataHMDQuat->HMDQuatY;
+				HMDData.Rotation.Z = DataHMDQuat->HMDQuatZ;
 
 				HMDData.Data = DataHMDQuat->HMDData;
 
-				TrackerWaistData.qW = (float)(DataHMDQuat->tracker1_QuatW) / 32767.f;
-				TrackerWaistData.qX = (float)(DataHMDQuat->tracker1_QuatX) / 32767.f;
-				TrackerWaistData.qY = (float)(DataHMDQuat->tracker1_QuatY) / 32767.f;
-				TrackerWaistData.qZ = (float)(DataHMDQuat->tracker1_QuatZ) / 32767.f;
+				TrackerWaistData.Rotation.W = (float)(DataHMDQuat->tracker1_QuatW) / 32767.f;
+				TrackerWaistData.Rotation.X = (float)(DataHMDQuat->tracker1_QuatX) / 32767.f;
+				TrackerWaistData.Rotation.Y = (float)(DataHMDQuat->tracker1_QuatY) / 32767.f;
+				TrackerWaistData.Rotation.Z = (float)(DataHMDQuat->tracker1_QuatZ) / 32767.f;
 				TrackerWaistData.vBat = (float)(DataHMDQuat->tracker1_vBat) / 255.f;
 
-				TrackerLeftData.qW = (float)(DataHMDQuat->tracker2_QuatW) / 32767.f;
-				TrackerLeftData.qX = (float)(DataHMDQuat->tracker2_QuatX) / 32767.f;
-				TrackerLeftData.qY = (float)(DataHMDQuat->tracker2_QuatY) / 32767.f;
-				TrackerLeftData.qZ = (float)(DataHMDQuat->tracker2_QuatZ) / 32767.f;
+				TrackerLeftData.Rotation.W = (float)(DataHMDQuat->tracker2_QuatW) / 32767.f;
+				TrackerLeftData.Rotation.X = (float)(DataHMDQuat->tracker2_QuatX) / 32767.f;
+				TrackerLeftData.Rotation.Y = (float)(DataHMDQuat->tracker2_QuatY) / 32767.f;
+				TrackerLeftData.Rotation.Z = (float)(DataHMDQuat->tracker2_QuatZ) / 32767.f;
 				TrackerLeftData.vBat = (float)(DataHMDQuat->tracker2_vBat) / 255.f;
 
-				TrackerRightData.qW = (float)(DataHMDQuat->tracker3_QuatW) / 32767.f;
-				TrackerRightData.qX = (float)(DataHMDQuat->tracker3_QuatX) / 32767.f;
-				TrackerRightData.qY = (float)(DataHMDQuat->tracker3_QuatY) / 32767.f;
-				TrackerRightData.qZ = (float)(DataHMDQuat->tracker3_QuatZ) / 32767.f;
+				TrackerRightData.Rotation.W = (float)(DataHMDQuat->tracker3_QuatW) / 32767.f;
+				TrackerRightData.Rotation.X = (float)(DataHMDQuat->tracker3_QuatX) / 32767.f;
+				TrackerRightData.Rotation.Y = (float)(DataHMDQuat->tracker3_QuatY) / 32767.f;
+				TrackerRightData.Rotation.Z = (float)(DataHMDQuat->tracker3_QuatZ) / 32767.f;
 				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255.f;
 				break;
 
 			case 2:		//Controller quaternion packet
 
-				RightCtrlData.qW = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
-				RightCtrlData.qX = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
-				RightCtrlData.qY = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
-				RightCtrlData.qZ = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
+				RightCtrlData.Rotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
+				RightCtrlData.Rotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
+				RightCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
+				RightCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
 				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
 				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
 				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
 				if (ctrlAccelEnable) {
-					CalcAccelPosition(RightCtrlData.qW, RightCtrlData.qX, RightCtrlData.qZ, RightCtrlData.qY, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
+					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
 				}
 				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
@@ -69,10 +69,10 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255.f;
 				
 
-				LeftCtrlData.qW = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
-				LeftCtrlData.qX = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
-				LeftCtrlData.qY = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
-				LeftCtrlData.qZ = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
+				LeftCtrlData.Rotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
+				LeftCtrlData.Rotation.X = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
+				LeftCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
+				LeftCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 
 				
 				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
@@ -80,7 +80,7 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
 				if (ctrlAccelEnable) {
-					CalcAccelPosition(LeftCtrlData.qW, LeftCtrlData.qX, LeftCtrlData.qY, LeftCtrlData.qZ, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
+					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
 				}
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
@@ -129,36 +129,28 @@ void CdataHandler::ReadHIDData()
 					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
 
 				//Apply rotation to the HMD
-				float quatW = HMDfilter.getQuatW();
-				float quatX = HMDfilter.getQuatX();
-				float quatY = HMDfilter.getQuatY();
-				float quatZ = HMDfilter.getQuatZ();
+				HMDData.Rotation = HMDfilter.getQuat();
 
-				HMDData.qW = quatW;
-				HMDData.qX = quatY;
-				HMDData.qY = quatZ;
-				HMDData.qZ = quatX;
-
-				CalcAccelPosition(quatW, quatX, quatY, quatZ, accX, accY, accZ, hmdPosData);
+				CalcAccelPosition(HMDData.Rotation.W, HMDData.Rotation.X, HMDData.Rotation.Y, HMDData.Rotation.Z, accX, accY, accZ, hmdPosData);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
-				TrackerWaistData.qW = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
-				TrackerWaistData.qX = (float)(DataHMDRAW->tracker1_QuatX) / 32767;
-				TrackerWaistData.qY = (float)(DataHMDRAW->tracker1_QuatY) / 32767;
-				TrackerWaistData.qZ = (float)(DataHMDRAW->tracker1_QuatZ) / 32767;
+				TrackerWaistData.Rotation.W = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
+				TrackerWaistData.Rotation.X = (float)(DataHMDRAW->tracker1_QuatX) / 32767;
+				TrackerWaistData.Rotation.Y = (float)(DataHMDRAW->tracker1_QuatY) / 32767;
+				TrackerWaistData.Rotation.Z = (float)(DataHMDRAW->tracker1_QuatZ) / 32767;
 				TrackerWaistData.vBat = (float)(DataHMDRAW->tracker1_vBat) / 255;
 
-				TrackerLeftData.qW = (float)(DataHMDRAW->tracker2_QuatW) / 32767;
-				TrackerLeftData.qX = (float)(DataHMDRAW->tracker2_QuatX) / 32767;
-				TrackerLeftData.qY = (float)(DataHMDRAW->tracker2_QuatY) / 32767;
-				TrackerLeftData.qZ = (float)(DataHMDRAW->tracker2_QuatZ) / 32767;
+				TrackerLeftData.Rotation.W = (float)(DataHMDRAW->tracker2_QuatW) / 32767;
+				TrackerLeftData.Rotation.X = (float)(DataHMDRAW->tracker2_QuatX) / 32767;
+				TrackerLeftData.Rotation.Y = (float)(DataHMDRAW->tracker2_QuatY) / 32767;
+				TrackerLeftData.Rotation.Z = (float)(DataHMDRAW->tracker2_QuatZ) / 32767;
 				TrackerLeftData.vBat = (float)(DataHMDRAW->tracker2_vBat) / 255;
 
-				TrackerRightData.qW = (float)(DataHMDRAW->tracker3_QuatW) / 32767;
-				TrackerRightData.qX = (float)(DataHMDRAW->tracker3_QuatX) / 32767;
-				TrackerRightData.qY = (float)(DataHMDRAW->tracker3_QuatY) / 32767;
-				TrackerRightData.qZ = (float)(DataHMDRAW->tracker3_QuatZ) / 32767;
+				TrackerRightData.Rotation.W = (float)(DataHMDRAW->tracker3_QuatW) / 32767;
+				TrackerRightData.Rotation.X = (float)(DataHMDRAW->tracker3_QuatX) / 32767;
+				TrackerRightData.Rotation.Y = (float)(DataHMDRAW->tracker3_QuatY) / 32767;
+				TrackerRightData.Rotation.Z = (float)(DataHMDRAW->tracker3_QuatZ) / 32767;
 				TrackerRightData.vBat = (float)(DataHMDRAW->tracker3_vBat) / 255;
 				break;
 			}
@@ -166,8 +158,8 @@ void CdataHandler::ReadHIDData()
 	}
 }
 
-void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData &pos) {
-	
+void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos) {
+
 	//get time delta
 	auto now = std::chrono::high_resolution_clock::now();
 	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - pos.lastUpdate).count() / 1000000.0f;
@@ -211,7 +203,7 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 	pos.oldPosZ = pos.posZ;
 }
 
-void CdataHandler::CalcTrackedPos(PosData &pos, float x, float y, float z, float smooth) 
+void CdataHandler::CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth)
 {
 	float diffX = pos.posX - x;
 	float diffY = pos.posY - y;
@@ -225,7 +217,7 @@ void CdataHandler::CalcTrackedPos(PosData &pos, float x, float y, float z, float
 	float outX = diffX * (1 - pow(M_E, -smooth * fabsfdiffX));
 	float outY = diffY * (1 - pow(M_E, -smooth * fabsfdiffY));
 	float outZ = diffZ * (1 - pow(M_E, -smooth * fabsfdiffZ));
-	
+
 	//update position
 	pos.posX += -outX;
 	pos.posY += -outY;
@@ -240,31 +232,28 @@ void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
 
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.qW, HMDData.qX, HMDData.qY, HMDData.qZ, HMDOffset, HMDConfigOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigOffset);
 
 		if (PSMConnected) {			//PSM POSITION
 
-			HMD->X = hmdPosData.posX;
-			HMD->Y = hmdPosData.posY;
-			HMD->Z = hmdPosData.posZ;
+			HMD->Position = Vector3(hmdPosData.posX, hmdPosData.posY, hmdPosData.posZ);
 		}
 		else {
-			HMD->X = 0;
-			HMD->Y = 0;
-			HMD->Z = 0;
+			HMD->Position = Vector3(0, 0, 0);
 		}
 
-
-		HMD->qW = HMDQuat.W;
-		HMD->qX = HMDQuat.X;
-		HMD->qY = HMDQuat.Y;
-		HMD->qZ = HMDQuat.Z;
+		HMD->Rotation = HMDQuat;
 
 	}
-	if ((GetAsyncKeyState(VK_F8) & 0x8000) != 0) {
+	if ((GetAsyncKeyState(VK_F8) & 0x8000) && !once)
+	{
 		SetCentering();
+		once = 1;
 	}
-
+	if (once && !(GetAsyncKeyState(VK_F8) & 0x8000))
+	{
+		once = 0;
+	}
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		ResetPos(false);
 	}
@@ -274,14 +263,10 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 {
 	if (HIDConnected) {
 
-		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.qW, RightCtrlData.qX, RightCtrlData.qY, RightCtrlData.qZ, RightCtrlOffset, CTRL1ConfigOffset);
-		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.qW, LeftCtrlData.qX, LeftCtrlData.qY, LeftCtrlData.qZ, LeftCtrlOffset, CTRL2ConfigOffset);
+		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CTRL1ConfigOffset);
+		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CTRL2ConfigOffset);
 
-		RightController->qW = CtrlRightQuat.W;
-		RightController->qX = CtrlRightQuat.X;
-		RightController->qY = CtrlRightQuat.Y;
-		RightController->qZ = CtrlRightQuat.Z;
-
+		RightController->Rotation = CtrlRightQuat;
 		RightController->Buttons = RightCtrlData.Buttons;
 		RightController->Trigger = RightCtrlData.Trigger;
 		RightController->JoyAxisX = RightCtrlData.JoyAxisX;
@@ -296,11 +281,8 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		RightController->FingPinky = RightCtrlData.FingPinky;
 
 
-		LeftController->qW = CtrlLeftQuat.W;
-		LeftController->qX = CtrlLeftQuat.X;
-		LeftController->qY = CtrlLeftQuat.Y;
-		LeftController->qZ = CtrlLeftQuat.Z;
 
+		LeftController->Rotation = CtrlLeftQuat;
 		LeftController->Buttons = LeftCtrlData.Buttons;
 		LeftController->Trigger = LeftCtrlData.Trigger;
 		LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;
@@ -318,80 +300,51 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 
-			RightController->X = ctrlRightPosData.posX;
-			RightController->Y = ctrlRightPosData.posY;
-			RightController->Z = ctrlRightPosData.posZ;
+			RightController->Position.X = ctrlRightPosData.posX;
+			RightController->Position.Y = ctrlRightPosData.posY;
+			RightController->Position.Z = ctrlRightPosData.posZ;
 
-			LeftController->X = ctrlLeftPosData.posX;
-			LeftController->Y = ctrlLeftPosData.posY;
-			LeftController->Z = ctrlLeftPosData.posZ;
+			LeftController->Position.X = ctrlLeftPosData.posX;
+			LeftController->Position.Y = ctrlLeftPosData.posY;
+			LeftController->Position.Z = ctrlLeftPosData.posZ;
 
 		}
 		else {
-
-			RightController->X = 0.1;
-			RightController->Y = -0.3;
-			RightController->Z = -0.2;
-
-			LeftController->X = -0.1;
-			LeftController->Y = -0.3;
-			LeftController->Z = -0.2;
+			RightController->Position = Vector3(0.1,-0.3,0.2);
+			LeftController->Position = Vector3(-0.1, -0.3, 0.2);
 		}
 	}
 }
 
 void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker)
-{
+{/*
 	if (HIDConnected) {
-		Quaternion TRKWaistQuat = SetOffsetQuat(TrackerWaistData.qW, TrackerWaistData.qX, TrackerWaistData.qY, TrackerWaistData.qZ, WaistTrackerOffset, Quaternion::Identity());
-		Quaternion TRKLeftQuat = SetOffsetQuat(TrackerLeftData.qW, TrackerLeftData.qX, TrackerLeftData.qY, TrackerLeftData.qZ, LeftTrackerOffset, Quaternion::Identity());
-		Quaternion TRKRightQuat = SetOffsetQuat(TrackerRightData.qW, TrackerRightData.qX, TrackerRightData.qY, TrackerRightData.qZ, RightTrackerOffset, Quaternion::Identity());
+		Quaternion TRKWaistQuat = SetOffsetQuat(TrackerWaistData.Rotation, WaistTrackerOffset, Quaternion::Identity());
+		Quaternion TRKLeftQuat = SetOffsetQuat(TrackerLeftData.Rotation, LeftTrackerOffset, Quaternion::Identity());
+		Quaternion TRKRightQuat = SetOffsetQuat(TrackerRightData.Rotation, RightTrackerOffset, Quaternion::Identity());
 
-		waistTracker->qW = TRKWaistQuat.W;
-		waistTracker->qX = TRKWaistQuat.X;
-		waistTracker->qY = TRKWaistQuat.Y;
-		waistTracker->qZ = TRKWaistQuat.Z;
+		waistTracker->Rotation = TRKWaistQuat;
 		waistTracker->vBat = TrackerWaistData.vBat;
 
-		leftTracker->qW = TRKLeftQuat.W;
-		leftTracker->qX = TRKLeftQuat.X;
-		leftTracker->qY = TRKLeftQuat.Y;
-		leftTracker->qZ = TRKLeftQuat.Z;
+		leftTracker->Rotation = TRKLeftQuat;
 		leftTracker->vBat = TrackerLeftData.vBat;
 
-		rightTracker->qW = TRKRightQuat.W;
-		rightTracker->qX = TRKRightQuat.X;
-		rightTracker->qY = TRKRightQuat.Y;
-		rightTracker->qZ = TRKRightQuat.Z;
+		rightTracker->Rotation = TRKRightQuat;
 		rightTracker->vBat = TrackerRightData.vBat;
 	}
 
 	if (PSMConnected) {
-		waistTracker->X = 0;
-		waistTracker->Y = 0;
-		waistTracker->Z = 0;
 		//todo: psm stuff
-		leftTracker->X = 0;
-		leftTracker->Y = 0;
-		leftTracker->Z = 0;
+		waistTracker->Position = Vector3(0, 0, 0);
+		leftTracker->Position = Vector3(0, 0, 0);
+		rightTracker->Position = Vector3(0, 0, 0);
 
-		rightTracker->X = 0;
-		rightTracker->Y = 0;
-		rightTracker->Z = 0;
 	}
 	else {
-		waistTracker->X = 0;
-		waistTracker->Y = 0;
-		waistTracker->Z = 0;
-
-		leftTracker->X = 0;
-		leftTracker->Y = 0;
-		leftTracker->Z = 0;
-
-		rightTracker->X = 0;
-		rightTracker->Y = 0;
-		rightTracker->Z = 0;
-	}
+		waistTracker->Position = Vector3(0, 0, 0);
+		leftTracker->Position = Vector3(0, 0, 0);
+		rightTracker->Position = Vector3(0, 0, 0);
+	}*/
 }
 
 bool CdataHandler::connectToPSMOVE()
