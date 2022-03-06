@@ -20,7 +20,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <chrono>
-
+#include <Quaternion.hpp>
 //--------------------------------------------------------------------------------------------
 // Variable declaration
 class Madgwick {
@@ -43,21 +43,8 @@ class Madgwick {
     void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
     void updateIMU(float gx, float gy, float gz, float ax, float ay, float az);
 
-    float getQuatW() {
-      return q0;
+    Quaternion getQuat() {
+      return Quaternion(q2, q3, q1, q0);
     }
-
-    float getQuatX() {
-      return q1;
-    }
-
-    float getQuatY() {
-      return q2;
-    }
-
-    float getQuatZ() {
-      return q3;
-    }
-
 };
 #endif
