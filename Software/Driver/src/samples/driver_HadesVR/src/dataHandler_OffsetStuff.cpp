@@ -55,44 +55,20 @@ void CdataHandler::SetCentering()
 
 void CdataHandler::ResetPos(bool hmdOnly) {
 	if (!hmdOnly) {
-		ctrlRightPosData.posX = 0.1f;
-		ctrlRightPosData.posY = -0.3f;
-		ctrlRightPosData.posZ = -0.2f;
-		ctrlRightPosData.oldPosX = 0.1f;
-		ctrlRightPosData.oldPosY = -0.3f;
-		ctrlRightPosData.oldPosZ = -0.2f;
-		ctrlRightPosData.vx = 0.f;
-		ctrlRightPosData.vy = 0.f;
-		ctrlRightPosData.vz = 0.f;
-		ctrlRightPosData.oldvX = 0.f;
-		ctrlRightPosData.oldvY = 0.f;
-		ctrlRightPosData.oldvZ = 0.f;
+		ctrlRightPosData.position = Vector3::Zero();
+		ctrlRightPosData.oldPosition = Vector3::Zero();
+		ctrlRightPosData.velocity = Vector3::Zero();
+		ctrlRightPosData.oldVelocity = Vector3::Zero();
 
-		ctrlLeftPosData.posX = 0.f;
-		ctrlLeftPosData.posY = 0.f;
-		ctrlLeftPosData.posZ = 0.f;
-		ctrlLeftPosData.oldPosX = 0.f;
-		ctrlLeftPosData.oldPosY = 0.f;
-		ctrlLeftPosData.oldPosZ = 0.f;
-		ctrlLeftPosData.vx = 0.f;
-		ctrlLeftPosData.vy = 0.f;
-		ctrlLeftPosData.vz = 0.f;
-		ctrlLeftPosData.oldvX = 0.f;
-		ctrlLeftPosData.oldvY = 0.f;
-		ctrlLeftPosData.oldvZ = 0.f;
+		ctrlLeftPosData.position = Vector3::Zero();
+		ctrlLeftPosData.oldPosition = Vector3::Zero();
+		ctrlLeftPosData.velocity = Vector3::Zero();
+		ctrlLeftPosData.oldVelocity = Vector3::Zero();
 	}
-	hmdPosData.posX = 0.f;
-	hmdPosData.posY = 0.f;
-	hmdPosData.posZ = 0.f;
-	hmdPosData.oldPosX = 0.f;
-	hmdPosData.oldPosY = 0.f;
-	hmdPosData.oldPosZ = 0.f;
-	hmdPosData.vx = 0.f;
-	hmdPosData.vy = 0.f;
-	hmdPosData.vz = 0.f;
-	hmdPosData.oldvX = 0.f;
-	hmdPosData.oldvY = 0.f;
-	hmdPosData.oldvZ = 0.f;
+	hmdPosData.position = Vector3::Zero();
+	hmdPosData.oldPosition = Vector3::Zero();
+	hmdPosData.velocity = Vector3::Zero();
+	hmdPosData.oldVelocity = Vector3::Zero();
 }
 
 Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset)

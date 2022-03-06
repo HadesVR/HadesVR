@@ -188,10 +188,10 @@ struct ControllerPacket
 
 struct PosData 
 {
-	float oldPosX = 0.f, oldPosY = 0.f, oldPosZ = 0.f;
-	float posX = 0.f, posY = 0.f, posZ = 0.f;
-	float vx = 0.f, vy = 0.f, vz = 0.f;
-	float oldvX = 0.f, oldvY = 0.f, oldvZ = 0.f;
+	Vector3 position = Vector3::Zero();
+	Vector3 oldPosition = Vector3::Zero();
+	Vector3 velocity = Vector3::Zero();
+	Vector3 oldVelocity = Vector3::Zero();
 
 	std::chrono::steady_clock::time_point lastUpdate;
 };
@@ -223,8 +223,8 @@ private:
 	void ReadHIDData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
-	void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos);
-	void CalcTrackedPos(PosData& pos, float x, float y, float z, float smooth);
+	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
+	void CalcTrackedPos(PosData& oldPos, Vector3 newPos, float smooth);
 	
 	Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
 
@@ -252,7 +252,7 @@ private:
 	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
-	bool ctrlAccelEnable = false;
+	//bool ctrlAccelEnable = false;
 
 	float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
