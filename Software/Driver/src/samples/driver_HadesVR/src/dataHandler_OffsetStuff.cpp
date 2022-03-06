@@ -51,8 +51,6 @@ void CdataHandler::SetCentering()
 	setCalibOffset(TrackerWaistData.Rotation.W, TrackerWaistData.Rotation.Y, WaistTrackerOffset, k_pch_Calibration_TRKWaist);
 	setCalibOffset(TrackerLeftData.Rotation.W, TrackerLeftData.Rotation.Y, LeftTrackerOffset, k_pch_Calibration_TRKLeft);
 	setCalibOffset(TrackerRightData.Rotation.W, TrackerRightData.Rotation.Y, RightTrackerOffset, k_pch_Calibration_TRKRight);
-
-	DriverLog("[Settings] Saved new offsets!");
 }
 
 void CdataHandler::ResetPos(bool hmdOnly) {
