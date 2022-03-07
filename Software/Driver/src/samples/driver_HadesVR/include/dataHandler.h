@@ -254,7 +254,7 @@ private:
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
 	//bool ctrlAccelEnable = false;
 
-	float k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
+	double k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;

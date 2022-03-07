@@ -516,7 +516,7 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 
 		//get psms update rate
 		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
-		psmsMillisecondPeriod = (float)((1.f / psmsUpdateRate) * 1000.f);
+		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
 		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
 		//use ctrl accelerometers?
