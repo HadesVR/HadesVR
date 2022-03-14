@@ -14,7 +14,7 @@ The setup includes DIY controllers that are capable of emulating HTC vive wands 
 There's also custom controller hardware like 3d printable shells (still a bit of a WIP) with their respective custom PCBs to build your own Knuckles controllers.
 
 The SteamVR driver used to be based off of [TrueOpenVR](https://github.com/TrueOpenVR) but it's modified so heavily I'm making it it's own thing.
-This driver also uses [PSMoveService](https://github.com/psmoveservice/PSMoveService) (for now at least) for the positional tracking of HMD and controllers, using ping pong balls and different colours of LED's.
+This driver also uses [PSMoveServiceEX](https://github.com/Timocop/PSMoveServiceEx) (for now at least) for the positional tracking of HMD and controllers, using ping pong balls and different colours of LED's.
 
 For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 

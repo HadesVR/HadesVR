@@ -14,7 +14,7 @@ Este conjunto incluye controles que puedes crear tu mismo que son capaces de emu
 También hay hardware de personalizado como carcasas para imprimir en 3D con sus respectivos PCB para armar tus propios controles de estilo "Knuckles" y "Wand". (en este momento, los controles Knuckles estan por ser rediseñados por lo que no recomiendo hacerlos ahora mismo)
 
 El driver de SteamVR solía estar basado en [TrueOpenVR](https://github.com/TrueOpenVR) Pero ha sido modificado tanto que decidí convertirlo en un proyecto a parte.
-El driver también utiliza [PSMoveService](https://github.com/psmoveservice/PSMoveService) (al menos por ahora) para el tracking de la posición del visor y ambos controles en un espacio 3D.
+El driver también utiliza [PSMoveServiceEx](https://github.com/Timocop/PSMoveServiceEx) (al menos por ahora) para el tracking de la posición del visor y ambos controles en un espacio 3D.
 
 Para mas información en todo, recomiendo leer la [documentación.](docs/DocsIndex.md)!
 

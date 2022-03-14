@@ -23,6 +23,9 @@ The driver configuration is divided into a couple sections for tidyness, these a
 | ------  | ------ |------     |
 | HID_VID | int | The VID value of your HID device, in decimal numbers. |
 | HID_PID | int | The PID value of your HID device, in decimal numbers. |
+| PSMSTrackerFrequency | int | The maximum update rate you have set on your psmoveservice trackers.|
+| ControllerSmoothingK | float | K constant of the controller position smoothing algorithm |
+| HMDSmoothingK | float | K constant of the HMD position smoothing algorithm |
 
 ### "Display" section where you'll find:
 |Parameter|Type    |Description|

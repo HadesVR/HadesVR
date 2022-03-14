@@ -1,7 +1,7 @@
 # Headset
 The headset will not only be in charge of showing you the image and relaying back rotation data from it's internal IMU, but it will also be in charge of receiving the RF Controller data and sending it back to the computer. Another thing that can be integrated into the headset is an USB Sound Card, that way it'll also have an integrated Microphone and a headphone jack for you to plug your headphones in. Though it's not mandatory.
 
-I plan on eventually making a custom pcb for the headset that includes a 2 port USB hub, an audio interface for headphones and microphone integration, an STM32 as the main microcontroller and maybe a couple other goodies like an attempt at backlight strobing to reduce screen blur.
+I plan on eventually making a custom pcb for the headset that includes a 2 port USB hub, an audio interface for headphones and microphone integration, and maybe a couple other goodies like an attempt at backlight strobing to reduce screen blur.
 
 # Hardware Needed
 
@@ -51,8 +51,17 @@ There's a couple different versions of these blue driver boards, the most common
 
 Some screen options are:
 
-### LS055R1SX04 or LS055R1SX03
-These screens are 1440x2560(vertical), they officially support up to 60Hz but depending on the driver board they can be pushed to around 70 without artifacts (this depends on the driver board).
+### LS055R1SX04 with Green board
+With this option you'll have to purchase the [display](https://www.aliexpress.com/item/4000999801804.html) and [board](https://www.aliexpress.com/item/1005002330323719.html) separately. Make sure you choose the right display to go with the right board (LS055R1SX04 lcd won't work with LS055R1SX03 board) and make sure the display has a backlight before purchasing since these are usually used for resin 3d printers.
+
+These screens are 1440x2560(vertical), they officially support up to 60Hz but with the board linked below they can be pushed to around 72hz without artifacts.
+
+The board is meant to run the display at 60hz but it can easily do 72hz if you create a custom resolution in nvidia control panel or amd's driver settings thing.
+
+![10](img/Headset/10.png)
+
+### LS055R1SX04 or LS055R1SX03 Blue board
+These screens are 1440x2560(vertical), they officially support up to 60Hz but depending on the driver board they can be pushed to around 65hz without artifacts (this depends on the driver board).
 
 ⚠️ Make sure you're getting the correct refresh rate since a lot of sellers sell these boards with a driver board that's programmed to run at only 50hz
 
