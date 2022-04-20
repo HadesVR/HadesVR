@@ -31,9 +31,8 @@ typedef struct _Controller
 {
 	Vector3 Position;
 	Quaternion Rotation;
-	float accelX;
-	float accelY;
-	float accelZ;
+	Vector3 Velocity;
+	Vector3 Accel;
 	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
@@ -244,10 +243,14 @@ private:
 	Quaternion LeftTrackerOffset = Quaternion::Identity();
 	Quaternion RightTrackerOffset = Quaternion::Identity();
 
-	Quaternion CTRL1ConfigOffset = Quaternion::Identity();
-	Quaternion CTRL2ConfigOffset = Quaternion::Identity();
+	Quaternion HMDConfigRotationOffset = Quaternion::Identity();
+	Quaternion CtrlRightConfigRotationOffset = Quaternion::Identity();
+	Quaternion CtrlLeftConfigRotationOffset = Quaternion::Identity();	
 
-	Quaternion HMDConfigOffset = Quaternion::Identity();
+	Vector3 HMDConfigPositionOffset = Vector3::Zero();
+	Vector3 CtrlRightConfigPositionOffset = Vector3::Zero();
+	Vector3 CtrlLeftConfigPositionOffset = Vector3::Zero();
+
 
 	bool HIDInit = false;
 	bool orientationFilterInit = false;

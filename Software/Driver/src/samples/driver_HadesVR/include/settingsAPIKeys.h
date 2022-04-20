@@ -49,6 +49,10 @@ static const char* const k_pch_HMD_YawOffset_Float = "HMDYawOffset";
 static const char* const k_pch_HMD_PitchOffset_Float = "HMDPitchOffset";
 static const char* const k_pch_HMD_RollOffset_Float = "HMDRollOffset";
 
+static const char* const k_pch_HMD_XOffset_Float = "HMDXOffset";
+static const char* const k_pch_HMD_YOffset_Float = "HMDYOffset";
+static const char* const k_pch_HMD_ZOffset_Float = "HMDZOffset";
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static const char* const k_pch_Controllers_Section = "Controllers";

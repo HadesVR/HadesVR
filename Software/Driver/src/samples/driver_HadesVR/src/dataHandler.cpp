@@ -49,9 +49,9 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
 				RightCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
-				RightCtrlData.accelX = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
-				RightCtrlData.accelY = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
-				RightCtrlData.accelZ = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
+				RightCtrlData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
+				RightCtrlData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
+				RightCtrlData.Accel.Z = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
 				/*if (ctrlAccelEnable) {
 					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
@@ -78,9 +78,9 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 
 				
-				LeftCtrlData.accelX = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
-				LeftCtrlData.accelY = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
-				LeftCtrlData.accelZ = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
+				LeftCtrlData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
+				LeftCtrlData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
+				LeftCtrlData.Accel.Z = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
 				/*if (ctrlAccelEnable) {
 					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
@@ -234,14 +234,14 @@ void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
 
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigRotationOffset);
 
 		if (PSMConnected) {			//PSM POSITION
 
 			HMD->Position = hmdPosData.position;
 		}
 		else {
-			HMD->Position = Vector3(0, 0, 0);
+			HMD->Position = Vector3(0, 0.1, 0);
 		}
 
 		HMD->Rotation = HMDQuat;
@@ -268,8 +268,12 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 {
 	if (HIDConnected) {
 
-		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CTRL1ConfigOffset);
-		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CTRL2ConfigOffset);
+		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
+		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+
+		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
+		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(CtrlRightQuat.X, CtrlRightQuat.Z, CtrlRightQuat.Y, CtrlRightQuat.W));
+		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(CtrlLeftQuat.X, CtrlLeftQuat.Z, CtrlLeftQuat.Y, CtrlLeftQuat.W));
 
 		RightController->Rotation = CtrlRightQuat;
 		RightController->Buttons = RightCtrlData.Buttons;
@@ -284,7 +288,6 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		RightController->FingMiddl = RightCtrlData.FingMiddl;
 		RightController->FingRing = RightCtrlData.FingRing;
 		RightController->FingPinky = RightCtrlData.FingPinky;
-
 
 
 		LeftController->Rotation = CtrlLeftQuat;
@@ -302,15 +305,15 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		LeftController->FingPinky = LeftCtrlData.FingPinky;
 
 
-
 		if (PSMConnected) {		//PSM POSITION
-
-			RightController->Position = ctrlRightPosData.position;
-			LeftController->Position = ctrlLeftPosData.position;
+			// Apply position offset
+			RightController->Position = ctrlRightPosData.position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
+			LeftController->Position = ctrlLeftPosData.position + (CtrlRightPosQuat * CtrlLeftConfigPositionOffset);
 		}
 		else {
-			RightController->Position = Vector3(0.1, -0.3, 0.2);
-			LeftController->Position = Vector3(-0.1, -0.3, 0.2);
+			// Apply position offset
+			RightController->Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
+			LeftController->Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
 		}
 	}
 }
@@ -485,13 +488,21 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		HIDConnected = true;
 		pHIDthread = new std::thread(this->ReadHIDEnter, this);
 
-		//get config offsets
-		HMDConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
+		//get filter beta
 		filterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_FilterBeta_Float);
+
+		//get config rotation offsets
+		HMDConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
 		
-		CTRL1ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_RollOffset_Float) * M_PI / 180);
-		CTRL2ConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_RollOffset_Float) * M_PI / 180);
+		CtrlRightConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_RollOffset_Float) * M_PI / 180);
+		CtrlLeftConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_RollOffset_Float) * M_PI / 180);
 		
+		//get config position offsets
+		HMDConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_ZOffset_Float));
+
+		CtrlRightConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_ZOffset_Float));
+		CtrlLeftConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_ZOffset_Float));
+
 
 		//get calibration offsets
 		HMDOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float);
