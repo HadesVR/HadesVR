@@ -235,13 +235,15 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	if (HIDConnected) {
 
 		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigRotationOffset);
+		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
+		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDQuat.X, HMDQuat.Z, HMDQuat.Y, HMDQuat.W));
 
-		if (PSMConnected) {			//PSM POSITION
+		if (PSMConnected) {	//PSM POSITION
 
-			HMD->Position = hmdPosData.position;
+			HMD->Position = hmdPosData.position + (HMDPosQuat * HMDConfigPositionOffset);
 		}
 		else {
-			HMD->Position = Vector3(0, 0.1, 0);
+			HMD->Position = Vector3(0, 0, 0) + HMDConfigPositionOffset;
 		}
 
 		HMD->Rotation = HMDQuat;
