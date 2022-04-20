@@ -58,13 +58,22 @@ static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
 
 static const char* const k_pch_Controller_AccelEnable_Bool = "UseControllerAccelerometers";
 
-static const char* const k_pch_Controller1_YawOffset_Float = "CTRLRightYawOffset";
-static const char* const k_pch_Controller1_PitchOffset_Float = "CTRLRightPitchOffset";
-static const char* const k_pch_Controller1_RollOffset_Float = "CTRLRightRollOffset";
+static const char* const k_pch_ControllerRight_YawOffset_Float = "CTRLRightYawOffset";
+static const char* const k_pch_ControllerRight_PitchOffset_Float = "CTRLRightPitchOffset";
+static const char* const k_pch_ControllerRight_RollOffset_Float = "CTRLRightRollOffset";
 
-static const char* const k_pch_Controller2_YawOffset_Float = "CTRLLeftYawOffset";
-static const char* const k_pch_Controller2_PitchOffset_Float = "CTRLLeftPitchOffset";
-static const char* const k_pch_Controller2_RollOffset_Float = "CTRLLeftRollOffset";
+static const char* const k_pch_ControllerRight_XOffset_Float = "CTRLRightXOffset";
+static const char* const k_pch_ControllerRight_YOffset_Float = "CTRLRightYOffset";
+static const char* const k_pch_ControllerRight_ZOffset_Float = "CTRLRightZOffset";
+
+static const char* const k_pch_ControllerLeft_YawOffset_Float = "CTRLLeftYawOffset";
+static const char* const k_pch_ControllerLeft_PitchOffset_Float = "CTRLLeftPitchOffset";
+static const char* const k_pch_ControllerLeft_RollOffset_Float = "CTRLLeftRollOffset";
+
+static const char* const k_pch_ControllerLeft_XOffset_Float = "CTRLLeftXOffset";
+static const char* const k_pch_ControllerLeft_YOffset_Float = "CTRLLeftYOffset";
+static const char* const k_pch_ControllerLeft_ZOffset_Float = "CTRLLeftZOffset";
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
