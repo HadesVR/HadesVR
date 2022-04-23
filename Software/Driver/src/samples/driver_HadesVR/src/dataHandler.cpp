@@ -310,7 +310,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		if (PSMConnected) {		//PSM POSITION
 			// Apply position offset
 			RightController->Position = ctrlRightPosData.position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
-			LeftController->Position = ctrlLeftPosData.position + (CtrlRightPosQuat * CtrlLeftConfigPositionOffset);
+			LeftController->Position = ctrlLeftPosData.position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
 		}
 		else {
 			// Apply position offset
