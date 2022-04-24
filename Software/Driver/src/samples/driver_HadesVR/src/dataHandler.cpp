@@ -214,12 +214,12 @@ void CdataHandler::CalcTrackedPos(PosData& pos, Vector3 newPos, float smooth)
 {
 	Vector3 diff = pos.oldPosition - newPos;
 
-	Vector3 absdiff = Vector3(fabsf(diff.X), fabsf(diff.Y), fabsf(diff.Z));
+	Vector3 absdiff = Vector3(fabs(diff.X), fabs(diff.Y), fabs(diff.Z));
 
 	//I have no idea, this is technically a high pass filter but think of it as a low pass one, plug "f\left(x\right)=\left(1-e^{-kx}\right)" into desmos to see how it works, let k be between 1 and 100.
-	float outX = diff.X * (1 - pow(M_E, -smooth * absdiff.X));
-	float outY = diff.Y * (1 - pow(M_E, -smooth * absdiff.Y));
-	float outZ = diff.Z * (1 - pow(M_E, -smooth * absdiff.Z));
+	double outX = diff.X * (1 - pow(M_E, -smooth * absdiff.X));
+	double outY = diff.Y * (1 - pow(M_E, -smooth * absdiff.Y));
+	double outZ = diff.Z * (1 - pow(M_E, -smooth * absdiff.Z));
 
 	//update position
 	pos.position += Vector3(-outX, -outY, -outZ);
