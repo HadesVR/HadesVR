@@ -187,15 +187,6 @@ public:
 		// Keys NOT found in "Model-v2.0" would then chase through the "Alias" to be resolved in "Model-v1.0" and either resolve their or continue through the alias.
 		// Thus "Prop_NamedIconPathDeviceAlertLow_String" in each model's block represent a specialization specific for that "model".
 		// Keys in "Model-v Defaults" are an example of mapping to the same states, and here all map to "Prop_NamedIconPathDeviceOff_String".
-	
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceOff_String, "{oculus}/resources/icons/cv1_headset_off.png" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearching_String, "{oculus}/resources/icons/cv1_headset_searching.b4bfb144.gif" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{oculus}/resources/icons/cv1_headset_alert_searching.b4bfb144.gif" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReady_String, "{oculus}/resources/icons/cv1_headset_ready.b4bfb144.png" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{oculus}/resources/icons/cv1_headset_ready_alert.b4bfb144.png" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceNotReady_String, "{oculus}/resources/icons/cv1_headset_error.b4bfb144.png" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceStandby_String, "{oculus}/resources/icons/cv1_headset_standby.b4bfb144.png" );
-	//	vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, vr::Prop_NamedIconPathDeviceAlertLow_String, "{oculus}/resources/icons/headset_sample_status_ready_low.png" );
 
 		return VRInitError_None;
 	}
