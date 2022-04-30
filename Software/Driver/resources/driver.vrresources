@@ -1,0 +1,19 @@
+{
+	"jsonid" : "vrresources",
+	"statusicons" : {
+		"HMD" : {
+			"Prop_NamedIconPathDeviceOff_String" : "{hadesvr}/icons/hvr_hmd_off.png",
+			"Prop_NamedIconPathDeviceSearching_String" : "{hadesvr}/icons/hvr_hmd_searching.png",
+			"Prop_NamedIconPathDeviceSearchingAlert_String" : "{hadesvr}/icons/hvr_hmd_searching.png",
+			"Prop_NamedIconPathDeviceReady_String" : "{hadesvr}/icons/hvr_hmd_ready.png",
+			"Prop_NamedIconPathDeviceReadyAlert_String" : "{hadesvr}/icons/hvr_hmd_ready_alert.png",
+			"Prop_NamedIconPathDeviceNotReady_String" : "{hadesvr}/icons/hvr_hmd_error.png",
+			"Prop_NamedIconPathDeviceStandby_String" : "{hadesvr}/icons/hvr_hmd_standby.png",
+			"Prop_NamedIconPathDeviceStandbyAlert_String" : "{hadesvr}/icons/hvr_hmd_standby.png",
+			"Prop_NamedIconPathDeviceAlertLow_String" : "{hadesvr}/icons/hvr_hmd_error.png"
+		},		
+		"HADES" : {
+			"Alias" : "HMD"
+		}
+	}	    
+}

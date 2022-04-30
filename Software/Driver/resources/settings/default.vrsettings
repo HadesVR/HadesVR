@@ -1,0 +1,72 @@
+{
+   	"Driver" : {
+		"HID_VID" : 9025,
+		"HID_PID" : 32822,
+		"PSMSTrackerFrequency" : 120,
+		"ControllerSmoothingK" : 100.0,
+		"HMDSmoothingK" : 75.0
+   },
+   "Display" : {
+		"Stereo" : true,
+		"IsDisplayOnDesktop" : true,
+		"IsDisplayReal" : true,
+		"DistanceBetweenEyes" : 0.065,
+		"IPD" : 0.065,
+		"FOV" : 101,
+		"windowWidth" : 2560,
+		"windowHeight" : 1440,
+		"renderWidth" : 1280,
+		"renderHeight" : 1440,
+		"displayFrequency" : 72,
+		"windowX" : 1920,
+		"windowY" : 0,		
+		"ScreenOffsetX" : 0,
+		"ScreenOffsetY" : 0,
+		"ZoomWidth" : 0.80,
+		"ZoomHeight" : 0.80,
+		"DistortionK1" : 0.91,
+		"DistortionK2" : 0.93,
+		"secondsFromVsyncToPhotons" : 0.004999999888241291
+   },
+   "HMD" : {
+   		"serialNumber" : "HADES",
+		"modelNumber" : "HADES",
+		"EnableHMD" : true,
+		"FilterBeta" : 0.025,
+		
+		"HMDYawOffset" : 0.0,
+		"HMDPitchOffset" : 0.0,
+		"HMDRollOffset" : 0.0,
+		
+		"HMDXOffset" : 0.0,
+		"HMDYOffset" : 0.07,
+		"HMDZOffset" : 0.0
+   },
+   "Controllers" : {
+   		"EnableControllers" : true,
+		"ControllerMode" : 0,
+		
+		"UseControllerAccelerometers" : false,
+		
+		"CTRLRightYawOffset" : 0.0,
+		"CTRLRightPitchOffset" : 25.0,
+		"CTRLRightRollOffset" : 0.0,
+		
+		"CTRLRightXOffset" : 0.058,
+		"CTRLRightYOffset" : 0.025,
+		"CTRLRightZOffset" : 0.04,
+		
+		"CTRLLeftYawOffset" : 0.0,
+		"CTRLLeftPitchOffset" : 25.0,
+		"CTRLLeftRollOffset" : 0.0,
+		
+		"CTRLLeftXOffset" : -0.058,
+		"CTRLLeftYOffset" : 0.025,
+		"CTRLLeftZOffset" : 0.04
+		
+   },
+   "Trackers" :{
+   		"EnableTrackers" : false,
+		"TrackerMode" : 0
+   }
+}
