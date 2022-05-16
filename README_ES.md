@@ -50,17 +50,7 @@ O quizás quieres crearlos tu mismo, recomiendo leer la [Documentación de los c
 
 # Demos
 
-Trackeo de dedos!
-
-![fingerT](docs/img/fingerT.gif)
-
-Demo de beatsaber:
-
-![beatsaber](docs/img/Beatsaber.gif)
-
-Half-Life: Alyx:
-
-![hla](docs/img/hla.gif)
+Grabé un par de demos del driver y el hardware funcionando en diferentes juegos, estas demos estan disponibles en [Esta lista de reproducción de Youtube](https://www.youtube.com/playlist?list=PLPNX9YMrhQR2g2nwp1AN23K4V-8d-4bBV)
 
 # Trello
 [Trello para las cosas de HadesVR](https://trello.com/b/4Ogw6SMk/hadesvr-stuff)
