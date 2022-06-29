@@ -1,7 +1,8 @@
 #pragma once
 
-static const char* const k_pch_Display_Section = "Display";
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
+static const char* const k_pch_Display_Section = "Display";
 
 static const char* const k_pch_Sample_WindowX_Int32 = "windowX";
 static const char* const k_pch_Sample_WindowY_Int32 = "windowY";
@@ -11,8 +12,6 @@ static const char* const k_pch_Sample_RenderWidth_Int32 = "renderWidth";
 static const char* const k_pch_Sample_RenderHeight_Int32 = "renderHeight";
 static const char* const k_pch_Sample_SecondsFromVsyncToPhotons_Float = "secondsFromVsyncToPhotons";
 static const char* const k_pch_Sample_DisplayFrequency_Float = "displayFrequency";
-static const char* const k_pch_Sample_DistortionK1_Float = "DistortionK1";
-static const char* const k_pch_Sample_DistortionK2_Float = "DistortionK2";
 static const char* const k_pch_Sample_ZoomWidth_Float = "ZoomWidth";
 static const char* const k_pch_Sample_ZoomHeight_Float = "ZoomHeight";
 static const char* const k_pch_Sample_FOV_Float = "FOV";
@@ -26,6 +25,18 @@ static const char* const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char* const k_pch_Sample_DebugMode_Bool = "DebugMode";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_Distortion_Section = "Distortion";
+
+static const char* const k_pch_Distortion_Red_K1_Float = "Red_K1";
+static const char* const k_pch_Distortion_Red_K2_Float = "Red_K2";
+static const char* const k_pch_Distortion_Green_K1_Float = "Green_K1";
+static const char* const k_pch_Distortion_Green_K2_Float = "Green_K2";
+static const char* const k_pch_Distortion_Blue_K1_Float = "Blue_K1";
+static const char* const k_pch_Distortion_Blue_K2_Float = "Blue_K2";
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 static const char* const k_pch_Driver_Section = "Driver";
 
 static const char* const k_pch_HID_PID_Int32 = "HID_PID";
@@ -33,8 +44,6 @@ static const char* const k_pch_HID_VID_Int32 = "HID_VID";
 static const char* const k_pch_PSMS_UPDATE_RATE_Int32 = "PSMSTrackerFrequency";
 static const char* const k_pch_TRACKER_SMOOTH_CTRL_Float = "ControllerSmoothingK";
 static const char* const k_pch_TRACKER_SMOOTH_HMD_Float = "HMDSmoothingK";
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +86,6 @@ static const char* const k_pch_ControllerLeft_RollOffset_Float = "CTRLLeftRollOf
 static const char* const k_pch_ControllerLeft_XOffset_Float = "CTRLLeftXOffset";
 static const char* const k_pch_ControllerLeft_YOffset_Float = "CTRLLeftYOffset";
 static const char* const k_pch_ControllerLeft_ZOffset_Float = "CTRLLeftZOffset";
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
