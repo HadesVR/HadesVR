@@ -129,12 +129,15 @@ public:
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
 
-		m_fDistortion_Red_K1 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K1_Float);
-		m_fDistortion_Red_K2 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K2_Float);
-		m_fDistortion_Green_K1 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Green_K1_Float);
-		m_fDistortion_Green_K2 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Green_K2_Float);
-		m_fDistortion_Blue_K1 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K1_Float);
-		m_fDistortion_Blue_K2 = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K2_Float);
+		m_fDistortion_Red_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K1_Float);
+		m_fDistortion_Red_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K2_Float);
+		m_fDistortion_Red_K[2] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K3_Float);
+		m_fDistortion_Green_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Green_K1_Float);
+		m_fDistortion_Green_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Green_K2_Float);
+		m_fDistortion_Green_K[2] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Green_K3_Float);
+		m_fDistortion_Blue_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K1_Float);
+		m_fDistortion_Blue_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K2_Float);
+		m_fDistortion_Blue_K[2] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K3_Float);
 		
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
@@ -331,9 +334,9 @@ public:
 		rr = sqrt((fU - 0.5f) * (fU - 0.5f) + (fV - 0.5f) * (fV - 0.5f));
 		theta = atan2(fU - 0.5f, fV - 0.5f);
 
-		r2_Red = rr * (1 + m_fDistortion_Red_K1 * (rr * rr) + m_fDistortion_Red_K2 * (rr * rr * rr * rr));
-		r2_Green = rr * (1 + m_fDistortion_Green_K1 * (rr * rr) + m_fDistortion_Green_K2 * (rr * rr * rr * rr));
-		r2_Blue = rr * (1 + m_fDistortion_Blue_K1 * (rr * rr) + m_fDistortion_Blue_K2 * (rr * rr * rr * rr));
+		r2_Red = rr * (1 + m_fDistortion_Red_K[0] * (rr * rr) + m_fDistortion_Red_K[1] * (rr * rr * rr * rr) + m_fDistortion_Red_K[2] * (rr * rr * rr * rr * rr * rr));
+		r2_Green = rr * (1 + m_fDistortion_Green_K[0] * (rr * rr) + m_fDistortion_Green_K[1] * (rr * rr * rr * rr) + m_fDistortion_Green_K[2] * (rr * rr * rr * rr * rr * rr));
+		r2_Blue = rr * (1 + m_fDistortion_Blue_K[0] * (rr * rr) + m_fDistortion_Blue_K[1] * (rr * rr * rr * rr) + m_fDistortion_Blue_K[2] * (rr * rr * rr * rr * rr * rr));
 
 		hX_Red = sin(theta) * r2_Red * m_fZoomWidth;
 		hY_Red = cos(theta) * r2_Red * m_fZoomHeight;
@@ -431,12 +434,9 @@ private:
 	bool m_displayReal;
 	bool m_displayOnDesktop;
 
-	float m_fDistortion_Red_K1;
-	float m_fDistortion_Red_K2;
-	float m_fDistortion_Green_K1;
-	float m_fDistortion_Green_K2;
-	float m_fDistortion_Blue_K1;
-	float m_fDistortion_Blue_K2;
+	float m_fDistortion_Red_K[3];
+	float m_fDistortion_Green_K[3];
+	float m_fDistortion_Blue_K[3];
 
 };
 

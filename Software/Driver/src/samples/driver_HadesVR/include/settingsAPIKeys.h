@@ -30,10 +30,13 @@ static const char* const k_pch_Distortion_Section = "Distortion";
 
 static const char* const k_pch_Distortion_Red_K1_Float = "Red_K1";
 static const char* const k_pch_Distortion_Red_K2_Float = "Red_K2";
+static const char* const k_pch_Distortion_Red_K3_Float = "Red_K3";
 static const char* const k_pch_Distortion_Green_K1_Float = "Green_K1";
 static const char* const k_pch_Distortion_Green_K2_Float = "Green_K2";
+static const char* const k_pch_Distortion_Green_K3_Float = "Green_K3";
 static const char* const k_pch_Distortion_Blue_K1_Float = "Blue_K1";
 static const char* const k_pch_Distortion_Blue_K2_Float = "Blue_K2";
+static const char* const k_pch_Distortion_Blue_K3_Float = "Blue_K3";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
