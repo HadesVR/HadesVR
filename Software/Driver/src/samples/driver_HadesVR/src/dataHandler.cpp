@@ -521,9 +521,9 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		DriverLog("[Settings] Loaded Calibration settings");
 
 		//get psms update rate
-		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
+		psmsUpdateRate = 2 * (vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32))://poll at twice the rate of camera refresh.
 		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
-		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
+		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
 		//use ctrl accelerometers?
 		//ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
