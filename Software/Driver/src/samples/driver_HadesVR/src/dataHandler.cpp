@@ -208,31 +208,13 @@ void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, floa
 */
 
 /**
-	 This basically blends between old pos data and new pos data using an exponential curve that is defined by the "smooth" component to avoid high frequency jitter.
-*/
-void CdataHandler::CalcTrackedPos(PosData& pos, Vector3 newPos, float smooth)
-{
-	Vector3 diff = pos.oldPosition - newPos;
-
-	Vector3 absdiff = Vector3(fabs(diff.X), fabs(diff.Y), fabs(diff.Z));
-
-	//I have no idea, this is technically a high pass filter but think of it as a low pass one, plug "f\left(x\right)=\left(1-e^{-kx}\right)" into desmos to see how it works, let k be between 1 and 100.
-	double outX = diff.X * (1 - pow(M_E, -smooth * absdiff.X));
-	double outY = diff.Y * (1 - pow(M_E, -smooth * absdiff.Y));
-	double outZ = diff.Z * (1 - pow(M_E, -smooth * absdiff.Z));
-
-	//update position
-	pos.position += Vector3(-outX, -outY, -outZ);
-
-	pos.oldPosition = pos.position;
-}
-
-/**
 	 Grabs Final HMD data...
 */
 void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
+
+		hmdPosData.position = HMDKalman.getEstimation();
 
 		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigRotationOffset);
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
@@ -258,6 +240,15 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	{
 		once = 0;
 	}
+	if ((GetAsyncKeyState(VK_F12) & 0x8000) && !once)
+	{
+		ReloadCalibration();
+		once = 1;
+	}
+	if (once && !(GetAsyncKeyState(VK_F12) & 0x8000))
+	{
+		once = 0;
+	}
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		ResetPos(false);
 	}
@@ -269,6 +260,11 @@ void CdataHandler::GetHMDData(THMD* HMD)
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
+
+		CtrlRightKalman.update();
+		CtrlLeftKalman.update();
+		ctrlLeftPosData.position = CtrlLeftKalman.getEstimation();
+		ctrlRightPosData.position = CtrlRightKalman.getEstimation();
 
 		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
 		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
@@ -442,7 +438,7 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(hmdPosData, PSMSHMDPos, HMDSmoothK);
+			HMDKalman.updateMeas(PSMSHMDPos);
 
 		}
 		if (ctrl1Allocated) {
@@ -450,7 +446,7 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(ctrlRightPosData, PSMSCtrlRightPos, ContSmoothK);
+			CtrlRightKalman.updateMeas(PSMSCtrlRightPos);
 
 		}
 		if (ctrl2Allocated) {
@@ -458,7 +454,7 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			CalcTrackedPos(ctrlLeftPosData, PSMSCtrlLeftPos, ContSmoothK);
+			CtrlLeftKalman.updateMeas(PSMSCtrlLeftPos);
 
 		}
 		//no need to update this faster than we can capture the images.
@@ -489,9 +485,6 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		HIDInit = true;
 		HIDConnected = true;
 		pHIDthread = new std::thread(this->ReadHIDEnter, this);
-
-		//get filter beta
-		filterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_FilterBeta_Float);
 
 		//get config rotation offsets
 		HMDConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
@@ -528,17 +521,22 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		DriverLog("[Settings] Loaded Calibration settings");
 
 		//get psms update rate
-		psmsUpdateRate = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32);
+		psmsUpdateRate = 2 * (vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32));//poll at twice the rate of camera refresh.
 		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
-		DriverLog("[Settings] PSMS update rate in hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
+		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
 		//use ctrl accelerometers?
 		//ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
 		//CURRENTLY DOES NOTHING I'LL REWORK THIS SOME DAY MAYBE OR SOMETHING
 
 		//get tracker update rate and smoothness thing
-		ContSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_CTRL_Float);
-		HMDSmoothK = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_TRACKER_SMOOTH_HMD_Float);
+		K_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Meas_err_Float);
+		K_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Estim_err_Float);
+		K_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Proc_noise_Float);
+
+		HMDKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
+		CtrlLeftKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
+		CtrlRightKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
 
 		//set initial states for controllers and hmd.
 		ResetPos(false);

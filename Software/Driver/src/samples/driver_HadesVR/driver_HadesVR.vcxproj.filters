@@ -5,14 +5,29 @@
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
-    <ClCompile Include="src\filters\MadgwickOrientation.cpp" />
     <ClCompile Include="src\dataHandler_OffsetStuff.cpp" />
+    <ClCompile Include="src\filters\MadgwickOrientation.cpp">
+      <Filter>Filters</Filter>
+    </ClCompile>
+    <ClCompile Include="src\filters\V3Kalman.cpp">
+      <Filter>Filters</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />
     <ClInclude Include="include\devices.hpp" />
     <ClInclude Include="include\HandTracking.h" />
     <ClInclude Include="include\settingsAPIKeys.h" />
-    <ClInclude Include="include\filters\MadgwickOrientation.h" />
+    <ClInclude Include="include\filters\MadgwickOrientation.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="include\filters\V3Kalman.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Filters">
+      <UniqueIdentifier>{6988853a-f4bd-4ede-9dad-79683675bcb6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

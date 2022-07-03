@@ -9,6 +9,7 @@
 #include <atlstr.h> 
 #include <math.h>
 
+#include "filters/V3Kalman.h"
 #include "filters/MadgwickOrientation.h"
 #include "Quaternion.hpp"
 #include "Vector3.hpp"
@@ -206,6 +207,7 @@ public:
 	void stopData();
 
 	void SetCentering();
+	void ReloadCalibration();
 
 	hid_device* hHID;
 	bool HIDConnected = false;
@@ -268,12 +270,18 @@ private:
 	PosData ctrlLeftPosData;
 
 	Madgwick HMDfilter;
+
 	int readsFromInit = 0;
 	float filterBeta = 0.05f;
 	double deltatime = 0;
 
-	float ContSmoothK = 75.f;
-	float HMDSmoothK = 75.f;
+	V3Kalman HMDKalman;
+	V3Kalman CtrlLeftKalman;
+	V3Kalman CtrlRightKalman;
+
+	float K_measErr = .5f;
+	float K_estmErr = .2f;
+	float K_ProcNoise = .1f;
 
 	int once = 0;
 
