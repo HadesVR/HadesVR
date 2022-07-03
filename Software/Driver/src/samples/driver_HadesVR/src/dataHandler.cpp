@@ -264,7 +264,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		CtrlRightKalman.update();
 		CtrlLeftKalman.update();
 		ctrlLeftPosData.position = CtrlLeftKalman.getEstimation();
-		//ctrlRightPosData.position = CtrlRightKalman.getEstimation();
+		ctrlRightPosData.position = CtrlRightKalman.getEstimation();
 
 		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
 		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
@@ -446,7 +446,7 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			ctrlRightPosData.position = PSMSCtrlRightPos;
+			CtrlRightKalman.updateMeas(PSMSCtrlRightPos);
 
 		}
 		if (ctrl2Allocated) {
