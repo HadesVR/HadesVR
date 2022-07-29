@@ -242,6 +242,34 @@ void setup() {
       delay(1000);
     }
   }
+
+  if (!radio.isChipConnected())
+  {
+    Serial.println("NRF24L01 Module not detected!");
+    while (true)
+    {
+      setColor(0);
+      delay(200);
+      setColor(6);
+      delay(200);
+      setColor(0);
+      delay(200);
+      setColor(6);
+      delay(200);
+      setColor(0);
+      delay(200);
+      setColor(6);
+      delay(200);
+      setColor(0);
+      delay(200);
+      setColor(6);
+      delay(1000);
+    }
+  }
+  else{
+    Serial.println("NRF24L01 Module up and running!");
+  }
+  
 #ifdef EEPROM_CAL
   EEPROM.get(0, cal);
 
