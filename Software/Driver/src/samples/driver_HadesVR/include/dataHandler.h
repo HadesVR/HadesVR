@@ -24,16 +24,31 @@ using namespace std::chrono;
 typedef struct _HMDData
 {
 	Vector3 Position;
+	Vector3 oldPosition = Vector3::Zero();
+
+	Vector3 Velocity;
+	Vector3 oldVelocity = Vector3::Zero();
+
+	Vector3 Accel;
+	Vector3 oldAccel = Vector3::Zero();
+
 	Quaternion Rotation;
 	uint16_t Data;
 } THMD, * PHMD;
 
-typedef struct _Controller
+typedef struct _ControllerData
 {
 	Vector3 Position;
-	Quaternion Rotation;
+	Vector3 oldPosition = Vector3::Zero();
+
 	Vector3 Velocity;
+	Vector3 oldVelocity = Vector3::Zero();
+
 	Vector3 Accel;
+	Vector3 oldAccel = Vector3::Zero();
+
+	Quaternion Rotation;
+
 	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
@@ -46,6 +61,8 @@ typedef struct _Controller
 	float	FingRing;
 	float	FingPinky;
 	uint16_t Data;
+
+	std::chrono::steady_clock::time_point lastUpdate;
 } TController, * PController;
 
 typedef struct _TrackerData
@@ -185,17 +202,6 @@ struct ControllerPacket
 };
 #pragma pack(pop)
 
-
-struct PosData 
-{
-	Vector3 position = Vector3::Zero();
-	Vector3 oldPosition = Vector3::Zero();
-	Vector3 velocity = Vector3::Zero();
-	Vector3 oldVelocity = Vector3::Zero();
-
-	std::chrono::steady_clock::time_point lastUpdate;
-};
-
 class CdataHandler {
 public:
 	
@@ -225,16 +231,17 @@ private:
 	bool connectToPSMOVE();
 	void PSMUpdate();
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
-	void CalcTrackedPos(PosData& oldPos, Vector3 newPos, float smooth);
-	
-	Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
+	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
+	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
 
-	_HMDData	HMDData;
-	_Controller RightCtrlData;
-	_Controller LeftCtrlData;
-	_TrackerData TrackerWaistData;
-	_TrackerData TrackerLeftData;
-	_TrackerData TrackerRightData;
+	Quaternion SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
+
+	_HMDData		HMDData;
+	_ControllerData RightCtrlData;
+	_ControllerData LeftCtrlData;
+	_TrackerData	TrackerWaistData;
+	_TrackerData	TrackerLeftData;
+	_TrackerData	TrackerRightData;
 	
 	uint8_t packet_buffer[64];
 
@@ -264,10 +271,6 @@ private:
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
 	PSMVector3f psmHmdPos, psmCtrlRightPos, psmCtrlLeftPos;
-
-	PosData hmdPosData;
-	PosData ctrlRightPosData;
-	PosData ctrlLeftPosData;
 
 	Madgwick HMDfilter;
 

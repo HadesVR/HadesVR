@@ -71,20 +71,20 @@ void CdataHandler::ReloadCalibration() {
 
 void CdataHandler::ResetPos(bool hmdOnly) {
 	if (!hmdOnly) {
-		ctrlRightPosData.position = Vector3::Zero();
-		ctrlRightPosData.oldPosition = Vector3::Zero();
-		ctrlRightPosData.velocity = Vector3::Zero();
-		ctrlRightPosData.oldVelocity = Vector3::Zero();
+		RightCtrlData.Position = Vector3::Zero();
+		RightCtrlData.oldPosition = Vector3::Zero();
+		RightCtrlData.Velocity = Vector3::Zero();
+		RightCtrlData.oldVelocity = Vector3::Zero();
 
-		ctrlLeftPosData.position = Vector3::Zero();
-		ctrlLeftPosData.oldPosition = Vector3::Zero();
-		ctrlLeftPosData.velocity = Vector3::Zero();
-		ctrlLeftPosData.oldVelocity = Vector3::Zero();
+		LeftCtrlData.Position = Vector3::Zero();
+		LeftCtrlData.oldPosition = Vector3::Zero();
+		LeftCtrlData.Velocity = Vector3::Zero();
+		LeftCtrlData.oldVelocity = Vector3::Zero();
 	}
-	hmdPosData.position = Vector3::Zero();
-	hmdPosData.oldPosition = Vector3::Zero();
-	hmdPosData.velocity = Vector3::Zero();
-	hmdPosData.oldVelocity = Vector3::Zero();
+	HMDData.Position = Vector3::Zero();
+	HMDData.oldPosition = Vector3::Zero();
+	HMDData.Velocity = Vector3::Zero();
+	HMDData.oldVelocity = Vector3::Zero();
 }
 
 Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset)

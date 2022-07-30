@@ -214,7 +214,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
 
-		hmdPosData.position = HMDKalman.getEstimation();
+		HMDData.Position = HMDKalman.getEstimation();
 
 		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigRotationOffset);
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
@@ -222,10 +222,10 @@ void CdataHandler::GetHMDData(THMD* HMD)
 
 		if (PSMConnected) {	//PSM POSITION
 
-			HMD->Position = hmdPosData.position + (HMDPosQuat * HMDConfigPositionOffset);
+			HMD->Position = HMDData.Position + (HMDPosQuat * HMDConfigPositionOffset);
 		}
 		else {
-			HMD->Position = Vector3(0, 0, 0) + HMDConfigPositionOffset;
+			HMD->Position = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
 		}
 
 		HMD->Rotation = HMDQuat;
@@ -263,8 +263,9 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		CtrlRightKalman.update();
 		CtrlLeftKalman.update();
-		ctrlLeftPosData.position = CtrlLeftKalman.getEstimation();
-		ctrlRightPosData.position = CtrlRightKalman.getEstimation();
+
+		LeftCtrlData.Position = CtrlLeftKalman.getEstimation();
+		RightCtrlData.Position = CtrlRightKalman.getEstimation();
 
 		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
 		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
@@ -305,8 +306,8 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 			// Apply position offset
-			RightController->Position = ctrlRightPosData.position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
-			LeftController->Position = ctrlLeftPosData.position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
+			RightController->Position = RightCtrlData.Position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
+			LeftController->Position = LeftCtrlData.Position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
 		}
 		else {
 			// Apply position offset
