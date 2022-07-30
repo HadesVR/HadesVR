@@ -1,8 +1,5 @@
 #include "dataHandler.h"
 
-// + (char)'W'
-// 
-
 void setCalibOffset(float DataW, float DataY, Quaternion &Offset, const char* settingsKey)
 {
 	std::string key_y = settingsKey;

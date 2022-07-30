@@ -1027,7 +1027,7 @@ void CServerDriver_Sample::Cleanup()
 			dH.pHIDthread->join();
 			delete dH.pHIDthread;
 			dH.pHIDthread = nullptr;
-			dH.stopData();
+			dH.StopData();
 		}
 	}
 	if (dH.PSMConnected) {

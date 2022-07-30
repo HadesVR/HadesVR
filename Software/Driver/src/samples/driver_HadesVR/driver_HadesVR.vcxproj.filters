@@ -12,6 +12,7 @@
     <ClCompile Include="src\filters\V3Kalman.cpp">
       <Filter>Filters</Filter>
     </ClCompile>
+    <ClCompile Include="src\dataHandler_IMU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />

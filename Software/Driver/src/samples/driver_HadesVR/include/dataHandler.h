@@ -210,7 +210,7 @@ public:
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	
 	void StartData(int32_t PID, int32_t VID);
-	void stopData();
+	void StopData();
 
 	void SetCentering();
 	void ReloadCalibration();
