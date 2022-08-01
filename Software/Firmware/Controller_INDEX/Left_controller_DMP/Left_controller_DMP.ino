@@ -583,7 +583,7 @@ void initMPU()
   data = 3 << 3; // 11 = 2000dps
   writeByte(MPU9250_ADDRESS, GYRO_CONFIG, data);
 
-  data = 1 << 3; // 01 = 4g
+  data = 3 << 3; // 11 = 16g
   writeByte(MPU9250_ADDRESS, ACCEL_CONFIG, data);
   // Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
   writeByte(MPU9250_ADDRESS, SMPLRT_DIV, 0x04);  // Use a 200 Hz rate; a rate consistent with the filter update rate
@@ -919,9 +919,9 @@ int readDMP(long *quat)
             ((long)fifo_data[14] << 8) | fifo_data[15];
   ii += 16;
 
-  ay = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
-  ax = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
-  az = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
+  ay = (((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1]) * 16.0 / 32768.0;
+  ax = (((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3]) * 16.0 / 32768.0;
+  az = (((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5]) * 16.0 / 32768.0;
   ii += 6;
   /*
     ax = (float)accel[1] * 4.0 / 32768.0;
