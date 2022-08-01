@@ -49,9 +49,9 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
 				RightCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
-				RightCtrlData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
-				RightCtrlData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
-				RightCtrlData.Accel.Z = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
+				RightCtrlData.Accel.X = ((float)(DataCtrl->Ctrl1_AccelX) / 2048.f) / 4.0;
+				RightCtrlData.Accel.Y = ((float)(DataCtrl->Ctrl1_AccelY) / 2048.f) / 4.0;
+				RightCtrlData.Accel.Z = ((float)(DataCtrl->Ctrl1_AccelZ) / 2048.f) / 4.0;
 
 				/*if (ctrlAccelEnable) {
 					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
@@ -78,9 +78,9 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 
 				
-				LeftCtrlData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
-				LeftCtrlData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
-				LeftCtrlData.Accel.Z = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
+				LeftCtrlData.Accel.X = ((float)(DataCtrl->Ctrl2_AccelX) / 2048.f) / 4.0;
+				LeftCtrlData.Accel.Y = ((float)(DataCtrl->Ctrl2_AccelY) / 2048.f) / 4.0;
+				LeftCtrlData.Accel.Z = ((float)(DataCtrl->Ctrl2_AccelZ) / 2048.f) / 4.0;
 				
 				/*if (ctrlAccelEnable) {
 					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
