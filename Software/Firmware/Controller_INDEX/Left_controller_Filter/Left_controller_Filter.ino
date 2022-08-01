@@ -299,8 +299,8 @@ void loop() {
     trackoutput = 0;
   }
 
-  axisX = -analogRead(JoyXPin);
-  axisY = -analogRead(JoyYPin);
+  axisX = analogRead(JoyXPin);
+  axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
     if (axisX > JoyXMax) {
@@ -309,7 +309,7 @@ void loop() {
     if (axisX < JoyXMin) {
       axisX = JoyXMin;
     }
-    data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
+    data.axisX = map(axisX, JoyXMin, JoyXMax, -127, 127);
     btn |= IB_ThumbStickTouch;
     joyTouch = true;
   } else {
@@ -323,7 +323,7 @@ void loop() {
     if (axisY < JoyYMin) {
       axisY = JoyYMin;
     }
-    data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
+    data.axisY = -map(axisY, JoyYMin, JoyYMax, -127, 127);
     btn |= IB_ThumbStickTouch;
     joyTouch = true;
   } else {
