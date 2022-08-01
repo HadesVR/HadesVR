@@ -21,7 +21,8 @@ V3Kalman::V3Kalman()
 	estm_err.Z = 1.f;
 }
 
-void V3Kalman::update() {
+void V3Kalman::update() 
+{
 	gain.X = estm_err.X / (estm_err.X + meas_err);
 	current_est.X = last_est.X + gain.X * (reading.X - last_est.X);
 	estm_err.X = (1.0 - gain.X) * estm_err.X + fabs(last_est.X - current_est.X) * process_n;
@@ -38,7 +39,8 @@ void V3Kalman::update() {
 	last_est.Z = current_est.Z;
 }
 
-void V3Kalman::updateMeas(Vector3 in) {
+void V3Kalman::updateMeas(Vector3 in) 
+{
 	reading = in;
 	update();
 }
@@ -52,6 +54,8 @@ void V3Kalman::setSettings(float meas_e, float estm_e, float p_n)
 	estm_err.Z = estm_e;
 }
 
-Vector3 V3Kalman::getEstimation() {
+Vector3 V3Kalman::getEstimation() 
+{
+	update();
 	return current_est;
 }

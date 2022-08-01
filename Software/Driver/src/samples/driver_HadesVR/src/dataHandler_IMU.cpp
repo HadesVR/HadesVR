@@ -1,5 +1,61 @@
 #include "dataHandler.h"
 
+void CdataHandler::CalcIMUVelocity(_ControllerData& _data) 
+{
+	//get deltatime
+	auto now = std::chrono::high_resolution_clock::now();
+	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - _data.lastUpdate).count() / 1000000.0f;
+	_data.lastUpdate = now;
+
+	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
+	Vector3 g = Vector3(-(2.0f * (_data.Rotation.X * _data.Rotation.W - _data.Rotation.Y * _data.Rotation.Z)),
+						(2.0f * (_data.Rotation.Y * _data.Rotation.X + _data.Rotation.Z * _data.Rotation.W)),
+						(_data.Rotation.Y * _data.Rotation.Y - _data.Rotation.X * _data.Rotation.X - _data.Rotation.Z * _data.Rotation.Z + _data.Rotation.W * _data.Rotation.W));
+
+	//remove gravity vector (or at least attempt to)
+	Vector3 lin_Acc = _data.Accel - g;
+
+	//convert to m/s^2
+	lin_Acc *= 9.80665f;
+
+	//integrate to get velocity													
+	_data.Velocity += (lin_Acc * deltatime);
+
+	//decay
+	_data.Velocity *= 0.99f;
+
+	//update old velocity
+	_data.oldVelocity = _data.Velocity;
+}
+
+void CdataHandler::CalcIMUVelocity(_HMDData& _data) 
+{
+	//get deltatime
+	auto now = std::chrono::high_resolution_clock::now();
+	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - _data.lastUpdate).count() / 1000000.0f;
+	_data.lastUpdate = now;
+
+	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
+	Vector3 g = Vector3(-(2.0f * (_data.Rotation.X * _data.Rotation.W - _data.Rotation.Y * _data.Rotation.Z)),
+						(2.0f * (_data.Rotation.Y * _data.Rotation.X + _data.Rotation.Z * _data.Rotation.W)),
+						(_data.Rotation.Y * _data.Rotation.Y - _data.Rotation.X * _data.Rotation.X - _data.Rotation.Z * _data.Rotation.Z + _data.Rotation.W * _data.Rotation.W));
+
+	//remove gravity vector (or at least attempt to)
+	Vector3 lin_Acc = _data.Accel - g;
+
+	//convert to m/s^2
+	lin_Acc *= 9.80665f;
+
+	//integrate to get velocity													
+	_data.Velocity += (lin_Acc * deltatime);
+
+	//decay
+	_data.Velocity *= 0.99f;
+
+	//update old velocity
+	_data.oldVelocity = _data.Velocity;
+}
+
 /*
 void CdataHandler::CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos) {
 

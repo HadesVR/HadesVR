@@ -49,13 +49,11 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
 				RightCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
-				RightCtrlData.Accel.X = ((float)(DataCtrl->Ctrl1_AccelX) / 2048.f) / 4.0;
-				RightCtrlData.Accel.Y = ((float)(DataCtrl->Ctrl1_AccelY) / 2048.f) / 4.0;
-				RightCtrlData.Accel.Z = ((float)(DataCtrl->Ctrl1_AccelZ) / 2048.f) / 4.0;
+				RightCtrlData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
+				RightCtrlData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
+				RightCtrlData.Accel.Z = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
-				/*if (ctrlAccelEnable) {
-					CalcAccelPosition(RightCtrlData.Rotation.W, RightCtrlData.Rotation.X, RightCtrlData.Rotation.Z, RightCtrlData.Rotation.Y, RightCtrlData.accelX, RightCtrlData.accelY, RightCtrlData.accelZ, ctrlRightPosData);
-				}*/
+				CalcIMUVelocity(RightCtrlData);
 				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
@@ -78,13 +76,11 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 
 				
-				LeftCtrlData.Accel.X = ((float)(DataCtrl->Ctrl2_AccelX) / 2048.f) / 4.0;
-				LeftCtrlData.Accel.Y = ((float)(DataCtrl->Ctrl2_AccelY) / 2048.f) / 4.0;
-				LeftCtrlData.Accel.Z = ((float)(DataCtrl->Ctrl2_AccelZ) / 2048.f) / 4.0;
+				LeftCtrlData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
+				LeftCtrlData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
+				LeftCtrlData.Accel.Z = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
-				/*if (ctrlAccelEnable) {
-					CalcAccelPosition(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.X, LeftCtrlData.Rotation.Y, LeftCtrlData.Rotation.Z, LeftCtrlData.accelX, LeftCtrlData.accelY, LeftCtrlData.accelZ, ctrlLeftPosData);
-				}*/
+				CalcIMUVelocity(LeftCtrlData);
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
@@ -122,19 +118,19 @@ void CdataHandler::ReadHIDData()
 					}
 				}
 
-				float accX = (float)(DataHMDRAW->AccX) / 2048;
-				float accY = (float)(DataHMDRAW->AccY) / 2048;
-				float accZ = (float)(DataHMDRAW->AccZ) / 2048;
+				HMDData.Accel.X = (float)(DataHMDRAW->AccX) / 2048;
+				HMDData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
+				HMDData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
 
 				//get data and scale it properly. Then update the filter.
 				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
-					accX, accY, accZ,
+					(float)(DataHMDRAW->AccX) / 2048, (float)(DataHMDRAW->AccY) / 2048, (float)(DataHMDRAW->AccZ) / 2048,
 					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
 
 				//Apply rotation to the HMD
 				HMDData.Rotation = HMDfilter.getQuat();
 
-				//CalcAccelPosition(HMDData.Rotation.W, HMDData.Rotation.X, HMDData.Rotation.Y, HMDData.Rotation.Z, accX, accY, accZ, hmdPosData);
+				CalcIMUVelocity(HMDData);
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -185,15 +181,6 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		HMD->Rotation = HMDQuat;
 		
 	}
-	if ((GetAsyncKeyState(VK_F8) & 0x8000) && !once)
-	{
-		SetCentering();
-		once = 1;
-	}
-	if (once && !(GetAsyncKeyState(VK_F8) & 0x8000))
-	{
-		once = 0;
-	}
 	if ((GetAsyncKeyState(VK_F12) & 0x8000) && !once)
 	{
 		ReloadCalibration();
@@ -203,8 +190,23 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	{
 		once = 0;
 	}
+	if ((GetAsyncKeyState(VK_F10) & 0x8000))
+	{
+		DriverLog("[Debug] Right controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", RightCtrlData.Accel.X, RightCtrlData.Accel.Y, RightCtrlData.Accel.Z, RightCtrlData.Velocity.X, RightCtrlData.Velocity.Y, RightCtrlData.Velocity.Z);
+		//DriverLog("[Debug] Left controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", LeftCtrlData.Accel.X, LeftCtrlData.Accel.Y, LeftCtrlData.Accel.Z, LeftCtrlData.Velocity.X, LeftCtrlData.Velocity.Y, LeftCtrlData.Velocity.Z);
+		//DriverLog("[Debug] HMD Accel: Ax:%f Ay:%f Az:%f HMD Velocity: Vx:%fm/s Vy:%fm/s Vz:%fm/s", HMDData.Accel.X, HMDData.Accel.Y, HMDData.Accel.Z, HMDData.Velocity.X, HMDData.Velocity.Y, HMDData.Velocity.Z);
+	}
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		ResetPos(false);
+	}
+	if ((GetAsyncKeyState(VK_F8) & 0x8000) && !once)
+	{
+		SetCentering();
+		once = 1;
+	}
+	if (once && !(GetAsyncKeyState(VK_F8) & 0x8000))
+	{
+		once = 0;
 	}
 }
 
@@ -215,9 +217,6 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 {
 	if (HIDConnected) {
 
-		CtrlRightKalman.update();
-		CtrlLeftKalman.update();
-
 		LeftCtrlData.Position = CtrlLeftKalman.getEstimation();
 		RightCtrlData.Position = CtrlRightKalman.getEstimation();
 
@@ -225,7 +224,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
 
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(CtrlRightQuat.X, CtrlRightQuat.Z, CtrlRightQuat.Y, CtrlRightQuat.W));
+		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(CtrlRightQuat.X, CtrlRightQuat.Z, CtrlRightQuat.Y, CtrlRightQuat.W));				//this is bs
 		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(CtrlLeftQuat.X, CtrlLeftQuat.Z, CtrlLeftQuat.Y, CtrlLeftQuat.W));
 
 		RightController->Rotation = CtrlRightQuat;

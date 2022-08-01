@@ -34,6 +34,8 @@ typedef struct _HMDData
 
 	Quaternion Rotation;
 	uint16_t Data;
+
+	std::chrono::steady_clock::time_point lastUpdate;
 } THMD, * PHMD;
 
 typedef struct _ControllerData
@@ -230,6 +232,13 @@ private:
 	void ReadHIDData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
+
+	void CalcIMUVelocity(_ControllerData& Data);
+	void CalcIMUVelocity(_HMDData& Data);
+
+	void CalcIMUDrift(_ControllerData& Data);
+	void CalcIMUDrift(_HMDData& Data);
+
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
 	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
