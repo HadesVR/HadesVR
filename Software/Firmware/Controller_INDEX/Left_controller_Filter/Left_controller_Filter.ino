@@ -299,8 +299,8 @@ void loop() {
     trackoutput = 0;
   }
 
-  axisX = analogRead(JoyXPin);
-  axisY = analogRead(JoyYPin);
+  axisX = -analogRead(JoyXPin);
+  axisY = -analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
     if (axisX > JoyXMax) {
