@@ -42,12 +42,8 @@ typedef struct _ControllerData
 {
 	Vector3 Position;
 	Vector3 oldPosition = Vector3::Zero();
-
 	Vector3 Velocity;
-	Vector3 oldVelocity = Vector3::Zero();
-
 	Vector3 Accel;
-	Vector3 oldAccel = Vector3::Zero();
 
 	Quaternion Rotation;
 

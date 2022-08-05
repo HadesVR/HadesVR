@@ -23,9 +23,6 @@ void CdataHandler::CalcIMUVelocity(_ControllerData& _data)
 
 	//decay
 	_data.Velocity *= 0.99f;
-
-	//update old velocity
-	_data.oldVelocity = _data.Velocity;
 }
 
 void CdataHandler::CalcIMUVelocity(_HMDData& _data) 
@@ -51,9 +48,6 @@ void CdataHandler::CalcIMUVelocity(_HMDData& _data)
 
 	//decay
 	_data.Velocity *= 0.99f;
-
-	//update old velocity
-	_data.oldVelocity = _data.Velocity;
 }
 
 /*

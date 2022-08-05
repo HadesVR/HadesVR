@@ -71,12 +71,10 @@ void CdataHandler::ResetPos(bool hmdOnly) {
 		RightCtrlData.Position = Vector3::Zero();
 		RightCtrlData.oldPosition = Vector3::Zero();
 		RightCtrlData.Velocity = Vector3::Zero();
-		RightCtrlData.oldVelocity = Vector3::Zero();
 
 		LeftCtrlData.Position = Vector3::Zero();
 		LeftCtrlData.oldPosition = Vector3::Zero();
 		LeftCtrlData.Velocity = Vector3::Zero();
-		LeftCtrlData.oldVelocity = Vector3::Zero();
 	}
 	HMDData.Position = Vector3::Zero();
 	HMDData.oldPosition = Vector3::Zero();

@@ -80,7 +80,6 @@ double DegToRad(double f) {
 	return f * (M_PI / 180);
 }
 
-int comPort = 3;
 //Velocity
 double FirstCtrlLastPos[3] = { 0, 0, 0 }, SecondCtrlLastPos[3] = { 0, 0, 0 };
 double TrackerWaistLastPos[3] = { 0, 0, 0 }, TrackerLeftFootLastPos[3] = { 0, 0, 0 }, TrackerRightFootLastPos[3] = { 0, 0, 0 };
