@@ -15,8 +15,8 @@
 namespace vr
 {
 	static const uint32_t k_nSteamVRVersionMajor = 1;
-	static const uint32_t k_nSteamVRVersionMinor = 10;
-	static const uint32_t k_nSteamVRVersionBuild = 30;
+	static const uint32_t k_nSteamVRVersionMinor = 14;
+	static const uint32_t k_nSteamVRVersionBuild = 15;
 } // namespace vr
 
 // vrtypes.h
@@ -441,7 +441,7 @@ enum ETrackedDeviceProperty
 	Prop_DriverProvidedChaperoneVisibility_Bool = 2076,
 	Prop_HmdColumnCorrectionSettingPrefix_String = 2077,
 	Prop_CameraSupportsCompatibilityModes_Bool	= 2078,
-
+	Prop_SupportsRoomViewDepthProjection_Bool	= 2079,
 	Prop_DisplayAvailableFrameRates_Float_Array = 2080, // populated by compositor from actual EDID list when available from GPU driver
 	Prop_DisplaySupportsMultipleFramerates_Bool = 2081, // if this is true but Prop_DisplayAvailableFrameRates_Float_Array is empty, explain to user
 	Prop_DisplayColorMultLeft_Vector3			= 2082,
@@ -469,7 +469,8 @@ enum ETrackedDeviceProperty
 
 	Prop_Audio_DefaultPlaybackDeviceId_String		= 2300,
 	Prop_Audio_DefaultRecordingDeviceId_String		= 2301,
-	Prop_Audio_DefaultPlaybackDeviceVolume_Float	= 2302,
+	Prop_Audio_DefaultPlaybackDeviceVolume_Float = 2302,
+	Prop_Audio_SupportsDualSpeakerAndJackOutput_Bool = 2303,
 
 	// Properties that are unique to TrackedDeviceClass_Controller
 	Prop_AttachedDeviceId_String				= 3000,
@@ -634,6 +635,9 @@ enum EVRSubmitFlags
 	// Set to indicate a discontinuity between this and the last frame.
 	// This will prevent motion smoothing from attempting to extrapolate using the pair.
 	Submit_FrameDiscontinuty = 0x20,
+
+	// Set to indicate that pTexture->handle is a contains VRVulkanTextureArrayData_t
+	Submit_VulkanTextureWithArrayData = 0x40,
 };
 
 /** Data required for passing Vulkan textures to IVRCompositor::Submit.
@@ -648,6 +652,15 @@ struct VRVulkanTextureData_t
 	VkQueue_T *m_pQueue;
 	uint32_t m_nQueueFamilyIndex;
 	uint32_t m_nWidth, m_nHeight, m_nFormat, m_nSampleCount;
+};
+
+/** Data required for passing Vulkan texture arrays to IVRCompositor::Submit.
+* Be sure to call OpenVR_Shutdown before destroying these resources. 
+* Please see https://github.com/ValveSoftware/openvr/wiki/Vulkan for Vulkan-specific documentation */
+struct VRVulkanTextureArrayData_t : public VRVulkanTextureData_t
+{
+	uint32_t m_unArrayIndex;
+	uint32_t m_unArraySize;
 };
 
 /** Data required for passing D3D12 textures to IVRCompositor::Submit.
@@ -746,7 +759,7 @@ enum EVREventType
 	//VREvent_DashboardThumbSelected		= 504, // Sent to the overlay manager - data is overlay - No longer sent
 	VREvent_DashboardRequested			= 505, // Sent to the overlay manager - data is overlay
 	VREvent_ResetDashboard				= 506, // Send to the overlay manager
-	VREvent_RenderToast					= 507, // Send to the dashboard to render a toast - data is the notification ID
+	//VREvent_RenderToast					= 507, // Send to the dashboard to render a toast - data is the notification ID -- no longer sent
 	VREvent_ImageLoaded					= 508, // Sent to overlays when a SetOverlayRaw or SetOverlayFromFile call finishes loading
 	VREvent_ShowKeyboard				= 509, // Sent to keyboard renderer in the dashboard to invoke it
 	VREvent_HideKeyboard				= 510, // Sent to keyboard renderer in the dashboard to hide it
@@ -772,6 +785,8 @@ enum EVREventType
 	VREvent_RoomViewHidden					= 527, // Sent by compositor whenever room-view is disabled
 	VREvent_ShowUI							= 528, // data is showUi
 	VREvent_ShowDevTools					= 529, // data is showDevTools
+	VREvent_DesktopViewUpdating				= 530,
+	VREvent_DesktopViewReady				= 531,
 
 	VREvent_Notification_Shown				= 600,
 	VREvent_Notification_Hidden				= 601,
@@ -793,6 +808,7 @@ enum EVREventType
 	VREvent_ChaperoneFlushCache				= 805, // Sent when the process needs to reload any cached data it retrieved from VRChaperone()
 	VREvent_ChaperoneRoomSetupStarting	    = 806, // Triggered by CVRChaperoneClient::RoomSetupStarting
 	VREvent_ChaperoneRoomSetupFinished	    = 807, // Triggered by CVRChaperoneClient::CommitWorkingCopy
+	VREvent_StandingZeroPoseReset			= 808,
 
 	VREvent_AudioSettingsHaveChanged		= 820,
 
@@ -816,6 +832,8 @@ enum EVREventType
 	VREvent_LastKnownSectionSettingChanged			= 867,
 	VREvent_DismissedWarningsSectionSettingChanged	= 868,
 	VREvent_GpuSpeedSectionSettingChanged			= 869,
+	VREvent_WindowsMRSectionSettingChanged			= 870,
+	VREvent_OtherSectionSettingChanged				= 871,
 
 	VREvent_StatusUpdate					= 900,
 
@@ -1446,6 +1464,7 @@ enum EVRApplicationType
 	VRApplication_SteamWatchdog = 6,// Reserved for Steam
 	VRApplication_Bootstrapper = 7, // reserved for vrstartup
 	VRApplication_WebHelper = 8,	// reserved for vrwebhelper
+	VRApplication_OpenXR = 9,		// reserved for openxr
 
 	VRApplication_Max
 };
@@ -2095,17 +2114,6 @@ public:
 	*/
 	virtual void GetDeviceToAbsoluteTrackingPose( ETrackingUniverseOrigin eOrigin, float fPredictedSecondsToPhotonsFromNow, VR_ARRAY_COUNT(unTrackedDevicePoseArrayCount) TrackedDevicePose_t *pTrackedDevicePoseArray, uint32_t unTrackedDevicePoseArrayCount ) = 0;
 
-	/** Sets the zero pose for the seated tracker coordinate system to the current position and yaw of the HMD. After 
-	* ResetSeatedZeroPose all GetDeviceToAbsoluteTrackingPose calls that pass TrackingUniverseSeated as the origin 
-	* will be relative to this new zero pose. The new zero coordinate system will not change the fact that the Y axis 
-	* is up in the real world, so the next pose returned from GetDeviceToAbsoluteTrackingPose after a call to 
-	* ResetSeatedZeroPose may not be exactly an identity matrix.
-	*
-	* NOTE: This function overrides the user's previously saved seated zero pose and should only be called as the result of a user action. 
-	* Users are also able to set their seated zero pose via the OpenVR Dashboard.
-	**/
-	virtual void ResetSeatedZeroPose() = 0;
-
 	/** Returns the transform from the seated zero pose to the standing absolute tracking system. This allows 
 	* applications to represent the seated origin to used or transform object positions from one coordinate
 	* system to the other. 
@@ -2293,7 +2301,7 @@ public:
 
 };
 
-static const char * const IVRSystem_Version = "IVRSystem_021";
+static const char * const IVRSystem_Version = "IVRSystem_022";
 
 }
 
@@ -2698,6 +2706,8 @@ namespace vr
 	static const char * const k_pch_SteamVR_CustomIconForceUpdate_String = "customIconForceUpdate";
 	static const char * const k_pch_SteamVR_AllowGlobalActionSetPriority = "globalActionSetPriority";
 	static const char * const k_pch_SteamVR_OverlayRenderQuality = "overlayRenderQuality_2";
+	static const char * const k_pch_SteamVR_BlockOculusSDKOnOpenVRLaunchOption_Bool = "blockOculusSDKOnOpenVRLaunchOption";
+	static const char * const k_pch_SteamVR_BlockOculusSDKOnAllLaunches_Bool = "blockOculusSDKOnAllLaunches";
 
 	//-----------------------------------------------------------------------------
 	// direct mode keys
@@ -2735,6 +2745,10 @@ namespace vr
 	static const char * const k_pch_Null_RenderHeight_Int32 = "renderHeight";
 	static const char * const k_pch_Null_SecondsFromVsyncToPhotons_Float = "secondsFromVsyncToPhotons";
 	static const char * const k_pch_Null_DisplayFrequency_Float = "displayFrequency";
+
+	//-----------------------------------------------------------------------------
+	// Windows MR keys
+	static const char * const k_pch_WindowsMR_Section = "driver_holographic";
 
 	//-----------------------------------------------------------------------------
 	// user interface keys
@@ -2778,6 +2792,7 @@ namespace vr
 	static const char * const k_pch_CollisionBounds_CenterMarkerOn_Bool = "CollisionBoundsCenterMarkerOn";
 	static const char * const k_pch_CollisionBounds_PlaySpaceOn_Bool = "CollisionBoundsPlaySpaceOn";
 	static const char * const k_pch_CollisionBounds_FadeDistance_Float = "CollisionBoundsFadeDistance";
+	static const char * const k_pch_CollisionBounds_WallHeight_Float = "CollisionBoundsWallHeight";
 	static const char * const k_pch_CollisionBounds_ColorGammaR_Int32 = "CollisionBoundsColorGammaR";
 	static const char * const k_pch_CollisionBounds_ColorGammaG_Int32 = "CollisionBoundsColorGammaG";
 	static const char * const k_pch_CollisionBounds_ColorGammaB_Int32 = "CollisionBoundsColorGammaB";
@@ -2788,15 +2803,15 @@ namespace vr
 	// camera keys
 	static const char * const k_pch_Camera_Section = "camera";
 	static const char * const k_pch_Camera_EnableCamera_Bool = "enableCamera";
-	static const char * const k_pch_Camera_EnableCameraInDashboard_Bool = "enableCameraInDashboard";
+	static const char * const k_pch_Camera_ShowOnController_Bool = "showOnController";
 	static const char * const k_pch_Camera_EnableCameraForCollisionBounds_Bool = "enableCameraForCollisionBounds";
-	static const char * const k_pch_Camera_EnableCameraForRoomView_Bool = "enableCameraForRoomView";
+	static const char * const k_pch_Camera_RoomView_Int32 = "roomView";
 	static const char * const k_pch_Camera_BoundsColorGammaR_Int32 = "cameraBoundsColorGammaR";
 	static const char * const k_pch_Camera_BoundsColorGammaG_Int32 = "cameraBoundsColorGammaG";
 	static const char * const k_pch_Camera_BoundsColorGammaB_Int32 = "cameraBoundsColorGammaB";
 	static const char * const k_pch_Camera_BoundsColorGammaA_Int32 = "cameraBoundsColorGammaA";
 	static const char * const k_pch_Camera_BoundsStrength_Int32 = "cameraBoundsStrength";
-	static const char * const k_pch_Camera_RoomViewMode_Int32 = "cameraRoomViewMode";
+	static const char * const k_pch_Camera_RoomViewStyle_Int32 = "roomViewStyle";
 
 	//-----------------------------------------------------------------------------
 	// audio keys
@@ -2813,8 +2828,11 @@ namespace vr
 	static const char * const k_pch_audio_PlaybackMirrorDevice_String = "playbackMirrorDevice";
 	static const char * const k_pch_audio_PlaybackMirrorDeviceName_String = "playbackMirrorDeviceName";
 	static const char * const k_pch_audio_OldPlaybackMirrorDevice_String = "onPlaybackMirrorDevice";
+	static const char * const k_pch_audio_ActiveMirrorDevice_String = "activePlaybackMirrorDevice";
+	static const char * const k_pch_audio_EnablePlaybackMirrorIndependentVolume_Bool = "enablePlaybackMirrorIndependentVolume";
 	static const char * const k_pch_audio_LastHmdPlaybackDeviceId_String = "lastHmdPlaybackDeviceId";
 	static const char * const k_pch_audio_VIVEHDMIGain = "viveHDMIGain";
+	static const char * const k_pch_audio_DualSpeakerAndJackOutput_Bool = "dualSpeakerAndJackOutput";
 
 	//-----------------------------------------------------------------------------
 	// power management keys
@@ -2831,7 +2849,6 @@ namespace vr
 	static const char * const k_pch_Dashboard_Section = "dashboard";
 	static const char * const k_pch_Dashboard_EnableDashboard_Bool = "enableDashboard";
 	static const char * const k_pch_Dashboard_ArcadeMode_Bool = "arcadeMode";
-	static const char * const k_pch_Dashboard_UseWebSettings = "useWebSettings";
 	static const char * const k_pch_Dashboard_Position = "position";
 	static const char * const k_pch_Dashboard_DesktopScale = "desktopScale";
 	static const char * const k_pch_Dashboard_DashboardScale = "dashboardScale";
@@ -2870,6 +2887,7 @@ namespace vr
 	static const char* const k_pch_App_BindingPreviousURLSuffix_String = "PreviousURL";
 	static const char* const k_pch_App_NeedToUpdateAutosaveSuffix_Bool = "NeedToUpdateAutosave";
 	static const char* const k_pch_App_DominantHand_Int32 = "DominantHand";
+	static const char* const k_pch_App_BlockOculusSDK_Bool = "blockOculusSDK";
 
 	//-----------------------------------------------------------------------------
 	// configuration for trackers
@@ -2965,9 +2983,20 @@ public:
 
 	/** Force the bounds to show, mostly for utilities **/
 	virtual void ForceBoundsVisible( bool bForce ) = 0;
+
+	/** Sets the zero pose for the given tracker coordinate system to the current position and yaw of the HMD. After
+	* ResetZeroPose all GetDeviceToAbsoluteTrackingPose calls as the origin will be relative to this new zero pose.
+	* The new zero coordinate system will not change the fact that the Y axis is up in the real world, so the next
+	* pose returned from GetDeviceToAbsoluteTrackingPose after a call to ResetZeroPose may not be exactly an
+	* identity matrix.
+	*
+	* NOTE: This function overrides the user's previously saved zero pose and should only be called as the result of a user action. 
+	* Users are also able to set their zero pose via the OpenVR Dashboard.
+	**/
+	virtual void ResetZeroPose( ETrackingUniverseOrigin eTrackingUniverseOrigin ) = 0;
 };
 
-static const char * const IVRChaperone_Version = "IVRChaperone_003";
+static const char * const IVRChaperone_Version = "IVRChaperone_004";
 
 #pragma pack( pop )
 
@@ -3033,7 +3062,7 @@ public:
 	/** Sets the Play Area in the working copy. */
 	virtual void SetWorkingPlayAreaSize( float sizeX, float sizeZ ) = 0;
 
-	/** Sets the Collision Bounds in the working copy. */
+	/** Sets the Collision Bounds in the working copy. Note: ceiling height is ignored. */
 	virtual void SetWorkingCollisionBoundsInfo( VR_ARRAY_COUNT(unQuadsCount) HmdQuad_t *pQuadsBuffer, uint32_t unQuadsCount ) = 0;
 
 	/** Sets the Collision Bounds in the working copy. */
@@ -4162,6 +4191,15 @@ enum EVRRenderModelError
 	VRRenderModelError_InvalidTexture = 400,
 };
 
+enum EVRRenderModelTextureFormat
+{
+	VRRenderModelTextureFormat_RGBA8_SRGB = 0, // RGBA with 8 bits per channel per pixel. Data size is width * height * 4ub
+	VRRenderModelTextureFormat_BC2,
+	VRRenderModelTextureFormat_BC4,
+	VRRenderModelTextureFormat_BC7,
+	VRRenderModelTextureFormat_BC7_SRGB
+};
+
 /** A single vertex in a render model */
 struct RenderModel_Vertex_t
 {
@@ -4180,7 +4218,8 @@ struct RenderModel_Vertex_t
 struct RenderModel_TextureMap_t
 {
 	uint16_t unWidth, unHeight; // width and height of the texture map in pixels
-	const uint8_t *rubTextureMapData;	// Map texture data. All textures are RGBA with 8 bits per channel per pixel. Data size is width * height * 4ub
+	const uint8_t *rubTextureMapData;	// Map texture data.
+	EVRRenderModelTextureFormat format; // Refer to EVRRenderModelTextureFormat
 };
 #if defined(__linux__) || defined(__APPLE__) 
 #pragma pack( pop )
