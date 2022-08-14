@@ -51,21 +51,6 @@ inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
 	return q;
 }
 
-{
-	pMatrix->m[0][0] = 1.f;
-	pMatrix->m[0][1] = 0.f;
-	pMatrix->m[0][2] = 0.f;
-	pMatrix->m[0][3] = 0.f;
-	pMatrix->m[1][0] = 0.f;
-	pMatrix->m[1][1] = 1.f;
-	pMatrix->m[1][3] = 0.f;
-	pMatrix->m[2][0] = 0.f;
-	pMatrix->m[2][1] = 0.f;
-	pMatrix->m[2][2] = 1.f;
-	pMatrix->m[2][3] = 0.f;
-}
-
-
 #define SUCCESS 0
 #define FAILURE 1
 
@@ -124,6 +109,7 @@ public:
 		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
+		m_displayCantAngle = ((vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DisplayAngle_Float) / 2) * 3.14159265358979323846 / 180); //radians
 
 		m_fDistortion_Red_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K1_Float);
 		m_fDistortion_Red_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K2_Float);
@@ -155,42 +141,19 @@ public:
 		vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, Prop_ModelNumber_String, m_sModelNumber.c_str() );
 		vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, Prop_RenderModelName_String, m_sModelNumber.c_str() );
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserIpdMeters_Float, m_flIPD );
-		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, 0.f );
+		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, 0.1f);
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_DisplayFrequency_Float, m_flDisplayFrequency );
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_SecondsFromVsyncToPhotons_Float, m_flSecondsFromVsyncToPhotons );
-
-		
 		vr::VRProperties()->SetUint64Property( m_ulPropertyContainer, Prop_CurrentUniverseId_Uint64, 2 );
+		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_HmdTrackingStyle_Int32, HmdTrackingStyle_OutsideInCameras);
 
 		// avoid "not fullscreen" warnings from vrmonitor
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_IsOnDesktop_Bool, m_displayOnDesktop);
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_HasDriverDirectModeComponent_Bool, false);
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
-
-
-		// Icons can be configured in code or automatically configured by an external file "drivername\resources\driver.vrresources".
-		// Icon properties NOT configured in code (post Activate) are then auto-configured by the optional presence of a driver's "drivername\resources\driver.vrresources".
-		// In this manner a driver can configure their icons in a flexible data driven fashion by using an external file.
-		//
-		// The structure of the driver.vrresources file allows a driver to specialize their icons based on their HW.
-		// Keys matching the value in "Prop_ModelNumber_String" are considered first, since the driver may have model specific icons.
-		// An absence of a matching "Prop_ModelNumber_String" then considers the ETrackedDeviceClass ("HMD", "Controller", "GenericTracker", "TrackingReference")
-		// since the driver may have specialized icons based on those device class names.
-		//
-		// An absence of either then falls back to the "system.vrresources" where generic device class icons are then supplied.
-		//
-		// Please refer to "bin\drivers\sample\resources\driver.vrresources" which contains this sample configuration.
-		//
-		// "Alias" is a reserved key and specifies chaining to another json block.
-		//
-		// In this sample configuration file (overly complex FOR EXAMPLE PURPOSES ONLY)....
-		//
-		// "Model-v2.0" chains through the alias to "Model-v1.0" which chains through the alias to "Model-v Defaults".
-		//
-		// Keys NOT found in "Model-v2.0" would then chase through the "Alias" to be resolved in "Model-v1.0" and either resolve their or continue through the alias.
-		// Thus "Prop_NamedIconPathDeviceAlertLow_String" in each model's block represent a specialization specific for that "model".
-		// Keys in "Model-v Defaults" are an example of mapping to the same states, and here all map to "Prop_NamedIconPathDeviceOff_String".
+		//Apply display cant angle (yaw)
+		vr::VRServerDriverHost()->SetDisplayEyeToHead(HMDIndex_t, CalcMatFromEuler(m_displayCantAngle, -(m_flIPD / 2)), CalcMatFromEuler(-m_displayCantAngle, m_flIPD / 2));
 
 		return VRInitError_None;
 	}
@@ -252,21 +215,8 @@ public:
 
 	virtual void GetEyeOutputViewport( EVREye eEye, uint32_t *pnX, uint32_t *pnY, uint32_t *pnWidth, uint32_t *pnHeight ) 
 	{
-		/**pnY = 0;
-				*pnWidth = m_nWindowWidth / 2;
-				*pnHeight = m_nWindowHeight;
-
-				if ( eEye == Eye_Left )
-				{
-					*pnX = 0;
-				}
-				else
-				{
-					*pnX = m_nWindowWidth / 2;
-				}*/
-
-		if (m_bStereoMode) {
-
+		if (m_bStereoMode) 
+		{
 			*pnY = m_nScreenOffsetY;
 			*pnWidth = m_nWindowWidth / 2;
 			*pnHeight = m_nWindowHeight;
@@ -280,7 +230,8 @@ public:
 				*pnX = (m_nWindowWidth / 2) - m_nDistanceBetweenEyes + m_nScreenOffsetX;
 			}
 		}
-		else { //Mono mode
+		else 
+		{ //Mono mode
 			pnY = 0;
 			*pnWidth = m_nRenderWidth;
 			*pnHeight = m_nRenderHeight;
@@ -293,21 +244,20 @@ public:
 			{
 				*pnX = m_nWindowWidth;
 			}
-			
-	
 		}
 	}
 
 	virtual void GetProjectionRaw( EVREye eEye, float *pfLeft, float *pfRight, float *pfTop, float *pfBottom ) 
 	{
-		if (m_bStereoMode) {
-			
+		if (m_bStereoMode) 
+		{
 			*pfLeft = -m_fFOV;
 			*pfRight = m_fFOV;
 			*pfTop = -m_fFOV;
 			*pfBottom = m_fFOV;
 		}
-		else { //Mono
+		else 
+		{//Mono
 			*pfLeft = (float)m_nRenderWidth / m_nRenderHeight * -1;
 			*pfRight = (float)m_nRenderWidth / m_nRenderHeight;
 			*pfTop = -1.0;
@@ -387,6 +337,24 @@ public:
 		return pose;
 	}
 	
+	HmdMatrix34_t CalcMatFromEuler(float a, float IPDOffset) {
+		HmdMatrix34_t mat;
+
+		mat.m[0][0] = cos(a);
+		mat.m[0][1] = 0;
+		mat.m[0][2] = sin(a);
+		mat.m[0][3] = IPDOffset;
+		mat.m[1][0] = 0;
+		mat.m[1][1] = 1;
+		mat.m[1][2] = 0;
+		mat.m[1][3] = 0;
+		mat.m[2][0] = -sin(a);
+		mat.m[2][1] = 0;
+		mat.m[2][2] = cos(a);
+		mat.m[2][3] = 0;
+
+		return mat;
+	}
 
 	void RunFrame()
 	{
@@ -408,8 +376,6 @@ private:
 	std::string m_sSerialNumber;
 	std::string m_sModelNumber;
 
-	float realfreq;
-
 	int32_t m_nWindowX;
 	int32_t m_nWindowY;
 	int32_t m_nWindowWidth;
@@ -422,6 +388,8 @@ private:
 	float m_fZoomWidth;
 	float m_fZoomHeight;
 	float m_fFOV;
+	float m_displayCantAngle = 0.f;
+
 	int32_t m_nDistanceBetweenEyes;
 	int32_t m_nScreenOffsetY;
 	int32_t m_nScreenOffsetX;
