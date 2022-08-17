@@ -46,19 +46,19 @@ void V3Kalman::update()
 
 void V3Kalman::updateIMU()
 {
-	gainIMU.X = IMU_estm_err.X / (IMU_estm_err.X + IMU_meas_err);
-	current_est.X = last_est.X + gainIMU.X * (reading.X - last_est.X);
-	IMU_estm_err.X = (1.0 - gainIMU.X) * IMU_estm_err.X + fabs(last_est.X - current_est.X) * IMU_process_n;
+	gain.X = IMU_estm_err.X / (IMU_estm_err.X + IMU_meas_err);
+	current_est.X = last_est.X + gain.X * (reading.X - last_est.X);
+	IMU_estm_err.X = (1.0 - gain.X) * IMU_estm_err.X + fabs(last_est.X - current_est.X) * IMU_process_n;
 	last_est.X = current_est.X;
 
-	gainIMU.Y = IMU_estm_err.Y / (IMU_estm_err.Y + IMU_meas_err);
-	current_est.Y = last_est.Y + gainIMU.Y * (reading.Y - last_est.Y);
-	IMU_estm_err.Y = (1.0 - gainIMU.Y) * IMU_estm_err.Y + fabs(last_est.Y - current_est.Y) * IMU_process_n;
+	gain.Y = IMU_estm_err.Y / (IMU_estm_err.Y + IMU_meas_err);
+	current_est.Y = last_est.Y + gain.Y * (reading.Y - last_est.Y);
+	IMU_estm_err.Y = (1.0 - gain.Y) * IMU_estm_err.Y + fabs(last_est.Y - current_est.Y) * IMU_process_n;
 	last_est.Y = current_est.Y;
 
-	gainIMU.Z = IMU_estm_err.Z / (IMU_estm_err.Z + IMU_meas_err);
-	current_est.Z = last_est.Z + gainIMU.Z * (reading.Z - last_est.Z);
-	IMU_estm_err.Z = (1.0 - gainIMU.Z) * IMU_estm_err.Z + fabs(last_est.Z - current_est.Z) * IMU_process_n;
+	gain.Z = IMU_estm_err.Z / (IMU_estm_err.Z + IMU_meas_err);
+	current_est.Z = last_est.Z + gain.Z * (reading.Z - last_est.Z);
+	IMU_estm_err.Z = (1.0 - gain.Z) * IMU_estm_err.Z + fabs(last_est.Z - current_est.Z) * IMU_process_n;
 	last_est.Z = current_est.Z;
 }
 
