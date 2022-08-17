@@ -21,8 +21,7 @@
 using namespace ATL;
 using namespace std::chrono;
 
-typedef struct _HMDData
-{
+typedef struct _TrackingData {
 	Vector3 Position;
 	Vector3 oldPosition = Vector3::Zero();
 
@@ -32,20 +31,23 @@ typedef struct _HMDData
 	Vector3 Accel;
 	Vector3 oldAccel = Vector3::Zero();
 
+	Vector3 LastCameraPos = Vector3::Zero();
+
 	Quaternion Rotation;
+	std::chrono::steady_clock::time_point lastIMUUpdate;
+	std::chrono::steady_clock::time_point lastCamUpdate;
+};
+
+typedef struct _HMDData
+{
+	_TrackingData TrackingData;
 	uint16_t Data;
 
-	std::chrono::steady_clock::time_point lastUpdate;
 } THMD, * PHMD;
 
 typedef struct _ControllerData
 {
-	Vector3 Position;
-	Vector3 oldPosition = Vector3::Zero();
-	Vector3 Velocity;
-	Vector3 Accel;
-
-	Quaternion Rotation;
+	_TrackingData TrackingData;
 
 	uint16_t Buttons;
 	float	Trigger;
@@ -59,8 +61,6 @@ typedef struct _ControllerData
 	float	FingRing;
 	float	FingPinky;
 	uint16_t Data;
-
-	std::chrono::steady_clock::time_point lastUpdate;
 } TController, * PController;
 
 typedef struct _TrackerData
@@ -229,11 +229,8 @@ private:
 	bool connectToPSMOVE();
 	void PSMUpdate();
 
-	void CalcIMUVelocity(_ControllerData& Data);
-	void CalcIMUVelocity(_HMDData& Data);
-
-	void CalcIMUDrift(_ControllerData& Data);
-	void CalcIMUDrift(_HMDData& Data);
+	void CalcIMUPosition(_TrackingData& _data, V3Kalman k);
+	void CalcVelocity(_TrackingData& _data);
 
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
@@ -269,7 +266,7 @@ private:
 	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
-	//bool ctrlAccelEnable = false;
+	bool accelEnable = false;
 
 	double k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
@@ -287,9 +284,6 @@ private:
 	V3Kalman CtrlLeftKalman;
 	V3Kalman CtrlRightKalman;
 
-	float K_measErr = .5f;
-	float K_estmErr = .2f;
-	float K_ProcNoise = .1f;
 	float CamK_measErr = .5f;
 	float CamK_estmErr = .2f;
 	float CamK_ProcNoise = .1f;

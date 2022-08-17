@@ -323,15 +323,15 @@ public:
 		if (HMDConnected) {
 			//Set head tracking rotation
 			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = HMD.Rotation.W;
-			HMDQuat.x = HMD.Rotation.X;
-			HMDQuat.y = HMD.Rotation.Y;
-			HMDQuat.z = HMD.Rotation.Z;
+			HMDQuat.w = HMD.TrackingData.Rotation.W;
+			HMDQuat.x = HMD.TrackingData.Rotation.X;
+			HMDQuat.y = HMD.TrackingData.Rotation.Y;
+			HMDQuat.z = HMD.TrackingData.Rotation.Z;
 			pose.qRotation = HMDQuat;
 			//Set head position tracking
-			pose.vecPosition[0] = HMD.Position.X;
-			pose.vecPosition[1] = HMD.Position.Z;
-			pose.vecPosition[2] = HMD.Position.Y;
+			pose.vecPosition[0] = HMD.TrackingData.Position.X;
+			pose.vecPosition[1] = HMD.TrackingData.Position.Z;
+			pose.vecPosition[2] = HMD.TrackingData.Position.Y;
 		}
 
 		return pose;
@@ -512,9 +512,9 @@ public:
 		//Controllers positions and rotations
 		if (ControllerIndex == 1) {
 
-			pose.vecPosition[0] = RightCtrl.Position.X;
-			pose.vecPosition[1] = RightCtrl.Position.Z;
-			pose.vecPosition[2] = RightCtrl.Position.Y;
+			pose.vecPosition[0] = RightCtrl.TrackingData.Position.X;
+			pose.vecPosition[1] = RightCtrl.TrackingData.Position.Z;
+			pose.vecPosition[2] = RightCtrl.TrackingData.Position.Y;
 
 			//Velocity
 			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
@@ -525,13 +525,13 @@ public:
 			FirstCtrlLastPos[2] = pose.vecPosition[2];
 
 			//Rotation first controller
-			pose.qRotation = retquat(RightCtrl.Rotation.W, RightCtrl.Rotation.X, RightCtrl.Rotation.Y, RightCtrl.Rotation.Z);
+			pose.qRotation = retquat(RightCtrl.TrackingData.Rotation.W, RightCtrl.TrackingData.Rotation.X, RightCtrl.TrackingData.Rotation.Y, RightCtrl.TrackingData.Rotation.Z);
 
 		} else { 
 			//Controller2
-			pose.vecPosition[0] = LeftCtrl.Position.X;
-			pose.vecPosition[1] = LeftCtrl.Position.Z;
-			pose.vecPosition[2] = LeftCtrl.Position.Y;
+			pose.vecPosition[0] = LeftCtrl.TrackingData.Position.X;
+			pose.vecPosition[1] = LeftCtrl.TrackingData.Position.Z;
+			pose.vecPosition[2] = LeftCtrl.TrackingData.Position.Y;
 
 			//Velocity
 			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
@@ -541,7 +541,7 @@ public:
 			SecondCtrlLastPos[1] = pose.vecPosition[1];
 			SecondCtrlLastPos[2] = pose.vecPosition[2];
 
-			pose.qRotation = retquat(LeftCtrl.Rotation.W, LeftCtrl.Rotation.X, LeftCtrl.Rotation.Y, LeftCtrl.Rotation.Z);
+			pose.qRotation = retquat(LeftCtrl.TrackingData.Rotation.W, LeftCtrl.TrackingData.Rotation.X, LeftCtrl.TrackingData.Rotation.Y, LeftCtrl.TrackingData.Rotation.Z);
 		}
 
 		return pose;

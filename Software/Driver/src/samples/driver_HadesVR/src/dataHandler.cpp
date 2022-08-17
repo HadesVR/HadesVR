@@ -16,10 +16,10 @@ void CdataHandler::ReadHIDData()
 			switch (packet_buffer[1])
 			{
 			case 1:		//HMD quaternion packet
-				HMDData.Rotation.W = DataHMDQuat->HMDQuatW;
-				HMDData.Rotation.X = DataHMDQuat->HMDQuatX;
-				HMDData.Rotation.Y = DataHMDQuat->HMDQuatY;
-				HMDData.Rotation.Z = DataHMDQuat->HMDQuatZ;
+				HMDData.TrackingData.Rotation.W = DataHMDQuat->HMDQuatW;
+				HMDData.TrackingData.Rotation.X = DataHMDQuat->HMDQuatX;
+				HMDData.TrackingData.Rotation.Y = DataHMDQuat->HMDQuatY;
+				HMDData.TrackingData.Rotation.Z = DataHMDQuat->HMDQuatZ;
 
 				HMDData.Data = DataHMDQuat->HMDData;
 
@@ -40,20 +40,20 @@ void CdataHandler::ReadHIDData()
 				TrackerRightData.Rotation.Y = (float)(DataHMDQuat->tracker3_QuatY) / 32767.f;
 				TrackerRightData.Rotation.Z = (float)(DataHMDQuat->tracker3_QuatZ) / 32767.f;
 				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255.f;
+
 				break;
 
 			case 2:		//Controller quaternion packet
 
-				RightCtrlData.Rotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
-				RightCtrlData.Rotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
-				RightCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
-				RightCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
+				RightCtrlData.TrackingData.Rotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
+				RightCtrlData.TrackingData.Rotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
+				RightCtrlData.TrackingData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
+				RightCtrlData.TrackingData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
-				RightCtrlData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
-				RightCtrlData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
-				RightCtrlData.Accel.Z = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
+				RightCtrlData.TrackingData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
+				RightCtrlData.TrackingData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
+				RightCtrlData.TrackingData.Accel.Z = (float)(DataCtrl->Ctrl1_AccelZ) / 2048.f;
 
-				CalcIMUVelocity(RightCtrlData);
 				
 				RightCtrlData.Data = DataCtrl->Ctrl1_Data;
 				RightCtrlData.Buttons = DataCtrl->Ctrl1_Buttons;
@@ -70,17 +70,15 @@ void CdataHandler::ReadHIDData()
 				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255.f;
 				
 
-				LeftCtrlData.Rotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
-				LeftCtrlData.Rotation.X = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
-				LeftCtrlData.Rotation.Y = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
-				LeftCtrlData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
-
+				LeftCtrlData.TrackingData.Rotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
+				LeftCtrlData.TrackingData.Rotation.X = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
+				LeftCtrlData.TrackingData.Rotation.Y = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
+				LeftCtrlData.TrackingData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 				
-				LeftCtrlData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
-				LeftCtrlData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
-				LeftCtrlData.Accel.Z = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
+				LeftCtrlData.TrackingData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
+				LeftCtrlData.TrackingData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
+				LeftCtrlData.TrackingData.Accel.Z = (float)(DataCtrl->Ctrl2_AccelZ) / 2048.f;
 				
-				CalcIMUVelocity(LeftCtrlData);
 
 				LeftCtrlData.Data = DataCtrl->Ctrl2_Data;
 				LeftCtrlData.Buttons = DataCtrl->Ctrl2_Buttons;
@@ -96,6 +94,10 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255.f;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
 				
+				if (accelEnable) {
+					CalcIMUPosition(RightCtrlData.TrackingData, CtrlRightKalman);
+					CalcIMUPosition(LeftCtrlData.TrackingData, CtrlLeftKalman);
+				}
 				break;
 
 			case 3:		//hmd IMU packet
@@ -118,9 +120,9 @@ void CdataHandler::ReadHIDData()
 					}
 				}
 
-				HMDData.Accel.X = (float)(DataHMDRAW->AccX) / 2048;
-				HMDData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
-				HMDData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
+				HMDData.TrackingData.Accel.X = (float)(DataHMDRAW->AccX) / 2048;
+				HMDData.TrackingData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
+				HMDData.TrackingData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
 
 				//get data and scale it properly. Then update the filter.
 				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
@@ -128,9 +130,7 @@ void CdataHandler::ReadHIDData()
 					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
 
 				//Apply rotation to the HMD
-				HMDData.Rotation = HMDfilter.getQuat();
-
-				CalcIMUVelocity(HMDData);
+				HMDData.TrackingData.Rotation = HMDfilter.getQuat();
 
 				HMDData.Data = DataHMDRAW->HMDData;
 
@@ -163,22 +163,21 @@ void CdataHandler::ReadHIDData()
 void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
+		HMDData.TrackingData.Position = HMDKalman.getEstimation();
 
-		HMDData.Position = HMDKalman.getEstimation();
-
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.Rotation, HMDOffset, HMDConfigRotationOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.TrackingData.Rotation, HMDOffset, HMDConfigRotationOffset);
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
 		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDQuat.X, HMDQuat.Z, HMDQuat.Y, HMDQuat.W));
 
 		if (PSMConnected) {	//PSM POSITION
 
-			HMD->Position = HMDData.Position + (HMDPosQuat * HMDConfigPositionOffset);
+			HMD->TrackingData.Position = HMDData.TrackingData.Position + (HMDPosQuat * HMDConfigPositionOffset);
 		}
 		else {
-			HMD->Position = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
+			HMD->TrackingData.Position = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
 		}
 
-		HMD->Rotation = HMDQuat;
+		HMD->TrackingData.Rotation = HMDQuat;
 		
 	}
 	if ((GetAsyncKeyState(VK_F12) & 0x8000) && !once)
@@ -192,9 +191,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	}
 	if ((GetAsyncKeyState(VK_F10) & 0x8000))
 	{
-		DriverLog("[Debug] Right controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", RightCtrlData.Accel.X, RightCtrlData.Accel.Y, RightCtrlData.Accel.Z, RightCtrlData.Velocity.X, RightCtrlData.Velocity.Y, RightCtrlData.Velocity.Z);
-		//DriverLog("[Debug] Left controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", LeftCtrlData.Accel.X, LeftCtrlData.Accel.Y, LeftCtrlData.Accel.Z, LeftCtrlData.Velocity.X, LeftCtrlData.Velocity.Y, LeftCtrlData.Velocity.Z);
-		//DriverLog("[Debug] HMD Accel: Ax:%f Ay:%f Az:%f HMD Velocity: Vx:%fm/s Vy:%fm/s Vz:%fm/s", HMDData.Accel.X, HMDData.Accel.Y, HMDData.Accel.Z, HMDData.Velocity.X, HMDData.Velocity.Y, HMDData.Velocity.Z);
+		DriverLog("[Debug] Right controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", RightCtrlData.TrackingData.Accel.X, RightCtrlData.TrackingData.Accel.Y, RightCtrlData.TrackingData.Accel.Z, RightCtrlData.TrackingData.Velocity.X, RightCtrlData.TrackingData.Velocity.Y, RightCtrlData.TrackingData.Velocity.Z);
+		DriverLog("[Debug] Left controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", LeftCtrlData.TrackingData.Accel.X, LeftCtrlData.TrackingData.Accel.Y, LeftCtrlData.TrackingData.Accel.Z, LeftCtrlData.TrackingData.Velocity.X, LeftCtrlData.TrackingData.Velocity.Y, LeftCtrlData.TrackingData.Velocity.Z);
+		DriverLog("[Debug] HMD Accel: Ax:%f Ay:%f Az:%f HMD Velocity: Vx:%fm/s Vy:%fm/s Vz:%fm/s", HMDData.TrackingData.Accel.X, HMDData.TrackingData.Accel.Y, HMDData.TrackingData.Accel.Z, HMDData.TrackingData.Velocity.X, HMDData.TrackingData.Velocity.Y, HMDData.TrackingData.Velocity.Z);
 	}
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		ResetPos(false);
@@ -216,18 +215,17 @@ void CdataHandler::GetHMDData(THMD* HMD)
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
+		RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
+		LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
 
-		LeftCtrlData.Position = CtrlLeftKalman.getEstimation();
-		RightCtrlData.Position = CtrlRightKalman.getEstimation();
-
-		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
-		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
+		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
 
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
 		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(CtrlRightQuat.X, CtrlRightQuat.Z, CtrlRightQuat.Y, CtrlRightQuat.W));				//this is bs
 		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(CtrlLeftQuat.X, CtrlLeftQuat.Z, CtrlLeftQuat.Y, CtrlLeftQuat.W));
 
-		RightController->Rotation = CtrlRightQuat;
+		RightController->TrackingData.Rotation = CtrlRightQuat;
 		RightController->Buttons = RightCtrlData.Buttons;
 		RightController->Trigger = RightCtrlData.Trigger;
 		RightController->JoyAxisX = RightCtrlData.JoyAxisX;
@@ -242,7 +240,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		RightController->FingPinky = RightCtrlData.FingPinky;
 
 
-		LeftController->Rotation = CtrlLeftQuat;
+		LeftController->TrackingData.Rotation = CtrlLeftQuat;
 		LeftController->Buttons = LeftCtrlData.Buttons;
 		LeftController->Trigger = LeftCtrlData.Trigger;
 		LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;
@@ -259,13 +257,13 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 
 		if (PSMConnected) {		//PSM POSITION
 			// Apply position offset
-			RightController->Position = RightCtrlData.Position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
-			LeftController->Position = LeftCtrlData.Position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
+			RightController->TrackingData.Position = RightCtrlData.TrackingData.Position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
+			LeftController->TrackingData.Position = LeftCtrlData.TrackingData.Position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
 		}
 		else {
 			// Apply position offset
-			RightController->Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
-			LeftController->Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
+			RightController->TrackingData.Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
+			LeftController->TrackingData.Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
 		}
 	}
 }
@@ -389,27 +387,56 @@ void CdataHandler::PSMUpdate()
 
 		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
+			bool isTracked = false;
+			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &isTracked);
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
-
-			HMDKalman.updateMeas(PSMSHMDPos);
-
+			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos)
+			{
+				HMDData.TrackingData.Position = PSMSHMDPos;
+				HMDKalman.updateMeasCam(PSMSHMDPos);
+				CalcVelocity(HMDData.TrackingData);
+				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
+			}
+			if (!isTracked) {
+				HMDData.TrackingData.Position = PSMSHMDPos;
+			}
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
+			bool isTracked = false;
+			PSM_GetIsControllerTracking(controllerList.controller_id[0], &isTracked);
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			CtrlRightKalman.updateMeas(PSMSCtrlRightPos);
-
+			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos)
+			{
+				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;
+				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
+				CalcVelocity(RightCtrlData.TrackingData);
+				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
+			}
+			if (!isTracked) {
+				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;
+			}
 		}
 		if (ctrl2Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
+			bool isTracked = false;
+			PSM_GetIsControllerTracking(controllerList.controller_id[1], &isTracked);
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			CtrlLeftKalman.updateMeas(PSMSCtrlLeftPos);
-
+			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos)
+			{	
+				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;
+				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
+				CalcVelocity(RightCtrlData.TrackingData);
+				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
+			}
+			if (!isTracked) {
+				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;
+			}
 		}
 		//no need to update this faster than we can capture the images.
 		std::this_thread::sleep_for(std::chrono::milliseconds(psmsMillisecondPeriod));
