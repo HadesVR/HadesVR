@@ -17,20 +17,26 @@
 
 class V3Kalman {
   private:
-    float meas_err;
-    float process_n;
-    Vector3 estm_err;
+    float Camera_meas_err;
+    float Camera_process_n;
+    Vector3 Camera_estm_err;
+    float IMU_meas_err;
+    float IMU_process_n;
+    Vector3 IMU_estm_err;
     Vector3 current_est = Vector3::Zero();
     Vector3 last_est = Vector3::Zero();
     Vector3 gain = Vector3::Zero();
+    Vector3 gainIMU = Vector3::Zero();
 
     Vector3 reading = Vector3::Zero();
 
   public:
     V3Kalman(void);
-    void setSettings(float meas_e, float estm_e, float p_n);
-    void updateMeas(Vector3 in);
+    void setSettings(float cam_meas_e, float cam_estm_e, float cam_p_n, float imu_meas_e, float imu_estm_e, float imu_p_n);
+    void updateMeasCam(Vector3 in);
+    void updateMeasIMU(Vector3 in);
     void update();
+    void updateIMU();
     Vector3 getEstimation();
 };
 #endif
