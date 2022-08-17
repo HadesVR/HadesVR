@@ -95,8 +95,8 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
 				
 				if (accelEnable) {
-					CalcIMUPosition(RightCtrlData.TrackingData, CtrlRightKalman);
-					CalcIMUPosition(LeftCtrlData.TrackingData, CtrlLeftKalman);
+					UpdateIMUPosition(RightCtrlData.TrackingData, CtrlRightKalman);
+					UpdateIMUPosition(LeftCtrlData.TrackingData, CtrlLeftKalman);
 				}
 				break;
 
@@ -395,15 +395,12 @@ void CdataHandler::PSMUpdate()
 			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &isTracked);
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
-			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !isTracked)
+			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
 			{
-				HMDData.TrackingData.Position = PSMSHMDPos;
+				HMDData.TrackingData.Position = PSMSHMDPos;								//update position
 				HMDKalman.updateMeasCam(PSMSHMDPos);
-				CalcVelocity(HMDData.TrackingData);
+				UpdateVelocity(HMDData.TrackingData);									//update velocity
 				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
-			}
-			if (!isTracked) {
-				HMDKalman.updateMeasCam(PSMSHMDPos);
 			}
 		}
 		if (ctrl1Allocated) {
@@ -413,11 +410,11 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !isTracked)
+			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
 			{
-				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;
+				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;								//update position
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
-				CalcVelocity(RightCtrlData.TrackingData);
+				UpdateVelocity(RightCtrlData.TrackingData);											//update velocity
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
 			}
 		}
@@ -428,15 +425,12 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !isTracked)
+			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
 			{	
-				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;
+				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;								//update position
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
-				CalcVelocity(LeftCtrlData.TrackingData);
+				UpdateVelocity(LeftCtrlData.TrackingData);											//update velocity
 				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
-			}
-			if (!isTracked) {
-				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
 			}
 		}
 		//no need to update this faster than we can capture the images.
@@ -511,13 +505,13 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		accelEnable = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_Tracking_AccelEnable_Bool);
 
 		//get tracker update rate and smoothness thing
-		CamK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Meas_err_Float);
-		CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Estim_err_Float);
-		CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Proc_noise_Float);
+		float CamK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Meas_err_Float);
+		float CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Estim_err_Float);
+		float CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Proc_noise_Float);
 
-		IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Meas_err_Float);
-		IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Estim_err_Float);
-		IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Proc_noise_Float);
+		float IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Meas_err_Float);
+		float IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Estim_err_Float);
+		float IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Proc_noise_Float);
 
 		HMDKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
 		CtrlLeftKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);

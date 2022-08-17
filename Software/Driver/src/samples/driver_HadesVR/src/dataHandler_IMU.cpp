@@ -1,6 +1,6 @@
 #include "dataHandler.h"
 
-void CdataHandler::CalcIMUPosition(_TrackingData& _data, V3Kalman& k)
+void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& k)
 {
 	//don't update on old data
 	if (_data.Accel == _data.oldAccel) return;
@@ -34,7 +34,7 @@ void CdataHandler::CalcIMUPosition(_TrackingData& _data, V3Kalman& k)
 	_data.oldAccel = _data.Accel;
 }
 
-void CdataHandler::CalcVelocity(_TrackingData& _data) {
+void CdataHandler::UpdateVelocity(_TrackingData& _data) {
 
 	//get deltatime
 	auto now = std::chrono::high_resolution_clock::now();

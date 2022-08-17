@@ -229,8 +229,8 @@ private:
 	bool connectToPSMOVE();
 	void PSMUpdate();
 
-	void CalcIMUPosition(_TrackingData& _data, V3Kalman& k);
-	void CalcVelocity(_TrackingData& _data);
+	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
+	void UpdateVelocity(_TrackingData& _data);
 
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
@@ -283,14 +283,6 @@ private:
 	V3Kalman HMDKalman;
 	V3Kalman CtrlLeftKalman;
 	V3Kalman CtrlRightKalman;
-
-	float CamK_measErr = .5f;
-	float CamK_estmErr = .2f;
-	float CamK_ProcNoise = .1f;
-
-	float IMUK_measErr = .5f;
-	float IMUK_estmErr = .2f;
-	float IMUK_ProcNoise = .1f;
 
 	int once = 0;
 
