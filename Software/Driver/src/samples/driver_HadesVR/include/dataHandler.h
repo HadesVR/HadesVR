@@ -229,7 +229,7 @@ private:
 	bool connectToPSMOVE();
 	void PSMUpdate();
 
-	void CalcIMUPosition(_TrackingData& _data, V3Kalman k);
+	void CalcIMUPosition(_TrackingData& _data, V3Kalman& k);
 	void CalcVelocity(_TrackingData& _data);
 
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.

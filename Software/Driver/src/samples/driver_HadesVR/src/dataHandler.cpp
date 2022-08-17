@@ -132,6 +132,10 @@ void CdataHandler::ReadHIDData()
 				//Apply rotation to the HMD
 				HMDData.TrackingData.Rotation = HMDfilter.getQuat();
 
+				if (accelEnable) {
+					//CalcIMUPosition(HMDData.TrackingData, HMDKalman);
+				}
+
 				HMDData.Data = DataHMDRAW->HMDData;
 
 				TrackerWaistData.Rotation.W = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
@@ -391,7 +395,7 @@ void CdataHandler::PSMUpdate()
 			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &isTracked);
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
-			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos)
+			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !isTracked)
 			{
 				HMDData.TrackingData.Position = PSMSHMDPos;
 				HMDKalman.updateMeasCam(PSMSHMDPos);
@@ -399,7 +403,7 @@ void CdataHandler::PSMUpdate()
 				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
 			}
 			if (!isTracked) {
-				HMDData.TrackingData.Position = PSMSHMDPos;
+				HMDKalman.updateMeasCam(PSMSHMDPos);
 			}
 		}
 		if (ctrl1Allocated) {
@@ -409,15 +413,12 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos)
+			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !isTracked)
 			{
 				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
 				CalcVelocity(RightCtrlData.TrackingData);
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
-			}
-			if (!isTracked) {
-				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;
 			}
 		}
 		if (ctrl2Allocated) {
@@ -427,15 +428,15 @@ void CdataHandler::PSMUpdate()
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos)
+			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !isTracked)
 			{	
 				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
-				CalcVelocity(RightCtrlData.TrackingData);
+				CalcVelocity(LeftCtrlData.TrackingData);
 				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
 			}
 			if (!isTracked) {
-				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;
+				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
 			}
 		}
 		//no need to update this faster than we can capture the images.
