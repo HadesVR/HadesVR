@@ -479,18 +479,21 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
 		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
-		//use ctrl accelerometers?
-		//ctrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_AccelEnable_Bool);
-		//CURRENTLY DOES NOTHING I'LL REWORK THIS SOME DAY MAYBE OR SOMETHING
+		//use accelerometers?
+		accelEnable = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_Tracking_AccelEnable_Bool);
 
 		//get tracker update rate and smoothness thing
-		K_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Meas_err_Float);
-		K_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Estim_err_Float);
-		K_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Kalman_Proc_noise_Float);
+		CamK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Meas_err_Float);
+		CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Estim_err_Float);
+		CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Proc_noise_Float);
 
-		HMDKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
-		CtrlLeftKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
-		CtrlRightKalman.setSettings(K_measErr, K_estmErr, K_ProcNoise);
+		IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Meas_err_Float);
+		IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Estim_err_Float);
+		IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Proc_noise_Float);
+
+		HMDKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
+		CtrlLeftKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
+		CtrlRightKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
 
 		//set initial states for controllers and hmd.
 		ResetPos(false);

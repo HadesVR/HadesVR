@@ -290,6 +290,13 @@ private:
 	float K_measErr = .5f;
 	float K_estmErr = .2f;
 	float K_ProcNoise = .1f;
+	float CamK_measErr = .5f;
+	float CamK_estmErr = .2f;
+	float CamK_ProcNoise = .1f;
+
+	float IMUK_measErr = .5f;
+	float IMUK_estmErr = .2f;
+	float IMUK_ProcNoise = .1f;
 
 	int once = 0;
 
