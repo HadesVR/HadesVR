@@ -219,8 +219,12 @@ void CdataHandler::GetHMDData(THMD* HMD)
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
+		CtrlRightKalman.updateIMU();
+		CtrlLeftKalman.updateIMU();
+
 		RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
 		LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
+
 
 		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
 		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);

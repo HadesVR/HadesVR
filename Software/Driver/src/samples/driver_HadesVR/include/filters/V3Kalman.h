@@ -26,6 +26,7 @@ class V3Kalman {
     Vector3 current_est = Vector3::Zero();
     Vector3 last_est = Vector3::Zero();
     Vector3 gain = Vector3::Zero();
+    Vector3 gainIMU = Vector3::Zero();
 
     Vector3 reading = Vector3::Zero();
 
