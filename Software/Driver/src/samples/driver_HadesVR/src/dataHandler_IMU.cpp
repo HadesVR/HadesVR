@@ -10,10 +10,12 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& k)
 	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - _data.lastIMUUpdate).count() / 1000000.0f;
 	_data.lastIMUUpdate = now;
 
+	Quaternion _q = Quaternion(_data.Rotation.Y, _data.Rotation.Z, _data.Rotation.X, _data.Rotation.W);
+
 	//Rotate gravity vector https://web.archive.org/web/20121004000626/http://www.varesano.net/blog/fabio/simple-gravity-compensation-9-dom-imus
-	Vector3 g = Vector3(-(2.0f * (_data.Rotation.X * _data.Rotation.W - _data.Rotation.Y * _data.Rotation.Z)),
-						(2.0f * (_data.Rotation.Y * _data.Rotation.X + _data.Rotation.Z * _data.Rotation.W)),
-						(_data.Rotation.Y * _data.Rotation.Y - _data.Rotation.X * _data.Rotation.X - _data.Rotation.Z * _data.Rotation.Z + _data.Rotation.W * _data.Rotation.W));
+	Vector3 g = Vector3((2.0f * (_q.X * _q.Y - _q.Z * _q.W)),
+						(2.0f * (_q.X * _q.Z + _q.Y * _q.W)),
+						(_q.X * _q.X - _q.Z * _q.Z - _q.Y * _q.Y + _q.W * _q.W));
 
 	//remove gravity vector (or at least attempt to)
 	Vector3 lin_Acc = _data.Accel - g;
@@ -21,8 +23,15 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& k)
 	//convert to m/s^2
 	lin_Acc *= 9.80665f;
 
-	//integrate to get velocity	(also swap axis)												
-	_data.Velocity += (Vector3(lin_Acc.Y, lin_Acc.X, lin_Acc.Z) * deltatime);
+	//swap axis
+	lin_Acc = Vector3(lin_Acc.Y, lin_Acc.X, lin_Acc.Z);
+
+	//rotate vector to quaternion so it all matches up nicely
+	Quaternion _pq = Quaternion::Inverse(Quaternion(_data.Rotation.X, _data.Rotation.Z, _data.Rotation.Y, _data.Rotation.W));
+	lin_Acc = (_pq * lin_Acc);
+
+	//integrate to get velocity											
+	_data.Velocity += (lin_Acc * deltatime);
 
 	//again to get position
 	Vector3 instant_pos = (_data.Velocity * deltatime);
