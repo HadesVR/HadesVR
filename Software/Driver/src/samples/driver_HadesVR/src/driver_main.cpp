@@ -28,17 +28,6 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-inline HmdQuaternion_t HmdQuaternion_Init( double w, double x, double y, double z )
-{
-	HmdQuaternion_t quat;
-	quat.w = w;
-	quat.x = x;
-	quat.y = y;
-	quat.z = z;
-	return quat;
-}
-
-
 inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
 {
 	vr::HmdQuaternion_t q;
@@ -61,13 +50,6 @@ int controllerMode, trackerMode;
 double DegToRad(double f) {
 	return f * (M_PI / 180);
 }
-
-//Velocity
-double FirstCtrlLastPos[3] = { 0, 0, 0 }, SecondCtrlLastPos[3] = { 0, 0, 0 };
-double TrackerWaistLastPos[3] = { 0, 0, 0 }, TrackerLeftFootLastPos[3] = { 0, 0, 0 }, TrackerRightFootLastPos[3] = { 0, 0, 0 };
-
-milliseconds deltaTime ;
-static milliseconds lastMillis;
 
 //-----------------------------------------------------------------------------
 // Purpose: HMD mess over here
@@ -317,8 +299,8 @@ public:
 			pose.deviceIsConnected = false;
 		}
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
+		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
+		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
 
 		if (HMDConnected) {
 			//Set head tracking rotation
@@ -506,8 +488,8 @@ public:
 		pose.deviceIsConnected = true;
 		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
+		pose.qWorldFromDriverRotation = retquat( 1, 0, 0, 0 );
+		pose.qDriverFromHeadRotation = retquat( 1, 0, 0, 0 );
 
 		//Controllers positions and rotations
 		if (ControllerIndex == 1) {
@@ -517,12 +499,9 @@ public:
 			pose.vecPosition[2] = RightCtrl.TrackingData.Position.Y;
 
 			//Velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
-			pose.vecVelocity[1] = (pose.vecPosition[1] - FirstCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
-			pose.vecVelocity[2] = (pose.vecPosition[2] - FirstCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
-			FirstCtrlLastPos[0] = pose.vecPosition[0];
-			FirstCtrlLastPos[1] = pose.vecPosition[1];
-			FirstCtrlLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = RightCtrl.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = RightCtrl.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = RightCtrl.TrackingData.Velocity.Y;
 
 			//Rotation first controller
 			pose.qRotation = retquat(RightCtrl.TrackingData.Rotation.W, RightCtrl.TrackingData.Rotation.X, RightCtrl.TrackingData.Rotation.Y, RightCtrl.TrackingData.Rotation.Z);
@@ -534,12 +513,9 @@ public:
 			pose.vecPosition[2] = LeftCtrl.TrackingData.Position.Y;
 
 			//Velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
-			pose.vecVelocity[1] = (pose.vecPosition[1] - SecondCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
-			pose.vecVelocity[2] = (pose.vecPosition[2] - SecondCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
-			SecondCtrlLastPos[0] = pose.vecPosition[0];
-			SecondCtrlLastPos[1] = pose.vecPosition[1];
-			SecondCtrlLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = LeftCtrl.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = LeftCtrl.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = LeftCtrl.TrackingData.Velocity.Y;
 
 			pose.qRotation = retquat(LeftCtrl.TrackingData.Rotation.W, LeftCtrl.TrackingData.Rotation.X, LeftCtrl.TrackingData.Rotation.Y, LeftCtrl.TrackingData.Rotation.Z);
 		}
@@ -706,54 +682,45 @@ public:
 		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
+		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
+		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
 
 		//Controllers positions and rotations
 		switch (TrackerIndex)
 		{
 		case 1:
 			//Waist Tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerWaistLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerWaistLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerWaistLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerWaistLastPos[0] = pose.vecPosition[0];
-			TrackerWaistLastPos[1] = pose.vecPosition[1];
-			TrackerWaistLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 			//Rotation
 			pose.qRotation = retquat(WaistTrk.Rotation.W, WaistTrk.Rotation.X, WaistTrk.Rotation.Y, WaistTrk.Rotation.Z);
 			break;
 		case 2:
 			//Left foot tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerLeftFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerLeftFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerLeftFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerLeftFootLastPos[0] = pose.vecPosition[0];
-			TrackerLeftFootLastPos[1] = pose.vecPosition[1];
-			TrackerLeftFootLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 			//rotation
 			pose.qRotation = retquat(LeftTrk.Rotation.W, LeftTrk.Rotation.X, LeftTrk.Rotation.Y, LeftTrk.Rotation.Z);
 			break;
 		case 3:
 			//Right foot tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerRightFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerRightFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerRightFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerRightFootLastPos[0] = pose.vecPosition[0];
-			TrackerRightFootLastPos[1] = pose.vecPosition[1];
-			TrackerRightFootLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 
 			//rotation
 			pose.qRotation = retquat(RightTrk.Rotation.W, RightTrk.Rotation.X, RightTrk.Rotation.Y, RightTrk.Rotation.Z);
@@ -1017,10 +984,6 @@ void CServerDriver_Sample::Cleanup()
 
 void CServerDriver_Sample::RunFrame()
 {
-	//Velocity
-	deltaTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()) - lastMillis;
-	lastMillis = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
 	if ( m_pHmd )
 	{
 		dH.GetHMDData(&HMD);
