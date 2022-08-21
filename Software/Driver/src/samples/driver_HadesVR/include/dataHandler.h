@@ -26,7 +26,6 @@ typedef struct _TrackingData {
 	Vector3 oldPosition = Vector3::Zero();
 
 	Vector3 Velocity;
-	Vector3 oldVelocity = Vector3::Zero();
 
 	Vector3 Accel;
 	Vector3 oldAccel = Vector3::Zero();
@@ -34,6 +33,7 @@ typedef struct _TrackingData {
 	Vector3 LastCameraPos = Vector3::Zero();
 
 	Quaternion Rotation;
+	Quaternion CorrectedRotation;
 	std::chrono::steady_clock::time_point lastIMUUpdate;
 	std::chrono::steady_clock::time_point lastCamUpdate;
 };
@@ -283,8 +283,6 @@ private:
 	V3Kalman HMDKalman;
 	V3Kalman CtrlLeftKalman;
 	V3Kalman CtrlRightKalman;
-
-	int once = 0;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

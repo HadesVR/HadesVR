@@ -133,7 +133,7 @@ void CdataHandler::ReadHIDData()
 				HMDData.TrackingData.Rotation = HMDfilter.getQuat();
 
 				if (accelEnable) {
-					//CalcIMUPosition(HMDData.TrackingData, HMDKalman);
+					UpdateIMUPosition(HMDData.TrackingData, HMDKalman);
 				}
 
 				HMDData.Data = DataHMDRAW->HMDData;
@@ -167,6 +167,14 @@ void CdataHandler::ReadHIDData()
 void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
+		// if accelerometer position is enabled, update on IMU data, else update on camera data.
+		if (accelEnable) {
+			HMDKalman.updateIMU();
+		}
+		else {
+			HMDKalman.update();
+		}
+
 		HMDData.TrackingData.Position = HMDKalman.getEstimation();
 
 		Quaternion HMDQuat = SetOffsetQuat(HMDData.TrackingData.Rotation, HMDOffset, HMDConfigRotationOffset);
@@ -184,14 +192,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		HMD->TrackingData.Rotation = HMDQuat;
 		
 	}
-	if ((GetAsyncKeyState(VK_F12) & 0x8000) && !once)
+	if ((GetAsyncKeyState(VK_F12) & 0x8000))
 	{
 		ReloadCalibration();
-		once = 1;
-	}
-	if (once && !(GetAsyncKeyState(VK_F12) & 0x8000))
-	{
-		once = 0;
 	}
 	if ((GetAsyncKeyState(VK_F10) & 0x8000))
 	{
@@ -202,14 +205,9 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
 		ResetPos(false);
 	}
-	if ((GetAsyncKeyState(VK_F8) & 0x8000) && !once)
+	if ((GetAsyncKeyState(VK_F8) & 0x8000))
 	{
 		SetCentering();
-		once = 1;
-	}
-	if (once && !(GetAsyncKeyState(VK_F8) & 0x8000))
-	{
-		once = 0;
 	}
 }
 
@@ -219,21 +217,37 @@ void CdataHandler::GetHMDData(THMD* HMD)
 void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
 {
 	if (HIDConnected) {
-		CtrlRightKalman.updateIMU();
-		CtrlLeftKalman.updateIMU();
+		// if accelerometer position is enabled, update on IMU data, else update on camera data.
+		if (accelEnable) {
+			CtrlRightKalman.updateIMU();
+			CtrlLeftKalman.updateIMU();
+		}
+		else {
+			CtrlRightKalman.update();
+			CtrlLeftKalman.update();
+		}
+		
 
 		RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
 		LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
 
 
-		Quaternion CtrlRightQuat = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
-		Quaternion CtrlLeftQuat = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+		RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
+		LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
 
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(CtrlRightQuat.X, CtrlRightQuat.Z, CtrlRightQuat.Y, CtrlRightQuat.W));				//this is bs
-		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(CtrlLeftQuat.X, CtrlLeftQuat.Z, CtrlLeftQuat.Y, CtrlLeftQuat.W));
+		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.CorrectedRotation.X,
+																	RightCtrlData.TrackingData.CorrectedRotation.Z,
+																	RightCtrlData.TrackingData.CorrectedRotation.Y,
+																	RightCtrlData.TrackingData.CorrectedRotation.W));
+		//this is bs
+		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.CorrectedRotation.X, 
+																	LeftCtrlData.TrackingData.CorrectedRotation.Z, 
+																	LeftCtrlData.TrackingData.CorrectedRotation.Y, 
+																	LeftCtrlData.TrackingData.CorrectedRotation.W));
 
-		RightController->TrackingData.Rotation = CtrlRightQuat;
+		RightController->TrackingData.Rotation = RightCtrlData.TrackingData.CorrectedRotation;
+		RightController->TrackingData.Velocity = RightCtrlData.TrackingData.Velocity;
 		RightController->Buttons = RightCtrlData.Buttons;
 		RightController->Trigger = RightCtrlData.Trigger;
 		RightController->JoyAxisX = RightCtrlData.JoyAxisX;
@@ -248,7 +262,8 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 		RightController->FingPinky = RightCtrlData.FingPinky;
 
 
-		LeftController->TrackingData.Rotation = CtrlLeftQuat;
+		LeftController->TrackingData.Rotation = LeftCtrlData.TrackingData.CorrectedRotation;
+		LeftController->TrackingData.Velocity = LeftCtrlData.TrackingData.Velocity;
 		LeftController->Buttons = LeftCtrlData.Buttons;
 		LeftController->Trigger = LeftCtrlData.Trigger;
 		LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;

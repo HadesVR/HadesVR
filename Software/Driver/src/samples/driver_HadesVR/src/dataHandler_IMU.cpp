@@ -25,7 +25,7 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	lin_Acc = Vector3(lin_Acc.Y, lin_Acc.X, lin_Acc.Z);
 
 	//rotate vector to quaternion so it all matches up nicely
-	Quaternion pq = Quaternion::Inverse(Quaternion(_data.Rotation.X, _data.Rotation.Z, _data.Rotation.Y, _data.Rotation.W));
+	Quaternion pq = Quaternion::Inverse(Quaternion(_data.CorrectedRotation.X, _data.CorrectedRotation.Z, _data.CorrectedRotation.Y, _data.CorrectedRotation.W));
 	lin_Acc = (pq * lin_Acc);
 
 	//integrate to get velocity											

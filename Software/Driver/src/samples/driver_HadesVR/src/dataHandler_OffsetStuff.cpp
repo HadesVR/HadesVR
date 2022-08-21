@@ -71,17 +71,14 @@ void CdataHandler::ResetPos(bool hmdOnly) {
 		RightCtrlData.TrackingData.Position = Vector3::Zero();
 		RightCtrlData.TrackingData.oldPosition = Vector3::Zero();
 		RightCtrlData.TrackingData.Velocity = Vector3::Zero();
-		RightCtrlData.TrackingData.oldVelocity = Vector3::Zero();
 
 		LeftCtrlData.TrackingData.Position = Vector3::Zero();
 		LeftCtrlData.TrackingData.oldPosition = Vector3::Zero();
 		LeftCtrlData.TrackingData.Velocity = Vector3::Zero();
-		LeftCtrlData.TrackingData.oldVelocity = Vector3::Zero();
 	}
 	HMDData.TrackingData.Position = Vector3::Zero();
 	HMDData.TrackingData.oldPosition = Vector3::Zero();
 	HMDData.TrackingData.Velocity = Vector3::Zero();
-	HMDData.TrackingData.oldVelocity = Vector3::Zero();
 }
 
 Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset)
