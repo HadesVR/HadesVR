@@ -23,6 +23,7 @@ static const char* const k_pch_Sample_Stereo_Bool = "Stereo";
 static const char* const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char* const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char* const k_pch_Sample_DebugMode_Bool = "DebugMode";
+static const char* const k_pch_Sample_DisplayAngle_Float = "DisplayCantAngle";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +46,13 @@ static const char* const k_pch_Driver_Section = "Driver";
 static const char* const k_pch_HID_PID_Int32 = "HID_PID";
 static const char* const k_pch_HID_VID_Int32 = "HID_VID";
 static const char* const k_pch_PSMS_UPDATE_RATE_Int32 = "PSMSTrackerFrequency";
-static const char* const k_pch_Kalman_Meas_err_Float = "Kalman_Measurement_Uncertainty";
-static const char* const k_pch_Kalman_Estim_err_Float = "Kalman_Estimation_Uncertainty";
-static const char* const k_pch_Kalman_Proc_noise_Float = "Kalman_Process_Noise";
+static const char* const k_pch_Tracking_AccelEnable_Bool = "UseAccelerometers";
+static const char* const k_pch_Camera_Kalman_Meas_err_Float = "Camera_Kalman_Measurement_Uncertainty";
+static const char* const k_pch_Camera_Kalman_Estim_err_Float = "Camera_Kalman_Estimation_Uncertainty";
+static const char* const k_pch_Camera_Kalman_Proc_noise_Float = "Camera_Kalman_Process_Noise";
+static const char* const k_pch_IMU_Kalman_Meas_err_Float = "IMU_Kalman_Measurement_Uncertainty";
+static const char* const k_pch_IMU_Kalman_Estim_err_Float = "IMU_Kalman_Estimation_Uncertainty";
+static const char* const k_pch_IMU_Kalman_Proc_noise_Float = "IMU_Kalman_Process_Noise";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +77,6 @@ static const char* const k_pch_Controllers_Section = "Controllers";
 
 static const char* const k_pch_Controller_Enable_Bool = "EnableControllers";
 static const char* const k_pch_Controller_Mode_Int32 = "ControllerMode";
-
-static const char* const k_pch_Controller_AccelEnable_Bool = "UseControllerAccelerometers";
 
 static const char* const k_pch_ControllerRight_YawOffset_Float = "CTRLRightYawOffset";
 static const char* const k_pch_ControllerRight_PitchOffset_Float = "CTRLRightPitchOffset";

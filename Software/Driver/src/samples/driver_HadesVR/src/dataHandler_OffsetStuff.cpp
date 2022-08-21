@@ -1,8 +1,5 @@
 #include "dataHandler.h"
 
-// + (char)'W'
-// 
-
 void setCalibOffset(float DataW, float DataY, Quaternion &Offset, const char* settingsKey)
 {
 	std::string key_y = settingsKey;
@@ -35,14 +32,14 @@ void CdataHandler::SetCentering()
 	/// HMD
 	/// </summary>
 
-	setCalibOffset(HMDData.Rotation.W, HMDData.Rotation.Y, HMDOffset, k_pch_Calibration_HMD);
+	setCalibOffset(HMDData.TrackingData.Rotation.W, HMDData.TrackingData.Rotation.Y, HMDOffset, k_pch_Calibration_HMD);
 
 	/// <summary>
 	///				Controllers
 	/// </summary>
 
-	setCalibOffset(RightCtrlData.Rotation.W, RightCtrlData.Rotation.Y, RightCtrlOffset, k_pch_Calibration_CONTRight);
-	setCalibOffset(LeftCtrlData.Rotation.W, LeftCtrlData.Rotation.Y, LeftCtrlOffset, k_pch_Calibration_CONTLeft);
+	setCalibOffset(RightCtrlData.TrackingData.Rotation.W, RightCtrlData.TrackingData.Rotation.Y, RightCtrlOffset, k_pch_Calibration_CONTRight);
+	setCalibOffset(LeftCtrlData.TrackingData.Rotation.W, LeftCtrlData.TrackingData.Rotation.Y, LeftCtrlOffset, k_pch_Calibration_CONTLeft);
 
 	/// <summary>
 	///					Trackers
@@ -71,20 +68,17 @@ void CdataHandler::ReloadCalibration() {
 
 void CdataHandler::ResetPos(bool hmdOnly) {
 	if (!hmdOnly) {
-		ctrlRightPosData.position = Vector3::Zero();
-		ctrlRightPosData.oldPosition = Vector3::Zero();
-		ctrlRightPosData.velocity = Vector3::Zero();
-		ctrlRightPosData.oldVelocity = Vector3::Zero();
+		RightCtrlData.TrackingData.Position = Vector3::Zero();
+		RightCtrlData.TrackingData.oldPosition = Vector3::Zero();
+		RightCtrlData.TrackingData.Velocity = Vector3::Zero();
 
-		ctrlLeftPosData.position = Vector3::Zero();
-		ctrlLeftPosData.oldPosition = Vector3::Zero();
-		ctrlLeftPosData.velocity = Vector3::Zero();
-		ctrlLeftPosData.oldVelocity = Vector3::Zero();
+		LeftCtrlData.TrackingData.Position = Vector3::Zero();
+		LeftCtrlData.TrackingData.oldPosition = Vector3::Zero();
+		LeftCtrlData.TrackingData.Velocity = Vector3::Zero();
 	}
-	hmdPosData.position = Vector3::Zero();
-	hmdPosData.oldPosition = Vector3::Zero();
-	hmdPosData.velocity = Vector3::Zero();
-	hmdPosData.oldVelocity = Vector3::Zero();
+	HMDData.TrackingData.Position = Vector3::Zero();
+	HMDData.TrackingData.oldPosition = Vector3::Zero();
+	HMDData.TrackingData.Velocity = Vector3::Zero();
 }
 
 Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset)

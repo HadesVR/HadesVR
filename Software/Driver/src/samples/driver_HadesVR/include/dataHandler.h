@@ -21,19 +21,34 @@
 using namespace ATL;
 using namespace std::chrono;
 
+typedef struct _TrackingData {
+	Vector3 Position;
+	Vector3 oldPosition = Vector3::Zero();
+
+	Vector3 Velocity;
+
+	Vector3 Accel;
+	Vector3 oldAccel = Vector3::Zero();
+
+	Vector3 LastCameraPos = Vector3::Zero();
+
+	Quaternion Rotation;
+	Quaternion CorrectedRotation;
+	std::chrono::steady_clock::time_point lastIMUUpdate;
+	std::chrono::steady_clock::time_point lastCamUpdate;
+};
+
 typedef struct _HMDData
 {
-	Vector3 Position;
-	Quaternion Rotation;
+	_TrackingData TrackingData;
 	uint16_t Data;
+
 } THMD, * PHMD;
 
-typedef struct _Controller
+typedef struct _ControllerData
 {
-	Vector3 Position;
-	Quaternion Rotation;
-	Vector3 Velocity;
-	Vector3 Accel;
+	_TrackingData TrackingData;
+
 	uint16_t Buttons;
 	float	Trigger;
 	float	JoyAxisX;
@@ -185,17 +200,6 @@ struct ControllerPacket
 };
 #pragma pack(pop)
 
-
-struct PosData 
-{
-	Vector3 position = Vector3::Zero();
-	Vector3 oldPosition = Vector3::Zero();
-	Vector3 velocity = Vector3::Zero();
-	Vector3 oldVelocity = Vector3::Zero();
-
-	std::chrono::steady_clock::time_point lastUpdate;
-};
-
 class CdataHandler {
 public:
 	
@@ -204,7 +208,7 @@ public:
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	
 	void StartData(int32_t PID, int32_t VID);
-	void stopData();
+	void StopData();
 
 	void SetCentering();
 	void ReloadCalibration();
@@ -224,17 +228,22 @@ private:
 	void ReadHIDData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
-	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
-	void CalcTrackedPos(PosData& oldPos, Vector3 newPos, float smooth);
-	
-	Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
 
-	_HMDData	HMDData;
-	_Controller RightCtrlData;
-	_Controller LeftCtrlData;
-	_TrackerData TrackerWaistData;
-	_TrackerData TrackerLeftData;
-	_TrackerData TrackerRightData;
+	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
+	void UpdateVelocity(_TrackingData& _data);
+
+	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
+	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
+	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
+
+	Quaternion SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
+
+	_HMDData		HMDData;
+	_ControllerData RightCtrlData;
+	_ControllerData LeftCtrlData;
+	_TrackerData	TrackerWaistData;
+	_TrackerData	TrackerLeftData;
+	_TrackerData	TrackerRightData;
 	
 	uint8_t packet_buffer[64];
 
@@ -257,17 +266,13 @@ private:
 	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
-	//bool ctrlAccelEnable = false;
+	bool accelEnable = false;
 
 	double k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
 	PSMControllerList controllerList;
 	PSMHmdList hmdList;
 	PSMVector3f psmHmdPos, psmCtrlRightPos, psmCtrlLeftPos;
-
-	PosData hmdPosData;
-	PosData ctrlRightPosData;
-	PosData ctrlLeftPosData;
 
 	Madgwick HMDfilter;
 
@@ -278,12 +283,6 @@ private:
 	V3Kalman HMDKalman;
 	V3Kalman CtrlLeftKalman;
 	V3Kalman CtrlRightKalman;
-
-	float K_measErr = .5f;
-	float K_estmErr = .2f;
-	float K_ProcNoise = .1f;
-
-	int once = 0;
 
 	static void PSMUpdateEnter(CdataHandler* ptr) {
 		ptr->PSMUpdate();

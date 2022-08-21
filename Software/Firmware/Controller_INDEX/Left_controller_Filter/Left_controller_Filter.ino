@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 HadesVR
+  Copyright 2022 HadesVR
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
   and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -14,40 +14,61 @@
 
 #include <Wire.h>
 #include <SPI.h>
+#include <EEPROM.h>
 #include "RF24.h"
 #include "RegisterMap.h"
-#include "HID.h"
+#include "Madgwick.h"
 
 //==========================================================================================================
 //************************************ USER CONFIGURABLE STUFF HERE*****************************************
 //==========================================================================================================
 
-#define MPU9250_ADDRESS     0x68            //ADO 0
-#define CALPIN              4               //pin to start mag calibration at power on
-#define EEPROM_CAL                          //comment this if your MCU doesn't support EEPROM.
 //#define SERIAL_DEBUG
+#define USE_MAG                           //use magnetometer (will slow down the filter!)
+#define MPU9250_ADDRESS     0x68            //ADO 0
+#define CALPIN              5               //pin to start mag calibration at power on
 
-//eeprom-less mcu stuff, you don't need to touch these if you do the eeprom calibration
-float magBias[3] = {0, 0, 0};
-float magScale[3] = {1, 1, 1};
-float gyroBias[3] = {0, 0, 0};
-float accelBias[3] = {0, 0, 0};
+#define APin                4
+#define BPin                3
+#define SysPin              5
+#define FingerIndexPin      1
+#define FingerMiddlePin     6
+#define FingerRingPin       7
+#define FingerPinkyPin      8
+#define TrackpadPin         A0
+#define JoyXPin             A1
+#define JoyYPin             A2
+#define JoyClickPin         2
+#define TriggerPin          A3
+#define VbatPin             A6
+
+#define BatLevelMax         968             //you need to find all of these values on your own
+#define JoyXMin             200             //check on the utils folder for sketches and instructions
+#define JoyXMax             900             //that help on getting these values
+#define JoyYMin             150             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
+#define JoyYMax             870             //if you use these values without changing them you MAY
+#define JoyXDeadZoneMin     515             //get stick drift
+#define JoyXDeadZoneMax     590
+#define JoyYDeadZoneMin     430
+#define JoyYDeadZoneMax     560
+
+//uint64_t Pipe = 0xF0F0F0F0E1LL; //right
+uint64_t Pipe = 0xF0F0F0F0D2LL; //left
 //==========================================================================================================
 
-const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
-const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
-const uint64_t trackerPipe = 0xF0F0F0F0C3LL;
 
+Madgwick filter;
+static const float MadgwickBeta = 0.16f;
 float magCalibration[3]; // factory mag calibration
 
 struct Calibration {
   int calDone;
   float magBias[3];
-  float magScale[3]; // Bias corrections for mag
+  float magScale[3];
   float gyroBias[3]; // bias corrections
   float accelBias[3]; // bias corrections
 };
-
+bool calDone;
 Calibration cal;
 
 static float ax, ay, az, gx, gy, gz, mx, my, mz;
@@ -65,148 +86,69 @@ GFS GFSSEL = GFS::G2000DPS;
 MFS MFSSEL = MFS::M16BITS;
 #define Mmode 0x06                    // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 
-#ifdef EEPROM_CAL
-#include <EEPROM.h>
-#endif
+#define IB_AClick           0x0001
+#define IB_ATouch           0x0002
+#define IB_BClick           0x0004
+#define IB_BTouch           0x0008
+#define IB_SYSClick         0x0010
+#define IB_ThumbStickClick  0x0020
+#define IB_TrackpadTouch    0x0040
+#define IB_ThumbStickTouch  0x0080
 
-static const uint8_t USB_HID_Descriptor[] PROGMEM = {
-
-  0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
-  0x09, 0x00,         // USAGE (Undefined)
-  0xa1, 0x01,         // COLLECTION (Application)
-  0x15, 0x00,         //   LOGICAL_MINIMUM (0)
-  0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)
-  0x85, 0x01,         //   REPORT_ID (1)
-  0x75, 0x08,         //   REPORT_SIZE (16)
-
-  0x95, 0x3f,         //   REPORT_COUNT (1)
-
-  0x09, 0x00,         //   USAGE (Undefined)
-  0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
-  0xc0
+struct ctrlData {
+  int16_t qW;
+  int16_t qX;
+  int16_t qY;
+  int16_t qZ;
+  int16_t accX;
+  int16_t accY;
+  int16_t accZ;
+  uint16_t BTN;
+  uint8_t  trigg;
+  int8_t  axisX;
+  int8_t  axisY;
+  int8_t  trackY;
+  uint8_t  vBAT;
+  uint8_t  fingerThumb;
+  uint8_t  fingerIndex;
+  uint8_t  fingerMiddle;
+  uint8_t  fingerRing;
+  uint8_t  fingerPinky;
+  uint16_t Data;
 };
+ctrlData data;
 
-struct HMDRAWPacket
-{
-  uint8_t  PacketID;
-
-  int16_t AccX;
-  int16_t AccY;
-  int16_t AccZ;
-
-  int16_t GyroX;
-  int16_t GyroY;
-  int16_t GyroZ;
-
-  int16_t MagX;
-  int16_t MagY;
-  int16_t MagZ;
-
-  uint16_t HMDData;
-
-  int16_t tracker1_QuatW;
-  int16_t tracker1_QuatX;
-  int16_t tracker1_QuatY;
-  int16_t tracker1_QuatZ;
-  uint8_t tracker1_vBat;
-  uint8_t tracker1_data;
-
-  int16_t tracker2_QuatW;
-  int16_t tracker2_QuatX;
-  int16_t tracker2_QuatY;
-  int16_t tracker2_QuatZ;
-  uint8_t tracker2_vBat;
-  uint8_t tracker2_data;
-
-  int16_t tracker3_QuatW;
-  int16_t tracker3_QuatX;
-  int16_t tracker3_QuatY;
-  int16_t tracker3_QuatZ;
-  uint8_t tracker3_vBat;
-  uint8_t tracker3_data;
-
-};
-struct ControllerPacket
-{
-  uint8_t PacketID;
-  int16_t Ctrl1_QuatW;
-  int16_t Ctrl1_QuatX;
-  int16_t Ctrl1_QuatY;
-  int16_t Ctrl1_QuatZ;
-  int16_t Ctrl1_AccelX;
-  int16_t Ctrl1_AccelY;
-  int16_t Ctrl1_AccelZ;
-  uint16_t Ctrl1_Buttons;
-  uint8_t Ctrl1_Trigger;
-  int8_t Ctrl1_axisX;
-  int8_t Ctrl1_axisY;
-  int8_t Ctrl1_trackY;
-  uint8_t Ctrl1_vBat;
-  uint8_t Ctrl1_THUMB;
-  uint8_t Ctrl1_INDEX;
-  uint8_t Ctrl1_MIDDLE;
-  uint8_t Ctrl1_RING;
-  uint8_t Ctrl1_PINKY;
-  uint16_t Ctrl1_Data;
-
-  int16_t Ctrl2_QuatW;
-  int16_t Ctrl2_QuatX;
-  int16_t Ctrl2_QuatY;
-  int16_t Ctrl2_QuatZ;
-  int16_t Ctrl2_AccelX;
-  int16_t Ctrl2_AccelY;
-  int16_t Ctrl2_AccelZ;
-  uint16_t Ctrl2_Buttons;
-  uint8_t Ctrl2_Trigger;
-  int8_t Ctrl2_axisX;
-  int8_t Ctrl2_axisY;
-  int8_t Ctrl2_trackY;
-  uint8_t Ctrl2_vBat;
-  uint8_t Ctrl2_THUMB;
-  uint8_t Ctrl2_INDEX;
-  uint8_t Ctrl2_MIDDLE;
-  uint8_t Ctrl2_RING;
-  uint8_t Ctrl2_PINKY;
-  uint16_t Ctrl2_Data;
-};
-
-
-static HMDRAWPacket HMDRawData;
-static ControllerPacket ContData;
-
-bool newCtrlData = false;
-bool calDone;
+int tracky;
+int trackoutput;
+int axisX;
+int axisY;
+bool joyTouch = false;
 
 RF24 radio(9, 10); // CE, CSN on Blue Pill
 
 void setup() {
 
-  pinMode(CALPIN, INPUT_PULLUP);
-
-  static HIDSubDescriptor node (USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
-  HID().AppendDescriptor(&node);
+  pinMode(APin, INPUT_PULLUP);
+  pinMode(BPin, INPUT_PULLUP);
+  pinMode(SysPin, INPUT_PULLUP);
+  pinMode(JoyClickPin, INPUT_PULLUP);
+  pinMode(TriggerPin, INPUT_PULLUP);
 
   aRes = getAres();
   gRes = getGres();
   mRes = getMres();
 
-
 #ifdef SERIAL_DEBUG
   Serial.begin(38400);
-  while (!Serial) {
-    ;
-  }
 #endif
 
   radio.begin();
-  radio.setPayloadSize(40);
-  radio.openReadingPipe(3, trackerPipe);
-  radio.openReadingPipe(2, leftCtrlPipe);
-  radio.openReadingPipe(1, rightCtrlPipe);
-  radio.setAutoAck(false);
+  radio.setPayloadSize(32);
+  radio.setPALevel(RF24_PA_MAX);
   radio.setDataRate(RF24_2MBPS);
-  radio.setPALevel(RF24_PA_LOW);
+  radio.openWritingPipe(Pipe);
   radio.startListening();
+  radio.setAutoAck(false);
 
   Wire.begin();
 
@@ -215,7 +157,6 @@ void setup() {
 
     Serial.println("MPU9250 is online");
     initMPU();
-
     if (readByte(AK8963_ADDRESS, AK8963_WHO_AM_I) == AK8963_WHOAMI_DEFAULT_VALUE)
     {
       Serial.println("AK8963 is online");
@@ -232,130 +173,244 @@ void setup() {
     Serial.print("Could not connect to MPU9250: 0x");
     Serial.println(readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250), HEX);
     while (true) {
-      //      digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(200);
-      //     digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(1000);
     }
   }
-
   if (!radio.isChipConnected())
   {
     Serial.println("NRF24L01 Module not detected!");
     while (true)
     {
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(1000);
     }
   }
-  else{
+  else
+  {
     Serial.println("NRF24L01 Module up and running!");
   }
-  
-#ifdef EEPROM_CAL
+
   EEPROM.get(0, cal);
 
   calDone = (cal.calDone != 99);                                  //check if calibration values are on flash
   while (calDone) {
-    delay(1000);
-    Serial.print("Calibration not done!");
+    delay(200);
     if (!digitalRead(CALPIN)) {
       calDone = false;
     }
   }
 
   if (!digitalRead(CALPIN)) {                                        //enter calibration mode
-    Serial.println("Magnetic calibration mode.");
-    delay(1000);
-    //    digitalWrite(PC13, LOW);
-    magcalMPU9250(cal.magBias, cal.magScale);
-    //    digitalWrite(PC13, HIGH);
-    Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
-    Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
-
-    Serial.println("Writting calibration values to EEPROM!");
+    if (!digitalRead(BPin)) {
+      Serial.println("Accelerometer calibration mode.");
+      delay(5000);
+      calibrateMPU9250(cal.gyroBias, cal.accelBias);
+      Serial.println("Done!");
+      Serial.print("gyroBias: "); Serial.print(cal.gyroBias[0], 7); Serial.print(","); Serial.print(cal.gyroBias[1], 7); Serial.print(","); Serial.println(cal.gyroBias[2], 7);
+      Serial.print("accelBias: "); Serial.print(cal.accelBias[0], 7); Serial.print(","); Serial.print(cal.accelBias[1], 7); Serial.print(","); Serial.println(cal.accelBias[2], 7);
+      delay(1000);
+    }
+    else {
+      Serial.println("Magnetic calibration mode.");
+      delay(1000);
+      magcalMPU9250(cal.magBias, cal.magScale);
+      Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
+      Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
+    }
     cal.calDone = 99;
+    Serial.println("Writting calibration values to EEPROM!");
     EEPROM.put(0, cal);
     delay(3000);
   }
-#else
-  cal.magBias[0] = magBias[0];
-  cal.magBias[1] = magBias[1];
-  cal.magBias[2] = magBias[2];
 
-  cal.magScale[0] = magScale[0];
-  cal.magScale[1] = magScale[1];
-  cal.magScale[2] = magScale[2];
+  //initialize controller data.
+  data.qW = 1;
+  data.qX = 0;
+  data.qY = 0;
+  data.qZ = 0;
+  data.BTN = 0;
+  data.trigg = 0;
+  data.axisX = 0;
+  data.axisY = 0;
+  data.trackY = 0;
+  data.vBAT = 0;
+  data.fingerThumb = 0;
+  data.fingerIndex = 0;
+  data.fingerMiddle = 0;
+  data.fingerRing = 0;
+  data.fingerPinky = 0;
+  data.Data = 0x4B3;
 
 
-  Serial.println("Loading calibration values from program memory");
+  filter.begin(MadgwickBeta);
+  /*
+    data.Data |= 0x03;  //non diy index controller identifier
+    data.Data |= 0x10;  //controller reports accelerometer values
+    data.Data |= 0x20;  //controller does support hand tracking
+    //data.Data |= 0x40;  //handtracking type is analog
+    data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
+    data.Data |= 0x400; //controller reports battery %
+  */
 
-#endif
-
-  HMDRawData.PacketID = 3;
-  ContData.PacketID = 2;
 }
 
 void loop() {
 
-  uint8_t pipenum;
   updateMag();
   if (dataAvailable()) {
     updateAccelGyro();
   }
+#ifdef USE_MAG
+  filter.update(gx, gy, gz, ax, ay, az, my, mx, -mz);
+#else
+  filter.updateIMU(gx, gy, gz, ax, ay, az);
+#endif
 
-  HMDRawData.AccX = (short)(ax * 2048);
-  HMDRawData.AccY = (short)(ay * 2048);
-  HMDRawData.AccZ = (short)(az * 2048);
+  float acc = abs(ax + ay + az);
+  if (acc < 1.25f) {
+    filter.changeBeta(0.05);
+  }
+  else if (acc < 2.0) {
+    filter.changeBeta(0.1);
+  }
+  else if (acc < 2.5) {
+    filter.changeBeta(0.15);
+  }
+  else if (acc < 5) {
+    filter.changeBeta(0.3);
+  }
+  else if (acc < 10) {
+    filter.changeBeta(0.6);
+  }
 
-  HMDRawData.GyroX = (short)(gx * 16);
-  HMDRawData.GyroY = (short)(gy * 16);
-  HMDRawData.GyroZ = (short)(gz * 16);
+  joyTouch = false;
+  int btn = 0;
+  tracky = analogRead(TrackpadPin);
+  if (tracky > 560) {
+    trackoutput = 1;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky < 300 && tracky > 100) {
+    trackoutput = 0;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky == 0) {
+    trackoutput = -1;
+    btn |= IB_TrackpadTouch;
+  }
+  if (tracky < 550 && tracky > 400) {
+    trackoutput = 0;
+  }
 
-  HMDRawData.MagX = (short)(my * 5);
-  HMDRawData.MagY = (short)(mx * 5);
-  HMDRawData.MagZ = (short)(-mz * 5);
+  axisX = analogRead(JoyXPin);
+  axisY = analogRead(JoyYPin);
 
-  HID().SendReport(1, &HMDRawData, 63);
-
-  if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
-    if (pipenum == 1) {
-      radio.read(&ContData.Ctrl1_QuatW, 28);        //receive right controller data
-      newCtrlData = true;
+  if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
+    if (axisX > JoyXMax) {
+      axisX = JoyXMax;
     }
-    if (pipenum == 2) {
-      radio.read(&ContData.Ctrl2_QuatW, 28);        //receive left controller data
-      newCtrlData = true;
+    if (axisX < JoyXMin) {
+      axisX = JoyXMin;
     }
-    if (pipenum == 3) {
-      radio.read(&HMDRawData.tracker1_QuatW, 27);      //recive all 3 trackers' data
+    data.axisX = map(axisX, JoyXMin, JoyXMax, -127, 127);
+    btn |= IB_ThumbStickTouch;
+    joyTouch = true;
+  } else {
+    data.axisX = 0;
+  }
+
+  if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
+    if (axisY > JoyYMax) {
+      axisY = JoyYMax;
     }
+    if (axisY < JoyYMin) {
+      axisY = JoyYMin;
+    }
+    data.axisY = -map(axisY, JoyYMin, JoyYMax, -127, 127);
+    btn |= IB_ThumbStickTouch;
+    joyTouch = true;
+  } else {
+    data.axisY = 0;
   }
 
 
-  if (newCtrlData) {
-    HID().SendReport(1, &ContData, 63);
-    newCtrlData = false;
+  if (analogRead(TriggerPin) < 1000) {
+    data.trigg = map(analogRead(TriggerPin), 1024, 0, 0, 255);
+    data.fingerIndex = map(analogRead(TriggerPin), 1024, 0, 0, 255);
   }
+  else {
+    data.trigg = 0;
+    data.fingerIndex = 0;
+  }
+
+
+  if (!digitalRead(APin)) {
+    btn |= IB_AClick;
+    btn |= IB_ATouch;
+  }
+  if (!digitalRead(BPin)) {
+    btn |= IB_BClick;
+    btn |= IB_BTouch;
+  }
+  if (!digitalRead(SysPin)) {
+    btn |= IB_SYSClick;
+  }
+  if (!digitalRead(JoyClickPin)) {
+    btn |= IB_ThumbStickClick;
+  }
+  //  if (digitalRead(FingerIndexPin)) {
+  //    data.fingerIndex = 255;
+  //  }
+  //  else {
+  //    data.fingerIndex = 0;
+  //  }
+  if (digitalRead(FingerMiddlePin)) {
+    data.fingerMiddle = 255;
+  }
+  else {
+    data.fingerMiddle = 0;
+  }
+  if (digitalRead(FingerRingPin)) {
+    data.fingerRing = 255;
+  }
+  else {
+    data.fingerRing = 0;
+  }
+  if (digitalRead(FingerPinkyPin)) {
+    data.fingerPinky = 255;
+  }
+  else {
+    data.fingerPinky = 0;
+  }
+
+
+  data.BTN = btn;
+  data.trackY = (trackoutput * 127);
+  data.vBAT = (map(analogRead(VbatPin), 787, BatLevelMax, 0, 255));
+  data.qW = (int16_t)(filter.getQuatW() * 32767.f);
+  data.qX = (int16_t)(filter.getQuatY() * 32767.f);
+  data.qY = (int16_t)(filter.getQuatZ() * 32767.f);
+  data.qZ = (int16_t)(filter.getQuatX() * 32767.f);
+  data.accX = (short)(ax * 2048);
+  data.accY = (short)(ay * 2048);
+  data.accZ = (short)(az * 2048);
+
+#ifdef SERIAL_DEBUG
+  Serial.print("qW: ");
+  Serial.print(filter.getQuatW());
+
+  Serial.print(" qX: ");
+  Serial.print(filter.getQuatX());
+
+  Serial.print(" qY: ");
+  Serial.print(filter.getQuatY());
+
+  Serial.print(" qZ: ");
+  Serial.println(filter.getQuatZ());
+#endif
+
+  radio.stopListening();
+  radio.write(&data, sizeof(ctrlData));
+  radio.startListening();
 }
+
 
 void initMPU()
 {
@@ -784,13 +839,6 @@ bool dataAvailable()
   return (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01);
 }
 
-void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
-{
-  Wire.beginTransmission(address);  // Initialize the Tx buffer
-  Wire.write(subAddress);           // Put slave register address in Tx buffer
-  Wire.write(data);                 // Put data in Tx buffer
-  Wire.endTransmission();           // Send the Tx buffer
-}
 
 uint8_t readByte(uint8_t address, uint8_t subAddress)
 {
@@ -813,4 +861,33 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * des
   while (Wire.available()) {
     dest[i++] = Wire.read();
   }         // Put read results in the Rx buffer
+}
+
+void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
+{
+  Wire.beginTransmission(address);  // Initialize the Tx buffer
+  Wire.write(subAddress);           // Put slave register address in Tx buffer
+  Wire.write(data);                 // Put data in Tx buffer
+  Wire.endTransmission();           // Send the Tx buffer
+}
+
+void writeBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t* data) {
+
+  Wire.beginTransmission(address);
+  Wire.write((uint8_t) subAddress); // send address
+  for (uint8_t i = 0; i < count; i++) {
+    Wire.write((uint8_t) data[i]);
+  }
+  Wire.endTransmission();
+}
+//fast invsqrt
+float invSqrt(float x) {
+  float halfx = 0.5f * x;
+  float y = x;
+  long i = *(long*)&y;
+  i = 0x5f3759df - (i >> 1);
+  y = *(float*)&i;
+  y = y * (1.5f - (halfx * y * y));
+  y = y * (1.5f - (halfx * y * y));
+  return y;
 }

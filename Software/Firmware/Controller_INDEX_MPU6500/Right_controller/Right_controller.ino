@@ -24,6 +24,7 @@
 
 #define MPU9250_ADDRESS     0x68            //ADO 0
 #define CALPIN              5               //pin to start mag calibration at power on
+//#define SERIAL_DEBUG
 
 #define APin                4
 #define BPin                3
@@ -40,21 +41,20 @@
 #define VbatPin             A6
 
 #define BatLevelMax         968             //you need to find all of these values on your own
-#define JoyXMin             200             //check on the utils folder for sketches and instructions
-#define JoyXMax             900             //that help on getting these values
-#define JoyYMin             150             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
-#define JoyYMax             870             //if you use these values without changing them you MAY
-#define JoyXDeadZoneMin     515             //get stick drift
-#define JoyXDeadZoneMax     590
-#define JoyYDeadZoneMin     430
-#define JoyYDeadZoneMax     560
+#define JoyXMin             237             //check on the utils folder for sketches and instructions
+#define JoyXMax             935             //that help on getting these values
+#define JoyYMin             190             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
+#define JoyYMax             900             //if you use these values without changing them you MAY
+#define JoyXDeadZoneMin     490             //get stick drift
+#define JoyXDeadZoneMax     620
+#define JoyYDeadZoneMin     420
+#define JoyYDeadZoneMax     620
 
-//uint64_t Pipe = 0xF0F0F0F0E1LL; //right
-uint64_t Pipe = 0xF0F0F0F0D2LL; //left
+uint64_t Pipe = 0xF0F0F0F0E1LL; //right
+//uint64_t Pipe = 0xF0F0F0F0D2LL; //left
 //==========================================================================================================
 
-
-float magCalibration[3]; // factory mag calibration
+float magQuat[4] {1, 0, 0, 0};
 
 struct Calibration {
   int calDone;
@@ -76,10 +76,6 @@ union u_quat {
   long _l[4];
 } q;
 
-float magQuat[4] {1, 0, 0, 0};
-float magHDG = 0;
-float dmpHDG = 0;
-float offsetHDG = 0;
 float DMPquat[4];
 
 static float mx, my, mz;
@@ -344,19 +340,21 @@ RF24 radio(9, 10); // CE, CSN on Blue Pill
 
 void setup() {
 
-  pinMode(APin, INPUT_PULLUP);
-  pinMode(BPin, INPUT_PULLUP);
-  pinMode(SysPin, INPUT_PULLUP);
-  pinMode(JoyClickPin, INPUT_PULLUP);
-  pinMode(TriggerPin, INPUT_PULLUP);
+    pinMode(APin, INPUT_PULLUP);
+    pinMode(BPin, INPUT_PULLUP);
+    pinMode(SysPin, INPUT_PULLUP);
+    pinMode(JoyClickPin, INPUT_PULLUP);
+    pinMode(TriggerPin, INPUT_PULLUP);
 
-  mRes = getMres();
 #ifdef SERIAL_DEBUG
   Serial.begin(38400);
+  while (!Serial) {
+    ;
+  }
 #endif
   radio.begin();
   radio.setPayloadSize(32);
-  radio.setPALevel(RF24_PA_LOW);
+  radio.setPALevel(RF24_PA_MAX);
   radio.setDataRate(RF24_2MBPS);
   radio.openWritingPipe(Pipe);
   radio.startListening();
@@ -366,60 +364,17 @@ void setup() {
 
   if (readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250) == MPU9250_WHOAMI_DEFAULT_VALUE)
   {
-
-    Serial.println("MPU9250 is online");
+    Serial.println("MPU6500 is online");
     initMPU();
     initDMP();
-    if (readByte(AK8963_ADDRESS, AK8963_WHO_AM_I) == AK8963_WHOAMI_DEFAULT_VALUE)
-    {
-      Serial.println("AK8963 is online");
-      initAK8963(magCalibration);
-    }
-    else
-    {
-      Serial.print("Could not connect to AK8963: 0x");
-      Serial.println(readByte(AK8963_ADDRESS, AK8963_WHO_AM_I), HEX);
-    }
   }
   else
   {
-    Serial.print("Could not connect to MPU9250: 0x");
+    Serial.print("Could not connect to MPU6500: 0x");
     Serial.println(readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250), HEX);
     while (true) {
-      //      digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(200);
-      //     digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(1000);
+      ;
     }
-  }
-
-  EEPROM.get(0, cal);
-
-  calDone = (cal.calDone != 99);                                  //check if calibration values are on flash
-  while (calDone) {
-    delay(200);
-    if (!digitalRead(CALPIN)) {
-      calDone = false;
-    }
-  }
-
-  if (!digitalRead(CALPIN)) {                                        //enter calibration mode
-    Serial.println("Magnetic calibration mode.");
-    delay(1000);
-    //    digitalWrite(PC13, LOW);
-    magcalMPU9250(cal.magBias, cal.magScale);
-    //    digitalWrite(PC13, HIGH);
-    Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
-    Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
-
-    Serial.println("Writting calibration values to EEPROM!");
-    cal.calDone = 99;
-    EEPROM.put(0, cal);
-    delay(3000);
   }
 
   //initialize controller data.
@@ -438,24 +393,26 @@ void setup() {
   data.fingerMiddle = 0;
   data.fingerRing = 0;
   data.fingerPinky = 0;
-  data.Data = 0x633;
+  data.Data = 0x4B3;
 
   /*
     data.Data |= 0x03;  //non diy index controller identifier
     data.Data |= 0x10;  //controller reports accelerometer values
     data.Data |= 0x20;  //controller does support hand tracking
     //data.Data |= 0x40;  //handtracking type is analog
-    data.Data |= 0x200;  //controller color is blue (80 for blue 100 for green 200 for red)
+    data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
     data.Data |= 0x400; //controller reports battery %
   */
-
 }
 
 void loop() {
 
   updateMPU();
 
-  //Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
+#ifdef SERIAL_DEBUG
+  Serial.print("qw: "); Serial.print(q._f.w); Serial.print(" qx: "); Serial.print(q._f.x); Serial.print(" qy: "); Serial.print(q._f.y); Serial.print(" qz: "); Serial.println(q._f.z);
+#endif
+
   joyTouch = false;
   int btn = 0;
   tracky = analogRead(TrackpadPin);
@@ -479,7 +436,13 @@ void loop() {
   axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-    data.axisX = map(axisX, JoyXMin, JoyXMax, -127, 127);
+    if (axisX > JoyXMax) {
+      axisX = JoyXMax;
+    }
+    if (axisX < JoyXMin) {
+      axisX = JoyXMin;
+    }
+    data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
     btn |= IB_ThumbStickTouch;
     joyTouch = true;
   } else {
@@ -487,7 +450,13 @@ void loop() {
   }
 
   if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-    data.axisY = -map(axisY, JoyYMin, JoyYMax, -127, 127);
+    if (axisY > JoyYMax) {
+      axisY = JoyYMax;
+    }
+    if (axisY < JoyYMin) {
+      axisY = JoyYMin;
+    }
+    data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
     btn |= IB_ThumbStickTouch;
     joyTouch = true;
   } else {
@@ -552,9 +521,10 @@ void loop() {
   data.qX = (int16_t)(q._f.y * 32767.f);
   data.qY = (int16_t)(q._f.z * 32767.f);
   data.qZ = (int16_t)(q._f.x * 32767.f);
-  data.accX = ax;
-  data.accY = ay;
-  data.accZ = az;
+  data.accX = ax * 2048;
+  data.accY = ay * 2048;
+  data.accZ = az * 2048;
+
   radio.stopListening();
   radio.write(&data, sizeof(ctrlData));
   radio.startListening();
@@ -636,113 +606,6 @@ void initAK8963(float * destination)
   //  Serial.print("Z-Axis sensitivity offset value "); Serial.println(cal.magBias[2], 2);
 }
 
-void magcalMPU9250(float * dest1, float * dest2)
-{
-  uint16_t ii = 0, sample_count = 0;
-  int32_t mag_bias[3] = {0, 0, 0}, mag_scale[3] = {0, 0, 0};
-  int16_t mag_max[3] = { -32767, -32767, -32767}, mag_min[3] = {32767, 32767, 32767}, mag_temp[3] = {0, 0, 0};
-
-  Serial.println("Mag Calibration: Wave device in a figure eight until done!");
-  delay(4000);
-
-  // shoot for ~fifteen seconds of mag data
-  if      (Mmode == 0x02) sample_count = 128;  // at 8 Hz ODR, new mag data is available every 125 ms
-  else if (Mmode == 0x06) sample_count = 1500;  // at 100 Hz ODR, new mag data is available every 10 ms
-
-  for (ii = 0; ii < sample_count; ii++)
-  {
-    uint8_t rawData[7];  // x/y/z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
-    if (readByte(AK8963_ADDRESS, AK8963_ST1) & 0x01) { // wait for magnetometer data ready bit to be set
-      readBytes(AK8963_ADDRESS, AK8963_XOUT_L, 7, &rawData[0]);  // Read the six raw data and ST2 registers sequentially into data array
-      uint8_t c = rawData[6]; // End data read by reading ST2 register
-      if (!(c & 0x08)) { // Check if magnetic sensor overflow set, if not then report data
-        mag_temp[0] = ((int16_t)rawData[1] << 8) | rawData[0];  // Turn the MSB and LSB into a signed 16-bit value
-        mag_temp[1] = ((int16_t)rawData[3] << 8) | rawData[2];  // Data stored as little Endian
-        mag_temp[2] = ((int16_t)rawData[5] << 8) | rawData[4];
-      }
-    }
-    for (int jj = 0; jj < 3; jj++)
-    {
-      if (mag_temp[jj] > mag_max[jj]) mag_max[jj] = mag_temp[jj];
-      if (mag_temp[jj] < mag_min[jj]) mag_min[jj] = mag_temp[jj];
-    }
-    if (Mmode == 0x02) delay(135); // at 8 Hz ODR, new mag data is available every 125 ms
-    if (Mmode == 0x06) delay(12); // at 100 Hz ODR, new mag data is available every 10 ms
-  }
-  //
-  //  Serial.println("mag x min/max:"); Serial.println(mag_max[0]); Serial.println(mag_min[0]);
-  //  Serial.println("mag y min/max:"); Serial.println(mag_max[1]); Serial.println(mag_min[1]);
-  //  Serial.println("mag z min/max:"); Serial.println(mag_max[2]); Serial.println(mag_min[2]);
-
-  // Get hard iron correction
-  mag_bias[0]  = (mag_max[0] + mag_min[0]) / 2; // get average x mag bias in counts
-  mag_bias[1]  = (mag_max[1] + mag_min[1]) / 2; // get average y mag bias in counts
-  mag_bias[2]  = (mag_max[2] + mag_min[2]) / 2; // get average z mag bias in counts
-
-  dest1[0] = (float) mag_bias[0] * mRes * magCalibration[0]; // save mag biases in G for main program
-  dest1[1] = (float) mag_bias[1] * mRes * magCalibration[1];
-  dest1[2] = (float) mag_bias[2] * mRes * magCalibration[2];
-
-  // Get soft iron correction estimate
-  mag_scale[0]  = (mag_max[0] - mag_min[0]) / 2; // get average x axis max chord length in counts
-  mag_scale[1]  = (mag_max[1] - mag_min[1]) / 2; // get average y axis max chord length in counts
-  mag_scale[2]  = (mag_max[2] - mag_min[2]) / 2; // get average z axis max chord length in counts
-
-  float avg_rad = mag_scale[0] + mag_scale[1] + mag_scale[2];
-  avg_rad /= 3.0;
-
-  dest2[0] = avg_rad / ((float)mag_scale[0]);
-  dest2[1] = avg_rad / ((float)mag_scale[1]);
-  dest2[2] = avg_rad / ((float)mag_scale[2]);
-
-  Serial.println("Mag Calibration done!");
-
-  //  Serial.println("AK8963 mag biases (mG)");
-  //  Serial.print(cal.magBias[0]); Serial.print(", ");
-  //  Serial.print(cal.magBias[1]); Serial.print(", ");
-  //  Serial.print(cal.magBias[2]); Serial.println();
-  //  Serial.println("AK8963 mag scale (mG)");
-  //  Serial.print(cal.magScale[0]); Serial.print(", ");
-  //  Serial.print(cal.magScale[1]); Serial.print(", ");
-  //  Serial.print(cal.magScale[2]); Serial.println();
-}
-
-void updateMag()
-{
-  if (readByte(AK8963_ADDRESS, AK8963_ST1) & 0x01) {             // wait for magnetometer data ready bit to be set
-    int16_t magCount[3] = {0, 0, 0};                             // Stores the 16-bit signed magnetometer sensor output
-    uint8_t rawData[7];                                          // x/y/z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
-    readBytes(AK8963_ADDRESS, AK8963_XOUT_L, 7, &rawData[0]);    // Read the six raw data and ST2 registers sequentially into data array
-    uint8_t c = rawData[6];                                      // End data read by reading ST2 register
-    if (!(c & 0x08)) {                                           // Check if magnetic sensor overflow set, if not then report data
-      magCount[0] = ((int16_t)rawData[1] << 8) | rawData[0];     // Turn the MSB and LSB into a signed 16-bit value
-      magCount[1] = ((int16_t)rawData[3] << 8) | rawData[2];     // Data stored as little Endian
-      magCount[2] = ((int16_t)rawData[5] << 8) | rawData[4];
-    }
-
-    // getMres();
-    // Calculate the magnetometer values in milliGauss
-    // Include factory calibration per data sheet and user environmental corrections
-
-    mx = (float)(magCount[0] * mRes * magCalibration[0] - cal.magBias[0]) * cal.magScale[0];  // get actual magnetometer value, this depends on scale being set
-    my = (float)(magCount[1] * mRes * magCalibration[1] - cal.magBias[1]) * cal.magScale[1];
-    mz = (float)(magCount[2] * mRes * magCalibration[2] - cal.magBias[2]) * cal.magScale[2];
-
-  }
-}
-
-float getMres()
-{
-  switch (MFSSEL)
-  {
-    // Possible magnetometer scales (and their register bit settings) are:
-    // 14 bit resolution (0) and 16 bit resolution (1)
-    // Proper scale to return milliGauss
-    case MFS::M14BITS: return 10. * 4912. / 8190.0;
-    case MFS::M16BITS: return 10. * 4912. / 32760.0;
-  }
-}
-
 void mpu_reset_fifo()
 {
   unsigned char data;
@@ -789,11 +652,9 @@ int updateMPU()
   DMPquat[1] = (float)q._l[1] / (float)QUAT_SENS;
   DMPquat[2] = (float)q._l[2] / (float)QUAT_SENS;
   DMPquat[3] = (float)q._l[3] / (float)QUAT_SENS;
-
-  float newOffset;
+  
   float tmp;
-
-  //Apply offsets.
+  
   q._f.w = magQuat[0] * DMPquat[0] - magQuat[3] * DMPquat[3];
   q._f.x = magQuat[0] * DMPquat[1] - magQuat[3] * DMPquat[2];
   q._f.y = magQuat[0] * DMPquat[2] + magQuat[3] * DMPquat[1];
@@ -804,80 +665,6 @@ int updateMPU()
   q._f.y *= tmp;
   q._f.x *= tmp;
   q._f.z *= tmp;
-
-  if (DMPquat[1] > -0.03f && DMPquat[1] < 0.03f && DMPquat[2] > -0.04f && DMPquat[2] < 0.04f && !joyTouch)   //get a new offset if relatively level
-  {
-    updateMag();
-
-    double siny_cosp = 2 * (DMPquat[0] * DMPquat[3] + DMPquat[1] * DMPquat[2]);
-    double cosy_cosp = 1 - 2 * (DMPquat[2] * DMPquat[2] + DMPquat[3] * DMPquat[3]);
-
-    magHDG = atan2(my , mx);
-    dmpHDG = atan2(siny_cosp, cosy_cosp);
-
-    newOffset = (magHDG - dmpHDG);
-
-    tmp = (newOffset - offsetHDG);
-
-#ifdef SERIAL_DEBUG
-    Serial.print("wanna get to ");
-    Serial.print(magHDG * 180 / M_PI);
-    Serial.print(" have ");
-    Serial.print(dmpHDG * 180 / M_PI);
-    Serial.print(" which is a ");
-    Serial.print(newOffset * 180 / M_PI);
-    Serial.print(" difference, and to get to that I'll need to add ");
-    Serial.print(tmp * 180 / M_PI);
-    Serial.print(" to ");
-    Serial.print(offsetHDG * 180 / M_PI);
-#endif
-
-    if (tmp > M_PI) {                  //wrap around
-      tmp -= (M_PI * 2);
-    }
-    if (tmp < -M_PI) {
-      tmp += (M_PI * 2);
-    }
-
-    if (tmp > -0.08f && tmp < 0.08f)    //go slower for slower distances to even out the jittery magnetometer output
-    {
-      offsetHDG += tmp * 0.02f;
-    }
-    else if (tmp > -0.17f && tmp < 0.17f)
-    {
-      offsetHDG += tmp * 0.04f;
-    }
-    else if (tmp > -0.26f && tmp < 0.26f)
-    {
-      offsetHDG += tmp * 0.1f;
-    }
-    else
-    {
-      offsetHDG += tmp;                 //go fast if distance target is too far off.
-    }
-
-
-    if (offsetHDG > M_PI) {             //wrap around
-      offsetHDG -= (M_PI * 2);
-    }
-    if (offsetHDG < -M_PI) {
-      offsetHDG += (M_PI * 2);
-    }
-
-    magQuat[0] = cos(offsetHDG / 2);    //get quaternion
-    magQuat[3] = sin(offsetHDG / 2);
-
-#ifdef SERIAL_DEBUG
-
-    siny_cosp = 2 * (q._f.w * q._f.z + q._f.x * q._f.y);
-    cosy_cosp = 1 - 2 * (q._f.y * q._f.y + q._f.z * q._f.z);
-
-    dmpHDG = atan2(siny_cosp, cosy_cosp);
-    Serial.print(" offset for an ouput of ");
-    Serial.println(dmpHDG * 180 / M_PI);
-
-#endif
-  }
 }
 
 int readDMP(long *quat)

@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dataHandler.cpp" />
+    <ClCompile Include="src\dataHandler_IMU.cpp" />
     <ClCompile Include="src\dataHandler_OffsetStuff.cpp" />
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />

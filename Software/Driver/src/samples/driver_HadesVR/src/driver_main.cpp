@@ -28,17 +28,6 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-inline HmdQuaternion_t HmdQuaternion_Init( double w, double x, double y, double z )
-{
-	HmdQuaternion_t quat;
-	quat.w = w;
-	quat.x = x;
-	quat.y = y;
-	quat.z = z;
-	return quat;
-}
-
-
 inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
 {
 	vr::HmdQuaternion_t q;
@@ -51,24 +40,6 @@ inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
 	return q;
 }
 
-
-inline void HmdMatrix_SetIdentity( HmdMatrix34_t *pMatrix )
-{
-	pMatrix->m[0][0] = 1.f;
-	pMatrix->m[0][1] = 0.f;
-	pMatrix->m[0][2] = 0.f;
-	pMatrix->m[0][3] = 0.f;
-	pMatrix->m[1][0] = 0.f;
-	pMatrix->m[1][1] = 1.f;
-	pMatrix->m[1][2] = 0.f;
-	pMatrix->m[1][3] = 0.f;
-	pMatrix->m[2][0] = 0.f;
-	pMatrix->m[2][1] = 0.f;
-	pMatrix->m[2][2] = 1.f;
-	pMatrix->m[2][3] = 0.f;
-}
-
-
 #define SUCCESS 0
 #define FAILURE 1
 
@@ -79,14 +50,6 @@ int controllerMode, trackerMode;
 double DegToRad(double f) {
 	return f * (M_PI / 180);
 }
-
-int comPort = 3;
-//Velocity
-double FirstCtrlLastPos[3] = { 0, 0, 0 }, SecondCtrlLastPos[3] = { 0, 0, 0 };
-double TrackerWaistLastPos[3] = { 0, 0, 0 }, TrackerLeftFootLastPos[3] = { 0, 0, 0 }, TrackerRightFootLastPos[3] = { 0, 0, 0 };
-
-milliseconds deltaTime ;
-static milliseconds lastMillis;
 
 //-----------------------------------------------------------------------------
 // Purpose: HMD mess over here
@@ -128,6 +91,7 @@ public:
 		m_bDebugMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DebugMode_Bool);
 		m_displayOnDesktop = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayOnDesktop);
 		m_displayReal = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_DisplayReal);
+		m_displayCantAngle = ((vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DisplayAngle_Float) / 2) * 3.14159265358979323846 / 180); //radians
 
 		m_fDistortion_Red_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K1_Float);
 		m_fDistortion_Red_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Red_K2_Float);
@@ -159,42 +123,19 @@ public:
 		vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, Prop_ModelNumber_String, m_sModelNumber.c_str() );
 		vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, Prop_RenderModelName_String, m_sModelNumber.c_str() );
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserIpdMeters_Float, m_flIPD );
-		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, 0.f );
+		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, 0.1f);
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_DisplayFrequency_Float, m_flDisplayFrequency );
 		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_SecondsFromVsyncToPhotons_Float, m_flSecondsFromVsyncToPhotons );
-
-		
 		vr::VRProperties()->SetUint64Property( m_ulPropertyContainer, Prop_CurrentUniverseId_Uint64, 2 );
+		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_HmdTrackingStyle_Int32, HmdTrackingStyle_OutsideInCameras);
 
 		// avoid "not fullscreen" warnings from vrmonitor
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_IsOnDesktop_Bool, m_displayOnDesktop);
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_HasDriverDirectModeComponent_Bool, false);
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
-
-
-		// Icons can be configured in code or automatically configured by an external file "drivername\resources\driver.vrresources".
-		// Icon properties NOT configured in code (post Activate) are then auto-configured by the optional presence of a driver's "drivername\resources\driver.vrresources".
-		// In this manner a driver can configure their icons in a flexible data driven fashion by using an external file.
-		//
-		// The structure of the driver.vrresources file allows a driver to specialize their icons based on their HW.
-		// Keys matching the value in "Prop_ModelNumber_String" are considered first, since the driver may have model specific icons.
-		// An absence of a matching "Prop_ModelNumber_String" then considers the ETrackedDeviceClass ("HMD", "Controller", "GenericTracker", "TrackingReference")
-		// since the driver may have specialized icons based on those device class names.
-		//
-		// An absence of either then falls back to the "system.vrresources" where generic device class icons are then supplied.
-		//
-		// Please refer to "bin\drivers\sample\resources\driver.vrresources" which contains this sample configuration.
-		//
-		// "Alias" is a reserved key and specifies chaining to another json block.
-		//
-		// In this sample configuration file (overly complex FOR EXAMPLE PURPOSES ONLY)....
-		//
-		// "Model-v2.0" chains through the alias to "Model-v1.0" which chains through the alias to "Model-v Defaults".
-		//
-		// Keys NOT found in "Model-v2.0" would then chase through the "Alias" to be resolved in "Model-v1.0" and either resolve their or continue through the alias.
-		// Thus "Prop_NamedIconPathDeviceAlertLow_String" in each model's block represent a specialization specific for that "model".
-		// Keys in "Model-v Defaults" are an example of mapping to the same states, and here all map to "Prop_NamedIconPathDeviceOff_String".
+		//Apply display cant angle (yaw)
+		vr::VRServerDriverHost()->SetDisplayEyeToHead(HMDIndex_t, CalcMatFromEuler(m_displayCantAngle, -(m_flIPD / 2)), CalcMatFromEuler(-m_displayCantAngle, m_flIPD / 2));
 
 		return VRInitError_None;
 	}
@@ -256,21 +197,8 @@ public:
 
 	virtual void GetEyeOutputViewport( EVREye eEye, uint32_t *pnX, uint32_t *pnY, uint32_t *pnWidth, uint32_t *pnHeight ) 
 	{
-		/**pnY = 0;
-				*pnWidth = m_nWindowWidth / 2;
-				*pnHeight = m_nWindowHeight;
-
-				if ( eEye == Eye_Left )
-				{
-					*pnX = 0;
-				}
-				else
-				{
-					*pnX = m_nWindowWidth / 2;
-				}*/
-
-		if (m_bStereoMode) {
-
+		if (m_bStereoMode) 
+		{
 			*pnY = m_nScreenOffsetY;
 			*pnWidth = m_nWindowWidth / 2;
 			*pnHeight = m_nWindowHeight;
@@ -284,7 +212,8 @@ public:
 				*pnX = (m_nWindowWidth / 2) - m_nDistanceBetweenEyes + m_nScreenOffsetX;
 			}
 		}
-		else { //Mono mode
+		else 
+		{ //Mono mode
 			pnY = 0;
 			*pnWidth = m_nRenderWidth;
 			*pnHeight = m_nRenderHeight;
@@ -297,21 +226,20 @@ public:
 			{
 				*pnX = m_nWindowWidth;
 			}
-			
-	
 		}
 	}
 
 	virtual void GetProjectionRaw( EVREye eEye, float *pfLeft, float *pfRight, float *pfTop, float *pfBottom ) 
 	{
-		if (m_bStereoMode) {
-			
+		if (m_bStereoMode) 
+		{
 			*pfLeft = -m_fFOV;
 			*pfRight = m_fFOV;
 			*pfTop = -m_fFOV;
 			*pfBottom = m_fFOV;
 		}
-		else { //Mono
+		else 
+		{//Mono
 			*pfLeft = (float)m_nRenderWidth / m_nRenderHeight * -1;
 			*pfRight = (float)m_nRenderWidth / m_nRenderHeight;
 			*pfTop = -1.0;
@@ -371,26 +299,44 @@ public:
 			pose.deviceIsConnected = false;
 		}
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
+		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
+		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
 
 		if (HMDConnected) {
 			//Set head tracking rotation
 			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = HMD.Rotation.W;
-			HMDQuat.x = HMD.Rotation.X;
-			HMDQuat.y = HMD.Rotation.Y;
-			HMDQuat.z = HMD.Rotation.Z;
+			HMDQuat.w = HMD.TrackingData.Rotation.W;
+			HMDQuat.x = HMD.TrackingData.Rotation.X;
+			HMDQuat.y = HMD.TrackingData.Rotation.Y;
+			HMDQuat.z = HMD.TrackingData.Rotation.Z;
 			pose.qRotation = HMDQuat;
 			//Set head position tracking
-			pose.vecPosition[0] = HMD.Position.X;
-			pose.vecPosition[1] = HMD.Position.Z;
-			pose.vecPosition[2] = HMD.Position.Y;
+			pose.vecPosition[0] = HMD.TrackingData.Position.X;
+			pose.vecPosition[1] = HMD.TrackingData.Position.Z;
+			pose.vecPosition[2] = HMD.TrackingData.Position.Y;
 		}
 
 		return pose;
 	}
 	
+	HmdMatrix34_t CalcMatFromEuler(float a, float IPDOffset) {
+		HmdMatrix34_t mat;
+
+		mat.m[0][0] = cos(a);
+		mat.m[0][1] = 0;
+		mat.m[0][2] = sin(a);
+		mat.m[0][3] = IPDOffset;
+		mat.m[1][0] = 0;
+		mat.m[1][1] = 1;
+		mat.m[1][2] = 0;
+		mat.m[1][3] = 0;
+		mat.m[2][0] = -sin(a);
+		mat.m[2][1] = 0;
+		mat.m[2][2] = cos(a);
+		mat.m[2][3] = 0;
+
+		return mat;
+	}
 
 	void RunFrame()
 	{
@@ -412,8 +358,6 @@ private:
 	std::string m_sSerialNumber;
 	std::string m_sModelNumber;
 
-	float realfreq;
-
 	int32_t m_nWindowX;
 	int32_t m_nWindowY;
 	int32_t m_nWindowWidth;
@@ -426,6 +370,8 @@ private:
 	float m_fZoomWidth;
 	float m_fZoomHeight;
 	float m_fFOV;
+	float m_displayCantAngle = 0.f;
+
 	int32_t m_nDistanceBetweenEyes;
 	int32_t m_nScreenOffsetY;
 	int32_t m_nScreenOffsetX;
@@ -542,42 +488,36 @@ public:
 		pose.deviceIsConnected = true;
 		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init( 1, 0, 0, 0 );
+		pose.qWorldFromDriverRotation = retquat( 1, 0, 0, 0 );
+		pose.qDriverFromHeadRotation = retquat( 1, 0, 0, 0 );
 
 		//Controllers positions and rotations
 		if (ControllerIndex == 1) {
 
-			pose.vecPosition[0] = RightCtrl.Position.X;
-			pose.vecPosition[1] = RightCtrl.Position.Z;
-			pose.vecPosition[2] = RightCtrl.Position.Y;
+			pose.vecPosition[0] = RightCtrl.TrackingData.Position.X;
+			pose.vecPosition[1] = RightCtrl.TrackingData.Position.Z;
+			pose.vecPosition[2] = RightCtrl.TrackingData.Position.Y;
 
 			//Velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - FirstCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
-			pose.vecVelocity[1] = (pose.vecPosition[1] - FirstCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
-			pose.vecVelocity[2] = (pose.vecPosition[2] - FirstCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
-			FirstCtrlLastPos[0] = pose.vecPosition[0];
-			FirstCtrlLastPos[1] = pose.vecPosition[1];
-			FirstCtrlLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = RightCtrl.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = RightCtrl.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = RightCtrl.TrackingData.Velocity.Y;
 
 			//Rotation first controller
-			pose.qRotation = retquat(RightCtrl.Rotation.W, RightCtrl.Rotation.X, RightCtrl.Rotation.Y, RightCtrl.Rotation.Z);
+			pose.qRotation = retquat(RightCtrl.TrackingData.Rotation.W, RightCtrl.TrackingData.Rotation.X, RightCtrl.TrackingData.Rotation.Y, RightCtrl.TrackingData.Rotation.Z);
 
 		} else { 
 			//Controller2
-			pose.vecPosition[0] = LeftCtrl.Position.X;
-			pose.vecPosition[1] = LeftCtrl.Position.Z;
-			pose.vecPosition[2] = LeftCtrl.Position.Y;
+			pose.vecPosition[0] = LeftCtrl.TrackingData.Position.X;
+			pose.vecPosition[1] = LeftCtrl.TrackingData.Position.Z;
+			pose.vecPosition[2] = LeftCtrl.TrackingData.Position.Y;
 
 			//Velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - SecondCtrlLastPos[0]) * 1000 / max((int)deltaTime.count(), 1); 
-			pose.vecVelocity[1] = (pose.vecPosition[1] - SecondCtrlLastPos[1]) * 1000 / max((int)deltaTime.count(), 1);
-			pose.vecVelocity[2] = (pose.vecPosition[2] - SecondCtrlLastPos[2]) * 1000 / max((int)deltaTime.count(), 1);
-			SecondCtrlLastPos[0] = pose.vecPosition[0];
-			SecondCtrlLastPos[1] = pose.vecPosition[1];
-			SecondCtrlLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = LeftCtrl.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = LeftCtrl.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = LeftCtrl.TrackingData.Velocity.Y;
 
-			pose.qRotation = retquat(LeftCtrl.Rotation.W, LeftCtrl.Rotation.X, LeftCtrl.Rotation.Y, LeftCtrl.Rotation.Z);
+			pose.qRotation = retquat(LeftCtrl.TrackingData.Rotation.W, LeftCtrl.TrackingData.Rotation.X, LeftCtrl.TrackingData.Rotation.Y, LeftCtrl.TrackingData.Rotation.Z);
 		}
 
 		return pose;
@@ -742,54 +682,45 @@ public:
 		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
 
-		pose.qWorldFromDriverRotation = HmdQuaternion_Init(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
+		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
+		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
 
 		//Controllers positions and rotations
 		switch (TrackerIndex)
 		{
 		case 1:
 			//Waist Tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerWaistLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerWaistLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerWaistLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerWaistLastPos[0] = pose.vecPosition[0];
-			TrackerWaistLastPos[1] = pose.vecPosition[1];
-			TrackerWaistLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 			//Rotation
 			pose.qRotation = retquat(WaistTrk.Rotation.W, WaistTrk.Rotation.X, WaistTrk.Rotation.Y, WaistTrk.Rotation.Z);
 			break;
 		case 2:
 			//Left foot tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerLeftFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerLeftFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerLeftFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerLeftFootLastPos[0] = pose.vecPosition[0];
-			TrackerLeftFootLastPos[1] = pose.vecPosition[1];
-			TrackerLeftFootLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 			//rotation
 			pose.qRotation = retquat(LeftTrk.Rotation.W, LeftTrk.Rotation.X, LeftTrk.Rotation.Y, LeftTrk.Rotation.Z);
 			break;
 		case 3:
 			//Right foot tracker
-			pose.vecPosition[0] = 0;
-			pose.vecPosition[1] = 0;
-			pose.vecPosition[2] = 0;
+			pose.vecPosition[0] = 0.f;
+			pose.vecPosition[1] = 0.f;
+			pose.vecPosition[2] = 0.f;
 			//velocity
-			pose.vecVelocity[0] = (pose.vecPosition[0] - TrackerRightFootLastPos[0]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[1] = (pose.vecPosition[1] - TrackerRightFootLastPos[1]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			pose.vecVelocity[2] = (pose.vecPosition[2] - TrackerRightFootLastPos[2]) * 1000 / max((int)deltaTime.count(), 1) / 3;
-			TrackerRightFootLastPos[0] = pose.vecPosition[0];
-			TrackerRightFootLastPos[1] = pose.vecPosition[1];
-			TrackerRightFootLastPos[2] = pose.vecPosition[2];
+			pose.vecVelocity[0] = 0.f;
+			pose.vecVelocity[1] = 0.f;
+			pose.vecVelocity[2] = 0.f;
 
 			//rotation
 			pose.qRotation = retquat(RightTrk.Rotation.W, RightTrk.Rotation.X, RightTrk.Rotation.Y, RightTrk.Rotation.Z);
@@ -1027,7 +958,7 @@ void CServerDriver_Sample::Cleanup()
 			dH.pHIDthread->join();
 			delete dH.pHIDthread;
 			dH.pHIDthread = nullptr;
-			dH.stopData();
+			dH.StopData();
 		}
 	}
 	if (dH.PSMConnected) {
@@ -1053,10 +984,6 @@ void CServerDriver_Sample::Cleanup()
 
 void CServerDriver_Sample::RunFrame()
 {
-	//Velocity
-	deltaTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()) - lastMillis;
-	lastMillis = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
 	if ( m_pHmd )
 	{
 		dH.GetHMDData(&HMD);
