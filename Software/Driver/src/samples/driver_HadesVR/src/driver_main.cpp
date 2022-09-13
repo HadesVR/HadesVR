@@ -81,8 +81,7 @@ public:
 		m_nRenderHeight = vr::VRSettings()->GetInt32( k_pch_Display_Section, k_pch_Sample_RenderHeight_Int32 );
 		m_flSecondsFromVsyncToPhotons = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_SecondsFromVsyncToPhotons_Float );
 		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_DisplayFrequency_Float );
-		m_fZoomWidth = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomWidth_Float);
-		m_fZoomHeight = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ZoomHeight_Float);
+		m_fViewportZoom = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ViewportZoom_Float);
 		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
 		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
 		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetX_Int32);
@@ -258,6 +257,9 @@ public:
 		double theta;
 
 		double r2_Red, r2_Green, r2_Blue;
+
+		float _ZoomWidth = m_fViewportZoom;
+		float _ZoomHeight = m_fViewportZoom * (m_nRenderHeight / m_nRenderWidth);
 		
 		rr = sqrt((fU - 0.5f) * (fU - 0.5f) + (fV - 0.5f) * (fV - 0.5f));
 		theta = atan2(fU - 0.5f, fV - 0.5f);
@@ -266,12 +268,12 @@ public:
 		r2_Green = rr * (1 + m_fDistortion_Green_K[0] * (rr * rr) + m_fDistortion_Green_K[1] * (rr * rr * rr * rr) + m_fDistortion_Green_K[2] * (rr * rr * rr * rr * rr * rr));
 		r2_Blue = rr * (1 + m_fDistortion_Blue_K[0] * (rr * rr) + m_fDistortion_Blue_K[1] * (rr * rr * rr * rr) + m_fDistortion_Blue_K[2] * (rr * rr * rr * rr * rr * rr));
 
-		hX_Red = sin(theta) * r2_Red * m_fZoomWidth;
-		hY_Red = cos(theta) * r2_Red * m_fZoomHeight;
-		hX_Green = sin(theta) * r2_Green * m_fZoomWidth;
-		hY_Green = cos(theta) * r2_Green * m_fZoomHeight;
-		hX_Blue = sin(theta) * r2_Blue * m_fZoomWidth;
-		hY_Blue = cos(theta) * r2_Blue * m_fZoomHeight;
+		hX_Red = sin(theta) * r2_Red * _ZoomWidth;
+		hY_Red = cos(theta) * r2_Red * _ZoomHeight;
+		hX_Green = sin(theta) * r2_Green * _ZoomWidth;
+		hY_Green = cos(theta) * r2_Green * _ZoomHeight;
+		hX_Blue = sin(theta) * r2_Blue * _ZoomWidth;
+		hY_Blue = cos(theta) * r2_Blue * _ZoomHeight;
 
 		coordinates.rfRed[0] = hX_Red + 0.5f;
 		coordinates.rfRed[1] = hY_Red + 0.5f;
@@ -367,8 +369,7 @@ private:
 	float m_flSecondsFromVsyncToPhotons;
 	float m_flDisplayFrequency;
 	float m_flIPD;
-	float m_fZoomWidth;
-	float m_fZoomHeight;
+	float m_fViewportZoom;
 	float m_fFOV;
 	float m_displayCantAngle = 0.f;
 
