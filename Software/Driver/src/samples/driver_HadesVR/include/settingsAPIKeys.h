@@ -45,13 +45,6 @@ static const char* const k_pch_Driver_Section = "Driver";
 static const char* const k_pch_HID_PID_Int32 = "HID_PID";
 static const char* const k_pch_HID_VID_Int32 = "HID_VID";
 static const char* const k_pch_PSMS_UPDATE_RATE_Int32 = "PSMSTrackerFrequency";
-static const char* const k_pch_Tracking_AccelEnable_Bool = "UseAccelerometers";
-static const char* const k_pch_Camera_Kalman_Meas_err_Float = "Camera_Kalman_Measurement_Uncertainty";
-static const char* const k_pch_Camera_Kalman_Estim_err_Float = "Camera_Kalman_Estimation_Uncertainty";
-static const char* const k_pch_Camera_Kalman_Proc_noise_Float = "Camera_Kalman_Process_Noise";
-static const char* const k_pch_IMU_Kalman_Meas_err_Float = "IMU_Kalman_Measurement_Uncertainty";
-static const char* const k_pch_IMU_Kalman_Estim_err_Float = "IMU_Kalman_Estimation_Uncertainty";
-static const char* const k_pch_IMU_Kalman_Proc_noise_Float = "IMU_Kalman_Process_Noise";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -99,6 +92,16 @@ static const char* const k_pch_Tracker_Section = "Trackers";
 
 static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
 static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//general use
+static const char* const k_pch_Tracking_AccelEnable_Bool = "UseAccelerometers";
+static const char* const k_pch_Camera_Kalman_Meas_err_Float = "Camera_Kalman_Measurement_Uncertainty";
+static const char* const k_pch_Camera_Kalman_Estim_err_Float = "Camera_Kalman_Estimation_Uncertainty";
+static const char* const k_pch_Camera_Kalman_Proc_noise_Float = "Camera_Kalman_Process_Noise";
+static const char* const k_pch_IMU_Kalman_Meas_err_Float = "IMU_Kalman_Measurement_Uncertainty";
+static const char* const k_pch_IMU_Kalman_Estim_err_Float = "IMU_Kalman_Estimation_Uncertainty";
+static const char* const k_pch_IMU_Kalman_Proc_noise_Float = "IMU_Kalman_Process_Noise";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //this all goes in the steamvr.vrsettings file

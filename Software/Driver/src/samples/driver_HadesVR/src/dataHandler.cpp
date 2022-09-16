@@ -94,7 +94,7 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255.f;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
 				
-				if (accelEnable) {
+				if (CtrlAccelEnable) {
 					UpdateIMUPosition(RightCtrlData.TrackingData, CtrlRightKalman);
 					UpdateIMUPosition(LeftCtrlData.TrackingData, CtrlLeftKalman);
 				}
@@ -132,7 +132,7 @@ void CdataHandler::ReadHIDData()
 				//Apply rotation to the HMD
 				HMDData.TrackingData.Rotation = HMDfilter.getQuat();
 
-				if (accelEnable) {
+				if (HMDAccelEnable) {
 					UpdateIMUPosition(HMDData.TrackingData, HMDKalman);
 				}
 
@@ -168,7 +168,7 @@ void CdataHandler::GetHMDData(THMD* HMD)
 {
 	if (HIDConnected) {
 		// if accelerometer position is enabled, update on IMU data, else update on camera data.
-		if (accelEnable) {
+		if (HMDAccelEnable) {
 			HMDKalman.updateIMU();
 		}
 		else {
@@ -218,7 +218,7 @@ void CdataHandler::GetControllersData(TController* RightController, TController*
 {
 	if (HIDConnected) {
 		// if accelerometer position is enabled, update on IMU data, else update on camera data.
-		if (accelEnable) {
+		if (CtrlAccelEnable) {
 			CtrlRightKalman.updateIMU();
 			CtrlLeftKalman.updateIMU();
 		}
@@ -521,20 +521,30 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
 		//use accelerometers?
-		accelEnable = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_Tracking_AccelEnable_Bool);
+		CtrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Tracking_AccelEnable_Bool);
+		HMDAccelEnable = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Tracking_AccelEnable_Bool);
 
 		//get tracker update rate and smoothness thing
-		float CamK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Meas_err_Float);
-		float CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Estim_err_Float);
-		float CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_Camera_Kalman_Proc_noise_Float);
+		float CamK_measErr = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Camera_Kalman_Meas_err_Float);
+		float CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Camera_Kalman_Estim_err_Float);
+		float CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_Camera_Kalman_Proc_noise_Float);
 
-		float IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Meas_err_Float);
-		float IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Estim_err_Float);
-		float IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Driver_Section, k_pch_IMU_Kalman_Proc_noise_Float);
+		float IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_IMU_Kalman_Meas_err_Float);
+		float IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_IMU_Kalman_Estim_err_Float);
+		float IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_IMU_Kalman_Proc_noise_Float);
 
-		HMDKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
 		CtrlLeftKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
 		CtrlRightKalman.setSettings(CamK_measErr, CamK_estmErr, CamK_ProcNoise, IMUK_measErr, IMUK_estmErr, IMUK_ProcNoise);
+
+		float HMD_CamK_measErr = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Camera_Kalman_Meas_err_Float);
+		float HMD_CamK_estmErr = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Camera_Kalman_Estim_err_Float);
+		float HMD_CamK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_Camera_Kalman_Proc_noise_Float);
+
+		float HMD_IMUK_measErr = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_IMU_Kalman_Meas_err_Float);
+		float HMD_IMUK_estmErr = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_IMU_Kalman_Estim_err_Float);
+		float HMD_IMUK_ProcNoise = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_IMU_Kalman_Proc_noise_Float);
+
+		HMDKalman.setSettings(HMD_CamK_measErr, HMD_CamK_estmErr, HMD_CamK_ProcNoise, HMD_IMUK_measErr, HMD_IMUK_estmErr, HMD_IMUK_ProcNoise);
 
 		//set initial states for controllers and hmd.
 		ResetPos(false);

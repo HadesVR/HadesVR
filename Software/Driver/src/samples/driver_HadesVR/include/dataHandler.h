@@ -266,7 +266,8 @@ private:
 	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
-	bool accelEnable = false;
+	bool CtrlAccelEnable = false;
+	bool HMDAccelEnable = false;
 
 	double k_fScalePSMoveAPIToMeters = 0.01f; // psmove driver in cm
 
