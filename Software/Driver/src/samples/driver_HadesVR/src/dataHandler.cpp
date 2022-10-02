@@ -124,9 +124,11 @@ void CdataHandler::ReadHIDData()
 				HMDData.TrackingData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
 				HMDData.TrackingData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
 
-				HMDData.TrackingData.AngularVelocity.X = (float)(DataHMDRAW->GyroX) / 16;
-				HMDData.TrackingData.AngularVelocity.Y = (float)(DataHMDRAW->GyroY) / 16;
-				HMDData.TrackingData.AngularVelocity.Z = (float)(DataHMDRAW->GyroZ) / 16;
+				HMDData.TrackingData.AngularAccel.X = (float)(DataHMDRAW->GyroY) / 16;
+				HMDData.TrackingData.AngularAccel.Y = (float)(DataHMDRAW->GyroX) / 16;
+				HMDData.TrackingData.AngularAccel.Z = (float)(DataHMDRAW->GyroZ) / 16;
+
+				HMDData.TrackingData.AngularAccel = HMDData.TrackingData.AngularAccel * 1;
 
 				//get data and scale it properly. Then update the filter.
 				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
@@ -177,8 +179,15 @@ DriverPose_t CdataHandler::GetHMDPose()
 	pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
 	if (HIDConnected) {
+
+		if (HMDData.TrackingData.isTracked) {
+			pose.result = TrackingResult_Running_OK;
+		}
+		else {
+			pose.result = TrackingResult_Fallback_RotationOnly;
+		}
+
 		pose.poseIsValid = true;
-		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
 		// if accelerometer position is enabled, update on IMU data, else update on camera data.
 		if (HMDAccelEnable) {
@@ -199,6 +208,11 @@ DriverPose_t CdataHandler::GetHMDPose()
 			pose.vecPosition[0] = pos.X;
 			pose.vecPosition[1] = pos.Z;
 			pose.vecPosition[2] = pos.Y;
+
+			//Velocity
+			pose.vecVelocity[0] = HMDData.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = HMDData.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = HMDData.TrackingData.Velocity.Y;
 		}
 		else {
 			Vector3 pos = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
@@ -207,16 +221,15 @@ DriverPose_t CdataHandler::GetHMDPose()
 			pose.vecPosition[2] = pos.Y;
 		}
 
-		//Velocity
-		pose.vecVelocity[0] = HMDData.TrackingData.Velocity.X;
-		pose.vecVelocity[1] = HMDData.TrackingData.Velocity.Z;
-		pose.vecVelocity[2] = HMDData.TrackingData.Velocity.Y;
+		//Angular acceleration
+		pose.vecAngularAcceleration[0] = HMDData.TrackingData.AngularAccel.X;
+		pose.vecAngularAcceleration[1] = HMDData.TrackingData.AngularAccel.Z;
+		pose.vecAngularAcceleration[2] = HMDData.TrackingData.AngularAccel.Y;
 
-		//Angular Velocity
 		pose.vecAngularVelocity[0] = HMDData.TrackingData.AngularVelocity.X;
 		pose.vecAngularVelocity[1] = HMDData.TrackingData.AngularVelocity.Z;
 		pose.vecAngularVelocity[2] = HMDData.TrackingData.AngularVelocity.Y;
-
+	
 		pose.qRotation = HmdQuaternion_t{ HMDQuat.W,HMDQuat.X ,HMDQuat.Y ,HMDQuat.Z };
 	}
 	else {
@@ -256,7 +269,6 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 	if (HIDConnected) {
 
 		pose.poseIsValid = true;
-		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
 		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
 
@@ -264,6 +276,14 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 		pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
 		if (ControllerIndex == 1) {
+
+			if (RightCtrlData.TrackingData.isTracked) {
+				pose.result = TrackingResult_Running_OK;
+			}
+			else{
+				pose.result = TrackingResult_Fallback_RotationOnly;
+			}
+
 			// if accelerometer position is enabled, update on IMU data, else update on camera data.
 			if (CtrlAccelEnable) {
 				CtrlRightKalman.updateIMU();
@@ -304,6 +324,13 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.CorrectedRotation.W, RightCtrlData.TrackingData.CorrectedRotation.X, RightCtrlData.TrackingData.CorrectedRotation.Y, RightCtrlData.TrackingData.CorrectedRotation.Z };
 		}
 		else{
+
+			if (LeftCtrlData.TrackingData.isTracked) {
+				pose.result = TrackingResult_Running_OK;
+			}
+			else {
+				pose.result = TrackingResult_Fallback_RotationOnly;
+			}
 			// if accelerometer position is enabled, update on IMU data, else update on camera data.
 			if (CtrlAccelEnable) {
 				CtrlLeftKalman.updateIMU();
@@ -494,11 +521,11 @@ void CdataHandler::PSMUpdate()
 
 		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
-			bool isTracked = false;
-			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &isTracked);
+			HMDData.TrackingData.isTracked = false;
+			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &HMDData.TrackingData.isTracked);
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
-			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
+			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !HMDData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
 				HMDData.TrackingData.Position = PSMSHMDPos;								//update position
 				HMDKalman.updateMeasCam(PSMSHMDPos);
@@ -508,12 +535,12 @@ void CdataHandler::PSMUpdate()
 		}
 		if (ctrl1Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
-			bool isTracked = false;
-			PSM_GetIsControllerTracking(controllerList.controller_id[0], &isTracked);
+			RightCtrlData.TrackingData.isTracked = false;
+			PSM_GetIsControllerTracking(controllerList.controller_id[0], &RightCtrlData.TrackingData.isTracked);
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
+			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !RightCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
 				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;								//update position
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
@@ -523,12 +550,12 @@ void CdataHandler::PSMUpdate()
 		}
 		if (ctrl2Allocated) {
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
-			bool isTracked = false;
-			PSM_GetIsControllerTracking(controllerList.controller_id[1], &isTracked);
+			LeftCtrlData.TrackingData.isTracked = false;
+			PSM_GetIsControllerTracking(controllerList.controller_id[1], &LeftCtrlData.TrackingData.isTracked);
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
-			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !isTracked)			//if position isn't old or if it's not being tracked
+			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !LeftCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{	
 				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;								//update position
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);

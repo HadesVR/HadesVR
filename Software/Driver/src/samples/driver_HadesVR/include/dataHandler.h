@@ -27,11 +27,15 @@ typedef struct _TrackingData {
 	Vector3 oldPosition = Vector3::Zero();
 
 	Vector3 Velocity;
-	Vector3 AngularVelocity;
 	Vector3 Accel;
 	Vector3 oldAccel = Vector3::Zero();
 
+	Vector3 AngularVelocity;
+	Vector3 AngularAccel;
+	Vector3 oldAngularAccel = Vector3::Zero();
+
 	Vector3 LastCameraPos = Vector3::Zero();
+	bool isTracked = false;
 
 	Quaternion Rotation;
 	Quaternion CorrectedRotation;
