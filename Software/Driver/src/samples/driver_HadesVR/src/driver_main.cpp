@@ -28,18 +28,6 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-inline vr::HmdQuaternion_t retquat(double qW, double qX, double qY, double qZ)
-{
-	vr::HmdQuaternion_t q;
-	// Abbreviations for the various angular functions
-	q.w = qW;
-	q.x = qX;
-	q.y = qY;
-	q.z = qZ;
-
-	return q;
-}
-
 #define SUCCESS 0
 #define FAILURE 1
 
@@ -287,38 +275,7 @@ public:
 
 	virtual DriverPose_t GetPose() 
 	{
-		DriverPose_t pose = { 0 };
-
-		if (HMDConnected) {
-			pose.poseIsValid = true;
-			pose.result = TrackingResult_Running_OK;
-			pose.deviceIsConnected = true;
-		}
-		else
-		{
-			pose.poseIsValid = false;
-			pose.result = TrackingResult_Uninitialized;
-			pose.deviceIsConnected = false;
-		}
-
-		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
-
-		if (HMDConnected) {
-			//Set head tracking rotation
-			HmdQuaternion_t HMDQuat;
-			HMDQuat.w = HMD.TrackingData.Rotation.W;
-			HMDQuat.x = HMD.TrackingData.Rotation.X;
-			HMDQuat.y = HMD.TrackingData.Rotation.Y;
-			HMDQuat.z = HMD.TrackingData.Rotation.Z;
-			pose.qRotation = HMDQuat;
-			//Set head position tracking
-			pose.vecPosition[0] = HMD.TrackingData.Position.X;
-			pose.vecPosition[1] = HMD.TrackingData.Position.Z;
-			pose.vecPosition[2] = HMD.TrackingData.Position.Y;
-		}
-
-		return pose;
+		return dH.GetHMDPose();
 	}
 	
 	HmdMatrix34_t CalcMatFromEuler(float a, float IPDOffset) {
@@ -482,46 +439,7 @@ public:
 
 	virtual DriverPose_t GetPose()
 	{
-		DriverPose_t pose = { 0 };
-		pose.poseIsValid = true;
-		//pose.result = TrackingResult_Calibrating_OutOfRange;
-		pose.result = TrackingResult_Running_OK;
-		pose.deviceIsConnected = true;
-		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
-
-		pose.qWorldFromDriverRotation = retquat( 1, 0, 0, 0 );
-		pose.qDriverFromHeadRotation = retquat( 1, 0, 0, 0 );
-
-		//Controllers positions and rotations
-		if (ControllerIndex == 1) {
-
-			pose.vecPosition[0] = RightCtrl.TrackingData.Position.X;
-			pose.vecPosition[1] = RightCtrl.TrackingData.Position.Z;
-			pose.vecPosition[2] = RightCtrl.TrackingData.Position.Y;
-
-			//Velocity
-			pose.vecVelocity[0] = RightCtrl.TrackingData.Velocity.X;
-			pose.vecVelocity[1] = RightCtrl.TrackingData.Velocity.Z;
-			pose.vecVelocity[2] = RightCtrl.TrackingData.Velocity.Y;
-
-			//Rotation first controller
-			pose.qRotation = retquat(RightCtrl.TrackingData.Rotation.W, RightCtrl.TrackingData.Rotation.X, RightCtrl.TrackingData.Rotation.Y, RightCtrl.TrackingData.Rotation.Z);
-
-		} else { 
-			//Controller2
-			pose.vecPosition[0] = LeftCtrl.TrackingData.Position.X;
-			pose.vecPosition[1] = LeftCtrl.TrackingData.Position.Z;
-			pose.vecPosition[2] = LeftCtrl.TrackingData.Position.Y;
-
-			//Velocity
-			pose.vecVelocity[0] = LeftCtrl.TrackingData.Velocity.X;
-			pose.vecVelocity[1] = LeftCtrl.TrackingData.Velocity.Z;
-			pose.vecVelocity[2] = LeftCtrl.TrackingData.Velocity.Y;
-
-			pose.qRotation = retquat(LeftCtrl.TrackingData.Rotation.W, LeftCtrl.TrackingData.Rotation.X, LeftCtrl.TrackingData.Rotation.Y, LeftCtrl.TrackingData.Rotation.Z);
-		}
-
-		return pose;
+		return dH.GetControllersPose(ControllerIndex);
 	}
 
 	void RunFrame()
@@ -541,6 +459,8 @@ public:
 			}
 			break;
 		}
+		dH.GetControllerData(&RightCtrl, &LeftCtrl);
+
 		updateFingerTracking(controllerMode, ControllerIndex, m_skeletonHandle, m_handBones);
 
 		updateDevice(controllerMode, ControllerIndex);
@@ -683,8 +603,8 @@ public:
 		pose.result = TrackingResult_Running_OK;
 		pose.deviceIsConnected = true;
 
-		pose.qWorldFromDriverRotation = retquat(1, 0, 0, 0);
-		pose.qDriverFromHeadRotation = retquat(1, 0, 0, 0);
+		pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+		pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
 		//Controllers positions and rotations
 		switch (TrackerIndex)
@@ -699,7 +619,7 @@ public:
 			pose.vecVelocity[1] = 0.f;
 			pose.vecVelocity[2] = 0.f;
 			//Rotation
-			pose.qRotation = retquat(WaistTrk.Rotation.W, WaistTrk.Rotation.X, WaistTrk.Rotation.Y, WaistTrk.Rotation.Z);
+			pose.qRotation = HmdQuaternion_t{ WaistTrk.Rotation.W, WaistTrk.Rotation.X, WaistTrk.Rotation.Y, WaistTrk.Rotation.Z };
 			break;
 		case 2:
 			//Left foot tracker
@@ -711,7 +631,7 @@ public:
 			pose.vecVelocity[1] = 0.f;
 			pose.vecVelocity[2] = 0.f;
 			//rotation
-			pose.qRotation = retquat(LeftTrk.Rotation.W, LeftTrk.Rotation.X, LeftTrk.Rotation.Y, LeftTrk.Rotation.Z);
+			pose.qRotation = HmdQuaternion_t{ LeftTrk.Rotation.W, LeftTrk.Rotation.X, LeftTrk.Rotation.Y, LeftTrk.Rotation.Z };
 			break;
 		case 3:
 			//Right foot tracker
@@ -724,7 +644,7 @@ public:
 			pose.vecVelocity[2] = 0.f;
 
 			//rotation
-			pose.qRotation = retquat(RightTrk.Rotation.W, RightTrk.Rotation.X, RightTrk.Rotation.Y, RightTrk.Rotation.Z);
+			pose.qRotation = HmdQuaternion_t{ RightTrk.Rotation.W, RightTrk.Rotation.X, RightTrk.Rotation.Y, RightTrk.Rotation.Z };
 			break;
 		}
 
@@ -822,7 +742,6 @@ private:
 	bool ctrlsEnabled = false, HMDEnabled = false, trackersEnabled = false;
 	
 	C_HMDDeviceDriver *m_pHmd = nullptr;
-
 	C_ControllerDriver *m_pControllerRight = nullptr;
 	C_ControllerDriver *m_pControllerLeft = nullptr;
 
@@ -987,14 +906,10 @@ void CServerDriver_Sample::RunFrame()
 {
 	if ( m_pHmd )
 	{
-		dH.GetHMDData(&HMD);
-
 		m_pHmd->RunFrame();
 	}
 	if (ctrlsConnected) 
 	{
-		dH.GetControllersData(&RightCtrl, &LeftCtrl);
-
 		if (m_pControllerRight)
 		{
 			m_pControllerRight->RunFrame();

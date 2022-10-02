@@ -124,6 +124,10 @@ void CdataHandler::ReadHIDData()
 				HMDData.TrackingData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
 				HMDData.TrackingData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
 
+				HMDData.TrackingData.AngularVelocity.X = (float)(DataHMDRAW->GyroX) / 16;
+				HMDData.TrackingData.AngularVelocity.Y = (float)(DataHMDRAW->GyroY) / 16;
+				HMDData.TrackingData.AngularVelocity.Z = (float)(DataHMDRAW->GyroZ) / 16;
+
 				//get data and scale it properly. Then update the filter.
 				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
 					(float)(DataHMDRAW->AccX) / 2048, (float)(DataHMDRAW->AccY) / 2048, (float)(DataHMDRAW->AccZ) / 2048,
@@ -159,14 +163,23 @@ void CdataHandler::ReadHIDData()
 			}
 		}
 	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max usb hid update rate is 1000hz.
 }
 
 /**
 	 Grabs Final HMD data...
 */
-void CdataHandler::GetHMDData(THMD* HMD)
+DriverPose_t CdataHandler::GetHMDPose()
 {
+	DriverPose_t pose = { 0 };
+
+	pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+	pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+
 	if (HIDConnected) {
+		pose.poseIsValid = true;
+		pose.result = TrackingResult_Running_OK;
+		pose.deviceIsConnected = true;
 		// if accelerometer position is enabled, update on IMU data, else update on camera data.
 		if (HMDAccelEnable) {
 			HMDKalman.updateIMU();
@@ -182,16 +195,36 @@ void CdataHandler::GetHMDData(THMD* HMD)
 		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDQuat.X, HMDQuat.Z, HMDQuat.Y, HMDQuat.W));
 
 		if (PSMConnected) {	//PSM POSITION
-
-			HMD->TrackingData.Position = HMDData.TrackingData.Position + (HMDPosQuat * HMDConfigPositionOffset);
+			Vector3 pos = HMDData.TrackingData.Position + (HMDPosQuat * HMDConfigPositionOffset);
+			pose.vecPosition[0] = pos.X;
+			pose.vecPosition[1] = pos.Z;
+			pose.vecPosition[2] = pos.Y;
 		}
 		else {
-			HMD->TrackingData.Position = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
+			Vector3 pos = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
+			pose.vecPosition[0] = pos.X;
+			pose.vecPosition[1] = pos.Z;
+			pose.vecPosition[2] = pos.Y;
 		}
 
-		HMD->TrackingData.Rotation = HMDQuat;
-		
+		//Velocity
+		pose.vecVelocity[0] = HMDData.TrackingData.Velocity.X;
+		pose.vecVelocity[1] = HMDData.TrackingData.Velocity.Z;
+		pose.vecVelocity[2] = HMDData.TrackingData.Velocity.Y;
+
+		//Angular Velocity
+		pose.vecAngularVelocity[0] = HMDData.TrackingData.AngularVelocity.X;
+		pose.vecAngularVelocity[1] = HMDData.TrackingData.AngularVelocity.Z;
+		pose.vecAngularVelocity[2] = HMDData.TrackingData.AngularVelocity.Y;
+
+		pose.qRotation = HmdQuaternion_t{ HMDQuat.W,HMDQuat.X ,HMDQuat.Y ,HMDQuat.Z };
 	}
+	else {
+		pose.poseIsValid = false;
+		pose.result = TrackingResult_Uninitialized;
+		pose.deviceIsConnected = false;
+	}
+
 	if ((GetAsyncKeyState(VK_F12) & 0x8000))
 	{
 		ReloadCalibration();
@@ -209,87 +242,138 @@ void CdataHandler::GetHMDData(THMD* HMD)
 	{
 		SetCentering();
 	}
+
+	return pose;
 }
 
 /**
 	 Grabs Final Controller data...
 */
-void CdataHandler::GetControllersData(TController* RightController, TController* LeftController)
+DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 {
+	DriverPose_t pose = { 0 };
+
 	if (HIDConnected) {
-		// if accelerometer position is enabled, update on IMU data, else update on camera data.
-		if (CtrlAccelEnable) {
-			CtrlRightKalman.updateIMU();
-			CtrlLeftKalman.updateIMU();
-		}
-		else {
-			CtrlRightKalman.update();
-			CtrlLeftKalman.update();
-		}
-		
 
-		RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
-		LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
+		pose.poseIsValid = true;
+		pose.result = TrackingResult_Running_OK;
+		pose.deviceIsConnected = true;
+		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
 
+		pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+		pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
-		RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
-		LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+		if (ControllerIndex == 1) {
+			// if accelerometer position is enabled, update on IMU data, else update on camera data.
+			if (CtrlAccelEnable) {
+				CtrlRightKalman.updateIMU();
+			}
+			else {
+				CtrlRightKalman.update();
+			}
 
-		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-		Quaternion CtrlRightPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.CorrectedRotation.X,
+			RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
+
+			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
+			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.CorrectedRotation.X,
 																	RightCtrlData.TrackingData.CorrectedRotation.Z,
 																	RightCtrlData.TrackingData.CorrectedRotation.Y,
 																	RightCtrlData.TrackingData.CorrectedRotation.W));
-		//this is bs
-		Quaternion CtrlLeftPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.CorrectedRotation.X, 
-																	LeftCtrlData.TrackingData.CorrectedRotation.Z, 
-																	LeftCtrlData.TrackingData.CorrectedRotation.Y, 
+
+			RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
+
+			if (PSMConnected) {		//PSM POSITION
+				// Apply position offset
+				RightCtrlData.TrackingData.Position = RightCtrlData.TrackingData.Position + (CtrlPosQuat * CtrlRightConfigPositionOffset);
+			}
+			else {
+				// Apply position offset
+				RightCtrlData.TrackingData.Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
+			}
+
+			pose.vecPosition[0] = RightCtrlData.TrackingData.Position.X;
+			pose.vecPosition[1] = RightCtrlData.TrackingData.Position.Z;
+			pose.vecPosition[2] = RightCtrlData.TrackingData.Position.Y;
+
+			//Velocity
+			pose.vecVelocity[0] = RightCtrlData.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = RightCtrlData.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = RightCtrlData.TrackingData.Velocity.Y;
+
+			//Rotation first controller
+			pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.CorrectedRotation.W, RightCtrlData.TrackingData.CorrectedRotation.X, RightCtrlData.TrackingData.CorrectedRotation.Y, RightCtrlData.TrackingData.CorrectedRotation.Z };
+		}
+		else{
+			// if accelerometer position is enabled, update on IMU data, else update on camera data.
+			if (CtrlAccelEnable) {
+				CtrlLeftKalman.updateIMU();
+			}
+			else {
+				CtrlLeftKalman.update();
+			}
+
+			LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+
+			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
+			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.CorrectedRotation.X,
+																	LeftCtrlData.TrackingData.CorrectedRotation.Z,
+																	LeftCtrlData.TrackingData.CorrectedRotation.Y,
 																	LeftCtrlData.TrackingData.CorrectedRotation.W));
 
-		RightController->TrackingData.Rotation = RightCtrlData.TrackingData.CorrectedRotation;
-		RightController->TrackingData.Velocity = RightCtrlData.TrackingData.Velocity;
-		RightController->Buttons = RightCtrlData.Buttons;
-		RightController->Trigger = RightCtrlData.Trigger;
-		RightController->JoyAxisX = RightCtrlData.JoyAxisX;
-		RightController->JoyAxisY = RightCtrlData.JoyAxisY;
-		RightController->TrackpY = RightCtrlData.TrackpY;
-		RightController->vBat = RightCtrlData.vBat;
+			LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
 
-		RightController->FingThumb = RightCtrlData.FingThumb;
-		RightController->FingIndex = RightCtrlData.FingIndex;
-		RightController->FingMiddl = RightCtrlData.FingMiddl;
-		RightController->FingRing = RightCtrlData.FingRing;
-		RightController->FingPinky = RightCtrlData.FingPinky;
+			if (PSMConnected) {		//PSM POSITION
+				// Apply position offset
+				LeftCtrlData.TrackingData.Position = LeftCtrlData.TrackingData.Position + (CtrlPosQuat * CtrlLeftConfigPositionOffset);
+			}
+			else {
+				// Apply position offset
+				LeftCtrlData.TrackingData.Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
+			}
 
+			pose.vecPosition[0] = LeftCtrlData.TrackingData.Position.X;
+			pose.vecPosition[1] = LeftCtrlData.TrackingData.Position.Z;
+			pose.vecPosition[2] = LeftCtrlData.TrackingData.Position.Y;
 
-		LeftController->TrackingData.Rotation = LeftCtrlData.TrackingData.CorrectedRotation;
-		LeftController->TrackingData.Velocity = LeftCtrlData.TrackingData.Velocity;
-		LeftController->Buttons = LeftCtrlData.Buttons;
-		LeftController->Trigger = LeftCtrlData.Trigger;
-		LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;
-		LeftController->JoyAxisY = LeftCtrlData.JoyAxisY;
-		LeftController->TrackpY = LeftCtrlData.TrackpY;
-		LeftController->vBat = LeftCtrlData.vBat;
-
-		LeftController->FingThumb = LeftCtrlData.FingThumb;
-		LeftController->FingIndex = LeftCtrlData.FingIndex;
-		LeftController->FingMiddl = LeftCtrlData.FingMiddl;
-		LeftController->FingRing = LeftCtrlData.FingRing;
-		LeftController->FingPinky = LeftCtrlData.FingPinky;
-
-
-		if (PSMConnected) {		//PSM POSITION
-			// Apply position offset
-			RightController->TrackingData.Position = RightCtrlData.TrackingData.Position + (CtrlRightPosQuat * CtrlRightConfigPositionOffset);
-			LeftController->TrackingData.Position = LeftCtrlData.TrackingData.Position + (CtrlLeftPosQuat * CtrlLeftConfigPositionOffset);
+			//Velocity
+			pose.vecVelocity[0] = LeftCtrlData.TrackingData.Velocity.X;
+			pose.vecVelocity[1] = LeftCtrlData.TrackingData.Velocity.Z;
+			pose.vecVelocity[2] = LeftCtrlData.TrackingData.Velocity.Y;
+			
+			//Rotation first controller
+			pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.CorrectedRotation.W, LeftCtrlData.TrackingData.CorrectedRotation.X, LeftCtrlData.TrackingData.CorrectedRotation.Y, LeftCtrlData.TrackingData.CorrectedRotation.Z };
 		}
-		else {
-			// Apply position offset
-			RightController->TrackingData.Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
-			LeftController->TrackingData.Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
-		}
+		return pose;
 	}
 }
+
+void CdataHandler::GetControllerData(TController* RightController, TController* LeftController) {
+	RightController->Buttons = RightCtrlData.Buttons;
+	RightController->Trigger = RightCtrlData.Trigger;
+	RightController->JoyAxisX = RightCtrlData.JoyAxisX;
+	RightController->JoyAxisY = RightCtrlData.JoyAxisY;
+	RightController->TrackpY = RightCtrlData.TrackpY;
+	RightController->vBat = RightCtrlData.vBat;
+
+	RightController->FingThumb = RightCtrlData.FingThumb;
+	RightController->FingIndex = RightCtrlData.FingIndex;
+	RightController->FingMiddl = RightCtrlData.FingMiddl;
+	RightController->FingRing = RightCtrlData.FingRing;
+	RightController->FingPinky = RightCtrlData.FingPinky;
+
+	LeftController->Buttons = LeftCtrlData.Buttons;
+	LeftController->Trigger = LeftCtrlData.Trigger;
+	LeftController->JoyAxisX = LeftCtrlData.JoyAxisX;
+	LeftController->JoyAxisY = LeftCtrlData.JoyAxisY;
+	LeftController->TrackpY = LeftCtrlData.TrackpY;
+	LeftController->vBat = LeftCtrlData.vBat;
+
+	LeftController->FingThumb = LeftCtrlData.FingThumb;
+	LeftController->FingIndex = LeftCtrlData.FingIndex;
+	LeftController->FingMiddl = LeftCtrlData.FingMiddl;
+	LeftController->FingRing = LeftCtrlData.FingRing;
+	LeftController->FingPinky = LeftCtrlData.FingPinky;
+};
 
 /**
 	 Grabs Final Tracker data...

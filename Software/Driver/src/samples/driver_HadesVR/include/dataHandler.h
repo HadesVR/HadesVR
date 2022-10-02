@@ -20,13 +20,14 @@
 
 using namespace ATL;
 using namespace std::chrono;
+using namespace vr;
 
 typedef struct _TrackingData {
 	Vector3 Position;
 	Vector3 oldPosition = Vector3::Zero();
 
 	Vector3 Velocity;
-
+	Vector3 AngularVelocity;
 	Vector3 Accel;
 	Vector3 oldAccel = Vector3::Zero();
 
@@ -203,8 +204,10 @@ struct ControllerPacket
 class CdataHandler {
 public:
 	
-	void GetHMDData(THMD* HMD);
-	void GetControllersData(TController* RightController, TController* LeftController);
+	DriverPose_t GetHMDPose();
+	DriverPose_t GetControllersPose(int ControllerIndex);
+	void GetControllerData(TController* RightController, TController* LeftController);
+
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	
 	void StartData(int32_t PID, int32_t VID);
