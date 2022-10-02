@@ -179,14 +179,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 	pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
 	if (HIDConnected) {
-
-		if (HMDData.TrackingData.isTracked) {
-			pose.result = TrackingResult_Running_OK;
-		}
-		else {
-			pose.result = TrackingResult_Fallback_RotationOnly;
-		}
-
+		pose.result = TrackingResult_Running_OK;
 		pose.poseIsValid = true;
 		pose.deviceIsConnected = true;
 		// if accelerometer position is enabled, update on IMU data, else update on camera data.
