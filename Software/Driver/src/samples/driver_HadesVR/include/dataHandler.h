@@ -285,6 +285,7 @@ private:
 	Madgwick HMDfilter;
 
 	int readsFromInit = 0;
+	bool receivedControllerData = false;
 	float minFilterBeta = 0.02f;
 	float maxFilterBeta = 0.30f;
 	double deltatime = 0;

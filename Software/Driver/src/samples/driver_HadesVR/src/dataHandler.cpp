@@ -40,7 +40,6 @@ void CdataHandler::ReadHIDData()
 				TrackerRightData.Rotation.Y = (float)(DataHMDQuat->tracker3_QuatY) / 32767.f;
 				TrackerRightData.Rotation.Z = (float)(DataHMDQuat->tracker3_QuatZ) / 32767.f;
 				TrackerRightData.vBat = (float)(DataHMDQuat->tracker3_vBat) / 255.f;
-
 				break;
 
 			case 2:		//Controller quaternion packet
@@ -93,7 +92,9 @@ void CdataHandler::ReadHIDData()
 				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255.f;
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255.f;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
-				
+
+				receivedControllerData = true;
+
 				if (CtrlAccelEnable) {
 					UpdateIMUPosition(RightCtrlData.TrackingData, CtrlRightKalman);
 					UpdateIMUPosition(LeftCtrlData.TrackingData, CtrlLeftKalman);
@@ -101,7 +102,6 @@ void CdataHandler::ReadHIDData()
 				break;
 
 			case 3:		//hmd IMU packet
-
 				if (!orientationFilterInit) {		//init filter
 					HMDfilter.begin();
 					HMDfilter.setBeta(2.f);
@@ -266,9 +266,18 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 
 	if (HIDConnected) {
 
-		pose.poseIsValid = true;
-		pose.deviceIsConnected = true;
-		pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
+		if (receivedControllerData) {
+			pose.poseIsValid = true;
+			pose.deviceIsConnected = true;
+			pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
+		}
+		else {
+			pose.poseIsValid = false;
+			pose.deviceIsConnected = false;
+			pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
+			pose.result = TrackingResult_Uninitialized;
+			return pose;
+		}
 
 		pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 		pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
@@ -319,7 +328,16 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			pose.vecVelocity[2] = RightCtrlData.TrackingData.Velocity.Y;
 
 			//Rotation first controller
-			pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.CorrectedRotation.W, RightCtrlData.TrackingData.CorrectedRotation.X, RightCtrlData.TrackingData.CorrectedRotation.Y, RightCtrlData.TrackingData.CorrectedRotation.Z };
+			//check if controller rotation is initialized and valid.
+			if (isnan(RightCtrlData.TrackingData.CorrectedRotation.W) || isnan(RightCtrlData.TrackingData.CorrectedRotation.X) || isnan(RightCtrlData.TrackingData.CorrectedRotation.Y) || isnan(RightCtrlData.TrackingData.CorrectedRotation.Z)) {
+				pose.poseIsValid = false;
+				pose.result = TrackingResult_Uninitialized;
+				pose.deviceIsConnected = false;
+				pose.qRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+			}
+			else {
+				pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.CorrectedRotation.W, RightCtrlData.TrackingData.CorrectedRotation.X, RightCtrlData.TrackingData.CorrectedRotation.Y, RightCtrlData.TrackingData.CorrectedRotation.Z };
+			}
 		}
 		else{
 
@@ -329,6 +347,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			else {
 				pose.result = TrackingResult_Fallback_RotationOnly;
 			}
+
 			// if accelerometer position is enabled, update on IMU data, else update on camera data.
 			if (CtrlAccelEnable) {
 				CtrlLeftKalman.updateIMU();
@@ -365,8 +384,18 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			pose.vecVelocity[1] = LeftCtrlData.TrackingData.Velocity.Z;
 			pose.vecVelocity[2] = LeftCtrlData.TrackingData.Velocity.Y;
 			
-			//Rotation first controller
-			pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.CorrectedRotation.W, LeftCtrlData.TrackingData.CorrectedRotation.X, LeftCtrlData.TrackingData.CorrectedRotation.Y, LeftCtrlData.TrackingData.CorrectedRotation.Z };
+			//Rotation second controller
+			//check if controller rotation is initialized and valid.
+			if (isnan(LeftCtrlData.TrackingData.CorrectedRotation.W) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.X) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.Y) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.Z)) {
+				pose.poseIsValid = false;
+				pose.result = TrackingResult_Uninitialized;
+				pose.deviceIsConnected = false;
+				pose.qRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+			}
+			else
+			{
+				pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.CorrectedRotation.W, LeftCtrlData.TrackingData.CorrectedRotation.X, LeftCtrlData.TrackingData.CorrectedRotation.Y, LeftCtrlData.TrackingData.CorrectedRotation.Z };
+			}
 		}
 		return pose;
 	}
