@@ -89,7 +89,11 @@ public:
 		m_fDistortion_Blue_K[0] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K1_Float);
 		m_fDistortion_Blue_K[1] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K2_Float);
 		m_fDistortion_Blue_K[2] = vr::VRSettings()->GetFloat(k_pch_Distortion_Section, k_pch_Distortion_Blue_K3_Float);
-		
+
+		m_enableDirectMode = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_DirectModeEnable_Bool);
+		m_directModeEDID_PID = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_DirectMode_EDID_PID_Int32);
+		m_directModeEDID_VID = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_DirectMode_EDID_VID_Int32);
+
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
 		DriverLog( "Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
@@ -121,6 +125,14 @@ public:
 		vr::VRProperties()->SetBoolProperty( m_ulPropertyContainer, Prop_HasDriverDirectModeComponent_Bool, false);
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
+		//Direct mode crap
+		if (m_enableDirectMode) {
+			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_EdidVendorID_Int32, m_directModeEDID_VID);
+			vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_EdidProductID_Int32, m_directModeEDID_PID);
+			m_displayOnDesktop = false;
+			m_displayReal = true;
+			vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_IsOnDesktop_Bool, m_displayOnDesktop);
+		}
 		//Apply display cant angle (yaw)
 		vr::VRServerDriverHost()->SetDisplayEyeToHead(HMDIndex_t, CalcMatFromEuler(m_displayCantAngle, -(m_flIPD / 2)), CalcMatFromEuler(-m_displayCantAngle, m_flIPD / 2));
 
@@ -337,6 +349,9 @@ private:
 	bool m_bDebugMode;
 	bool m_displayReal;
 	bool m_displayOnDesktop;
+	bool m_enableDirectMode = false;
+	int32_t m_directModeEDID_PID;
+	int32_t m_directModeEDID_VID;
 
 	float m_fDistortion_Red_K[3];
 	float m_fDistortion_Green_K[3];
