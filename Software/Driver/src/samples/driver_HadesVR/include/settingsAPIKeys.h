@@ -57,7 +57,8 @@ static const char* const k_pch_HMD_Section = "HMD";
 static const char* const k_pch_HMD_SerialNumber_String = "serialNumber";
 static const char* const k_pch_HMD_ModelNumber_String = "modelNumber";
 static const char* const k_pch_HMD_Enable_Bool = "EnableHMD";
-static const char* const k_pch_HMD_FilterBeta_Float = "FilterBeta";
+static const char* const k_pch_HMD_MinFilterBeta_Float = "MinFilterBeta";
+static const char* const k_pch_HMD_MaxFilterBeta_Float = "MaxFilterBeta";
 
 static const char* const k_pch_HMD_YawOffset_Float = "HMDYawOffset";
 static const char* const k_pch_HMD_PitchOffset_Float = "HMDPitchOffset";

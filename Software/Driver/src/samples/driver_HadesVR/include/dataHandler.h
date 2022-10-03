@@ -285,7 +285,8 @@ private:
 	Madgwick HMDfilter;
 
 	int readsFromInit = 0;
-	float filterBeta = 0.05f;
+	float minFilterBeta = 0.02f;
+	float maxFilterBeta = 0.30f;
 	double deltatime = 0;
 
 	V3Kalman HMDKalman;

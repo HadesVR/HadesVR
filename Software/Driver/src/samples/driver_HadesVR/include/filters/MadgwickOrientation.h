@@ -46,5 +46,9 @@ class Madgwick {
     Quaternion getQuat() {
       return Quaternion(q2, q3, q1, q0);
     }
+
+    float getBeta() {
+        return beta;
+    }
 };
 #endif

@@ -105,19 +105,22 @@ void CdataHandler::ReadHIDData()
 				if (!orientationFilterInit) {		//init filter
 					HMDfilter.begin();
 					HMDfilter.setBeta(2.f);
-					DriverLog("[Madgwick] Revving up the filter and redlining it to a beta of 2");
-					orientationFilterInit = true;
-				}
 
-				if (readsFromInit < 2000) {
-					readsFromInit++;
-					if (readsFromInit == 2000) {
-						HMDfilter.setBeta(filterBeta);
-						DriverLog("[Madgwick] first 2000 readings done! switching to more accurate beta value. of %f", filterBeta);
+					if (readsFromInit < 1000) {
+						readsFromInit++;
 					}
-					if (PSMConnected) {
-						ResetPos(true);
+					if (readsFromInit >= 1000) {
+						orientationFilterInit = true;
+						if (PSMConnected) {
+							ResetPos(true);
+						}
 					}
+				}			
+
+				if (readsFromInit >= 1000) {
+					float Av = Vector3::Magnitude(HMDData.TrackingData.AngularVelocity);
+					if (Av > 10.f) Av = 10.f;
+					HMDfilter.setBeta(Av * (maxFilterBeta - minFilterBeta) / 10 + minFilterBeta);
 				}
 
 				HMDData.TrackingData.Accel.X = (float)(DataHMDRAW->AccX) / 2048;
@@ -127,8 +130,6 @@ void CdataHandler::ReadHIDData()
 				HMDData.TrackingData.AngularAccel.X = (float)(DataHMDRAW->GyroY) / 16;
 				HMDData.TrackingData.AngularAccel.Y = (float)(DataHMDRAW->GyroX) / 16;
 				HMDData.TrackingData.AngularAccel.Z = (float)(DataHMDRAW->GyroZ) / 16;
-
-				HMDData.TrackingData.AngularAccel = HMDData.TrackingData.AngularAccel * 1;
 
 				//get data and scale it properly. Then update the filter.
 				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
@@ -234,6 +235,10 @@ DriverPose_t CdataHandler::GetHMDPose()
 	if ((GetAsyncKeyState(VK_F12) & 0x8000))
 	{
 		ReloadCalibration();
+	}
+	if ((GetAsyncKeyState(VK_F11) & 0x8000))
+	{
+		DriverLog("[Debug] current filter beta:%lf", HMDfilter.getBeta());
 	}
 	if ((GetAsyncKeyState(VK_F10) & 0x8000))
 	{
@@ -624,6 +629,9 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
 		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
+		minFilterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_MinFilterBeta_Float);
+		maxFilterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_MaxFilterBeta_Float);
+
 		//use accelerometers?
 		CtrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Tracking_AccelEnable_Bool);
 		HMDAccelEnable = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_Tracking_AccelEnable_Bool);
