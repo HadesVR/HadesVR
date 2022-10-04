@@ -106,10 +106,10 @@ void CdataHandler::ReadHIDData()
 					HMDfilter.begin();
 					HMDfilter.setBeta(2.f);
 
-					if (readsFromInit < 1000) {
+					if (readsFromInit < 2000) {
 						readsFromInit++;
 					}
-					if (readsFromInit >= 1000) {
+					if (readsFromInit >= 2000) {
 						orientationFilterInit = true;
 						if (PSMConnected) {
 							ResetPos(true);
@@ -117,7 +117,7 @@ void CdataHandler::ReadHIDData()
 					}
 				}			
 
-				if (readsFromInit >= 1000) {
+				if (readsFromInit >= 2000) {
 					float Av = Vector3::Magnitude(HMDData.TrackingData.AngularVelocity);
 					if (Av > 10.f) Av = 10.f;
 					HMDfilter.setBeta(Av * (maxFilterBeta - minFilterBeta) / 10 + minFilterBeta);
