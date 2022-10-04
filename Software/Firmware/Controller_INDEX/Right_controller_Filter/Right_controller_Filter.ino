@@ -123,6 +123,7 @@ int trackoutput;
 int axisX;
 int axisY;
 bool joyTouch = false;
+float rot = 0.f;
 
 RF24 radio(9, 10); // CE, CSN on Blue Pill
 
@@ -263,22 +264,14 @@ void loop() {
   filter.updateIMU(gx, gy, gz, ax, ay, az);
 #endif
 
-  float acc = abs(ax + ay + az);
-  if (acc < 1.25f) {
-    filter.changeBeta(0.05);
-  }
-  else if (acc < 2.0) {
-    filter.changeBeta(0.1);
-  } 
-  else if (acc < 2.5) {
-    filter.changeBeta(0.15);
-  } 
-  else if (acc < 5) {
-    filter.changeBeta(0.3);
-  } 
-  else if (acc < 10) {
-    filter.changeBeta(0.6);
-  }
+  rot += (abs(gx) + abs(gy) + abs(gz));
+  if (rot > 2000.f) rot = 2000.f;
+  rot *= 0.93f;
+  filter.changeBeta((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+#ifdef SERIAL_DEBUG
+  Serial.print("filter beta: ");
+  Serial.println((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+#endif
 
   joyTouch = false;
   int btn = 0;
@@ -393,17 +386,17 @@ void loop() {
   data.accZ = (short)(az * 2048);
 
 #ifdef SERIAL_DEBUG
-  Serial.print("qW: ");
-  Serial.print(filter.getQuatW());
-
-  Serial.print(" qX: ");
-  Serial.print(filter.getQuatX());
-
-  Serial.print(" qY: ");
-  Serial.print(filter.getQuatY());
-
-  Serial.print(" qZ: ");
-  Serial.println(filter.getQuatZ());
+  //  Serial.print("qW: ");
+  //  Serial.print(filter.getQuatW());
+  //
+  //  Serial.print(" qX: ");
+  //  Serial.print(filter.getQuatX());
+  //
+  //  Serial.print(" qY: ");
+  //  Serial.print(filter.getQuatY());
+  //
+  //  Serial.print(" qZ: ");
+  //  Serial.println(filter.getQuatZ());
 #endif
 
   radio.stopListening();
