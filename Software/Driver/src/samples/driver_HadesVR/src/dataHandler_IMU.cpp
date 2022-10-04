@@ -30,6 +30,7 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 
 	//integrate to get velocity											
 	_data.Velocity += (lin_Acc * deltatime);
+	_data.Velocity *= 0.9;
 	//update angular velocity
 	_data.AngularVelocity += (_data.AngularAccel * deltatime);
 	_data.AngularVelocity *= 0.75;

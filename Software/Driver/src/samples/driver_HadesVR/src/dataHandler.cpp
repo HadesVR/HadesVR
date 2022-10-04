@@ -554,8 +554,8 @@ void CdataHandler::PSMUpdate()
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
 			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !HMDData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
-				HMDData.TrackingData.Position = PSMSHMDPos;								//update position
 				HMDKalman.updateMeasCam(PSMSHMDPos);
+				HMDData.TrackingData.Position = HMDKalman.getEstimation();				//update position
 				UpdateVelocity(HMDData.TrackingData);									//update velocity
 				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
 			}
@@ -569,8 +569,8 @@ void CdataHandler::PSMUpdate()
 
 			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !RightCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
-				RightCtrlData.TrackingData.Position = PSMSCtrlRightPos;								//update position
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
+				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();				//update position
 				UpdateVelocity(RightCtrlData.TrackingData);											//update velocity
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
 			}
@@ -584,8 +584,8 @@ void CdataHandler::PSMUpdate()
 
 			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !LeftCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{	
-				LeftCtrlData.TrackingData.Position = PSMSCtrlLeftPos;								//update position
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
+				LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();				//update position
 				UpdateVelocity(LeftCtrlData.TrackingData);											//update velocity
 				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
 			}
