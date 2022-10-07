@@ -265,12 +265,12 @@ void loop() {
 #endif
 
   rot += (abs(gx) + abs(gy) + abs(gz));
-  if (rot > 2000.f) rot = 2000.f;
-  rot *= 0.93f;
-  filter.changeBeta((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+  if (rot > 64000.f) rot = 64000.f;
+  rot *= 0.97f;
+  filter.changeBeta(rot * (1.5 - 0.1) / 64000 + 0.1);
 #ifdef SERIAL_DEBUG
   Serial.print("filter beta: ");
-  Serial.println((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+  Serial.println(rot * (1.5 - 0.1) / 64000 + 0.1);
 #endif
 
   joyTouch = false;
@@ -386,17 +386,33 @@ void loop() {
   data.accZ = (short)(az * 2048);
 
 #ifdef SERIAL_DEBUG
-  //  Serial.print("qW: ");
-  //  Serial.print(filter.getQuatW());
-  //
-  //  Serial.print(" qX: ");
-  //  Serial.print(filter.getQuatX());
-  //
-  //  Serial.print(" qY: ");
-  //  Serial.print(filter.getQuatY());
-  //
-  //  Serial.print(" qZ: ");
-  //  Serial.println(filter.getQuatZ());
+//  Serial.print("AX: ");
+//  Serial.print(ax);
+//
+//  Serial.print("AY: ");
+//  Serial.print(ay);
+//
+//  Serial.print("AZ: ");
+//  Serial.print(az);
+//
+//  Serial.print("GX: ");
+//  Serial.print(gx);
+//
+//  Serial.print("GY: ");
+//  Serial.print(gy);
+//
+//  Serial.print("GZ: ");
+//  Serial.print(gz);
+//
+//  Serial.print("MX: ");
+//  Serial.print(mx);
+//
+//  Serial.print("MY: ");
+//  Serial.print(my);
+//
+//  Serial.print("MZ: ");
+//  Serial.println(mz);
+
 #endif
 
   radio.stopListening();
@@ -509,14 +525,14 @@ void updateAccelGyro()
   MPU9250Data[6] = ((int16_t)rawData[12] << 8) | rawData[13] ;
 
   // Now we'll calculate the accleration value into actual g's
-  ax = (float)MPU9250Data[0] * aRes - cal.accelBias[0];              // get actual g value, this depends on scale being set
-  ay = (float)MPU9250Data[1] * aRes - cal.accelBias[1];
-  az = (float)MPU9250Data[2] * aRes - cal.accelBias[2];
+  ax = ((float)MPU9250Data[0] * aRes) - cal.accelBias[0];              // get actual g value, this depends on scale being set
+  ay = ((float)MPU9250Data[1] * aRes) - cal.accelBias[1];
+  az = ((float)MPU9250Data[2] * aRes) - cal.accelBias[2];
 
   // Calculate the gyro value into actual degrees per second
-  gx = (float)MPU9250Data[4] * gRes - cal.gyroBias[0];               // get actual gyro value, this depends on scale being set
-  gy = (float)MPU9250Data[5] * gRes - cal.gyroBias[1];
-  gz = (float)MPU9250Data[6] * gRes - cal.gyroBias[2];
+  gx = ((float)MPU9250Data[4] * gRes);               // get actual gyro value, this depends on scale being set
+  gy = ((float)MPU9250Data[5] * gRes);
+  gz = ((float)MPU9250Data[6] * gRes);
 }
 
 void updateMag()

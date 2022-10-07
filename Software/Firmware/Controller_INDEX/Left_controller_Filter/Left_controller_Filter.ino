@@ -266,13 +266,13 @@ void loop() {
   filter.updateIMU(gx, gy, gz, ax, ay, az);
 #endif
 
-  rot += (abs(gx) + abs(gy) + abs(gz));  //optimize this eventually using fast inv sqrt
-  if (rot > 2000.f) rot = 2000.f;
-  rot *= 0.93f;
-  filter.changeBeta((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+  rot += (abs(gx) + abs(gy) + abs(gz));
+  if (rot > 64000.f) rot = 64000.f;
+  rot *= 0.97f;
+  filter.changeBeta(rot * (1.5 - 0.1) / 64000 + 0.1);
 #ifdef SERIAL_DEBUG
   Serial.print("filter beta: ");
-  Serial.println((rot * (1.0 - 0.005) / 2000 + 0.005) + 0.025);
+  Serial.println(rot * (1.5 - 0.1) / 64000 + 0.1);
 #endif
 
   joyTouch = false;
