@@ -45,16 +45,18 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	_data.oldAccel = _data.Accel;
 }
 
-void CdataHandler::UpdateVelocity(_TrackingData& _data) {
-
+void CdataHandler::UpdateVelocity(_TrackingData& _data, bool _wasTracked)
+{
 	//get deltatime
 	auto now = std::chrono::high_resolution_clock::now();
 	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - _data.lastCamUpdate).count() / 1000000.0f;
-	_data.lastCamUpdate = now;
+	_data.lastCamUpdate = now;	
 
 	//update velocity
-	_data.Velocity = (_data.Position - _data.oldPosition) / deltatime;
-
+	if (_wasTracked) 
+	{
+	_data.Velocity = (_data.Position - _data.oldPosition) / deltatime; //don't update velocity on new camera tracking point.
+	}
 	//update position
 	_data.oldPosition = _data.Position;
 }

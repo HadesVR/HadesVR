@@ -36,6 +36,7 @@ typedef struct _TrackingData {
 
 	Vector3 LastCameraPos = Vector3::Zero();
 	bool isTracked = false;
+	bool wasTracked = false;
 
 	Quaternion Rotation;
 	Quaternion CorrectedRotation;
@@ -237,7 +238,7 @@ private:
 	void PSMUpdate();
 
 	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
-	void UpdateVelocity(_TrackingData& _data);
+	void UpdateVelocity(_TrackingData& _data, bool _wasTracked);
 
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);

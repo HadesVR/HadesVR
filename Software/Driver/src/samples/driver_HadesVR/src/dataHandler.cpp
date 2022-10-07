@@ -269,12 +269,11 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 		if (receivedControllerData) {
 			pose.poseIsValid = true;
 			pose.deviceIsConnected = true;
-			pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
-		}
-		else {
+			pose.poseTimeOffset = ((float)psmsMillisecondPeriod * 2) / 1000;	//keep things smooth, time offset in milliseconds is psms camera rate.
+		}																		//thanks okawo!
+		else {	
 			pose.poseIsValid = false;
 			pose.deviceIsConnected = false;
-			pose.poseTimeOffset = 0.035;	//holy shit thanks okawo
 			pose.result = TrackingResult_Uninitialized;
 			return pose;
 		}
@@ -547,38 +546,47 @@ void CdataHandler::PSMUpdate()
 		lastPSMSUpdate = now;
 
 		if (HMDAllocated) {
-			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 			HMDData.TrackingData.isTracked = false;
+
+			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &HMDData.TrackingData.isTracked);
+			HMDData.TrackingData.wasTracked = !HMDData.TrackingData.isTracked;
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
 			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !HMDData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
 				HMDKalman.updateMeasCam(PSMSHMDPos);
 				HMDData.TrackingData.Position = HMDKalman.getEstimation();				//update position
-				UpdateVelocity(HMDData.TrackingData);									//update velocity
+				UpdateVelocity(HMDData.TrackingData, HMDData.TrackingData.wasTracked);									//update velocity
 				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
+				HMDData.TrackingData.wasTracked = true;
 			}
 		}
 		if (ctrl1Allocated) {
-			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 			RightCtrlData.TrackingData.isTracked = false;
+
+			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[0], &RightCtrlData.TrackingData.isTracked);
 
-			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
+			RightCtrlData.TrackingData.wasTracked = !RightCtrlData.TrackingData.isTracked;
 
+			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !RightCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
 				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();				//update position
-				UpdateVelocity(RightCtrlData.TrackingData);											//update velocity
+				UpdateVelocity(RightCtrlData.TrackingData, RightCtrlData.TrackingData.wasTracked);												//update velocity
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
+				RightCtrlData.TrackingData.wasTracked = true;
 			}
 		}
 		if (ctrl2Allocated) {
-			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 			LeftCtrlData.TrackingData.isTracked = false;
+
+			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[1], &LeftCtrlData.TrackingData.isTracked);
+
+			LeftCtrlData.TrackingData.wasTracked = !LeftCtrlData.TrackingData.isTracked;
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
 
@@ -586,8 +594,9 @@ void CdataHandler::PSMUpdate()
 			{	
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
 				LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();				//update position
-				UpdateVelocity(LeftCtrlData.TrackingData);											//update velocity
+				UpdateVelocity(LeftCtrlData.TrackingData, LeftCtrlData.TrackingData.wasTracked);												//update velocity
 				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
+				LeftCtrlData.TrackingData.wasTracked = true;
 			}
 		}
 		//no need to update this faster than we can capture the images.
