@@ -71,7 +71,10 @@ public:
 		m_flDisplayFrequency = vr::VRSettings()->GetFloat( k_pch_Display_Section, k_pch_Sample_DisplayFrequency_Float );
 		m_fViewportZoom = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_ViewportZoom_Float);
 		m_fFOV = (vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_FOV_Float) * 3.14159265358979323846 / 180); //radians
-		m_nDistanceBetweenEyes = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_DistanceBetweenEyes_Int32);
+		m_fDistanceBetweenLenses = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistanceBetweenLenses_Float);
+		m_fDistanceBetweenViews = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DistanceBetweenViews_Float);
+		m_fDisplayWidth = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_DisplayWidth_Float);
+		m_bIsSinglePanel = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_IsSinglePanel_Bool);
 		m_nScreenOffsetX = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetX_Int32);
 		m_nScreenOffsetY = vr::VRSettings()->GetInt32(k_pch_Display_Section, k_pch_Sample_ScreenOffsetY_Int32);
 		m_bStereoMode = vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Stereo_Bool);
@@ -95,7 +98,6 @@ public:
 		m_directModeEDID_VID = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_DirectMode_EDID_VID_Int32);
 
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
-		DriverLog( "Viewport zoom: %f, zoom ratio: %f\n", m_fViewportZoom, (m_nRenderHeight / (float)m_nRenderWidth));
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
 		DriverLog( "Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
 		DriverLog( "Display Frequency: %f\n", m_flDisplayFrequency );
@@ -205,11 +207,11 @@ public:
 
 			if (eEye == Eye_Left)
 			{
-				*pnX = m_nDistanceBetweenEyes + m_nScreenOffsetX;
+				*pnX = m_nScreenOffsetX;
 			}
 			else
 			{
-				*pnX = (m_nWindowWidth / 2) - m_nDistanceBetweenEyes + m_nScreenOffsetX;
+				*pnX = (m_nWindowWidth / 2) + m_nScreenOffsetX;
 			}
 		}
 		else 
@@ -233,10 +235,28 @@ public:
 	{
 		if (m_bStereoMode) 
 		{
-			*pfLeft = -m_fFOV;
-			*pfRight = m_fFOV;
-			*pfTop = -m_fFOV;
-			*pfBottom = m_fFOV;
+			*pfTop = -tan(m_fFOV* m_nRenderHeight / m_nRenderWidth / 2);
+			*pfBottom = tan(m_fFOV * m_nRenderHeight / m_nRenderWidth / 2);
+			if (m_bIsSinglePanel == false)
+			{
+				*pfLeft = -tan(m_fFOV / 2);
+				*pfRight = tan(m_fFOV / 2);
+			}
+			else
+			{
+				float projectionLength = 0.25 * m_fDisplayWidth * 1 / tan(m_fFOV / 2);
+				float centerDifference = 0.25 * m_fDisplayWidth - 0.5 * m_fDistanceBetweenViews;
+				if (eEye == Eye_Left)
+				{
+					*pfLeft = -((0.25 * m_fDisplayWidth + centerDifference) / projectionLength);
+					*pfRight = (0.25 * m_fDisplayWidth - centerDifference) / projectionLength;
+				}
+				else
+				{
+					*pfLeft = -((0.25 * m_fDisplayWidth - centerDifference) / projectionLength);
+					*pfRight = (0.25 * m_fDisplayWidth + centerDifference) / projectionLength;
+				}
+			}
 		}
 		else 
 		{//Mono
@@ -254,34 +274,52 @@ public:
 		float hX_Red, hX_Green, hX_Blue;
 		float hY_Red, hY_Green, hY_Blue;
 
-		double rr;
+		double rr, rr2, rr4, rr6;
 		double theta;
 
 		double r2_Red, r2_Green, r2_Blue;
 
-		float _ZoomWidth = m_fViewportZoom;
-		float _ZoomHeight = m_fViewportZoom * (m_nRenderHeight / (float)m_nRenderWidth);
+		float centerOffsetU, centerOffsetV = 0.5f;
+		if (m_bIsSinglePanel == false)
+		{
+			centerOffsetU = 0.5f;
+		}
+		else
+		{
+			float centerDifference = 0.25 * m_fDisplayWidth - 0.5 * m_fDistanceBetweenLenses;
+			if (eEye == Eye_Left)
+			{
+				centerOffsetU = 0.5f * (0.25 * m_fDisplayWidth + centerDifference) / (0.25 * m_fDisplayWidth);
+			}
+			else
+			{
+				centerOffsetU = 0.5f * (0.25 * m_fDisplayWidth - centerDifference) / (0.25 * m_fDisplayWidth);
+			}
+		}
 		
-		rr = sqrt((fU - 0.5f) * (fU - 0.5f) + (fV - 0.5f) * (fV - 0.5f));
-		theta = atan2(fU - 0.5f, fV - 0.5f);
+		rr = sqrt((fU - centerOffsetU) * (fU - centerOffsetU) + (fV - centerOffsetV) * (fV - centerOffsetV));
+		rr2 = rr * rr;
+		rr4 = rr2 * rr2;
+		rr6 = rr2 * rr4;
+		theta = atan2(fU - centerOffsetU, fV - centerOffsetV);
 
-		r2_Red = rr * (1 + m_fDistortion_Red_K[0] * (rr * rr) + m_fDistortion_Red_K[1] * (rr * rr * rr * rr) + m_fDistortion_Red_K[2] * (rr * rr * rr * rr * rr * rr));
-		r2_Green = rr * (1 + m_fDistortion_Green_K[0] * (rr * rr) + m_fDistortion_Green_K[1] * (rr * rr * rr * rr) + m_fDistortion_Green_K[2] * (rr * rr * rr * rr * rr * rr));
-		r2_Blue = rr * (1 + m_fDistortion_Blue_K[0] * (rr * rr) + m_fDistortion_Blue_K[1] * (rr * rr * rr * rr) + m_fDistortion_Blue_K[2] * (rr * rr * rr * rr * rr * rr));
+		r2_Red = rr * (1 + m_fDistortion_Red_K[0] * rr2 + m_fDistortion_Red_K[1] * rr4 + m_fDistortion_Red_K[2] * rr6);
+		r2_Green = rr * (1 + m_fDistortion_Green_K[0] * rr2 + m_fDistortion_Green_K[1] * rr4 + m_fDistortion_Green_K[2] * rr6);
+		r2_Blue = rr * (1 + m_fDistortion_Blue_K[0] * rr2 + m_fDistortion_Blue_K[1] * rr4 + m_fDistortion_Blue_K[2] * rr6);
 
-		hX_Red = sin(theta) * r2_Red * _ZoomWidth;
-		hY_Red = cos(theta) * r2_Red * _ZoomHeight;
-		hX_Green = sin(theta) * r2_Green * _ZoomWidth;
-		hY_Green = cos(theta) * r2_Green * _ZoomHeight;
-		hX_Blue = sin(theta) * r2_Blue * _ZoomWidth;
-		hY_Blue = cos(theta) * r2_Blue * _ZoomHeight;
+		hX_Red = sin(theta) * r2_Red * m_fViewportZoom;
+		hY_Red = cos(theta) * r2_Red * m_fViewportZoom;
+		hX_Green = sin(theta) * r2_Green * m_fViewportZoom;
+		hY_Green = cos(theta) * r2_Green * m_fViewportZoom;
+		hX_Blue = sin(theta) * r2_Blue * m_fViewportZoom;
+		hY_Blue = cos(theta) * r2_Blue * m_fViewportZoom;
 
-		coordinates.rfRed[0] = hX_Red + 0.5f;
-		coordinates.rfRed[1] = hY_Red + 0.5f;
-		coordinates.rfGreen[0] = hX_Green + 0.5f;
-		coordinates.rfGreen[1] = hY_Green + 0.5f;
-		coordinates.rfBlue[0] = hX_Blue + 0.5f;
-		coordinates.rfBlue[1] = hY_Blue + 0.5f;
+		coordinates.rfRed[0] = hX_Red + centerOffsetU;
+		coordinates.rfRed[1] = hY_Red + centerOffsetV;
+		coordinates.rfGreen[0] = hX_Green + centerOffsetU;
+		coordinates.rfGreen[1] = hY_Green + centerOffsetV;
+		coordinates.rfBlue[0] = hX_Blue + centerOffsetU;
+		coordinates.rfBlue[1] = hY_Blue + centerOffsetV;
 
 		return coordinates;
 	}
@@ -342,8 +380,11 @@ private:
 	float m_fViewportZoom;
 	float m_fFOV;
 	float m_displayCantAngle = 0.f;
+	float m_fDistanceBetweenLenses; // distance between the center of the lenses / Unit: m
+	float m_fDistanceBetweenViews; // distance between the center of the viewports / Unit: m
+	float m_fDisplayWidth; // panel physical length / Unit: m
+	bool m_bIsSinglePanel; // single panel or dual panel
 
-	int32_t m_nDistanceBetweenEyes;
 	int32_t m_nScreenOffsetY;
 	int32_t m_nScreenOffsetX;
 	bool m_bStereoMode = true;
