@@ -95,6 +95,7 @@ public:
 		m_directModeEDID_VID = vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_DirectMode_EDID_VID_Int32);
 
 		DriverLog( "Window: %d %d %d %d\n", m_nWindowX, m_nWindowY, m_nWindowWidth, m_nWindowHeight );
+		DriverLog( "Viewport zoom: %f, zoom ratio: %f\n", m_fViewportZoom, (m_nRenderHeight / (float)m_nRenderWidth));
 		DriverLog( "Render Target: %d %d\n", m_nRenderWidth, m_nRenderHeight );
 		DriverLog( "Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons );
 		DriverLog( "Display Frequency: %f\n", m_flDisplayFrequency );
@@ -259,7 +260,7 @@ public:
 		double r2_Red, r2_Green, r2_Blue;
 
 		float _ZoomWidth = m_fViewportZoom;
-		float _ZoomHeight = m_fViewportZoom * (m_nRenderHeight / m_nRenderWidth);
+		float _ZoomHeight = m_fViewportZoom * (m_nRenderHeight / (float)m_nRenderWidth);
 		
 		rr = sqrt((fU - 0.5f) * (fU - 0.5f) + (fV - 0.5f) * (fV - 0.5f));
 		theta = atan2(fU - 0.5f, fV - 0.5f);
