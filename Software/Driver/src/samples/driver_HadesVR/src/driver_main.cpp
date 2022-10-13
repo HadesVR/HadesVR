@@ -235,8 +235,8 @@ public:
 	{
 		if (m_bStereoMode) 
 		{
-			*pfTop = -tan(m_fFOV* m_nRenderHeight / m_nRenderWidth / 2);
-			*pfBottom = tan(m_fFOV * m_nRenderHeight / m_nRenderWidth / 2);
+			*pfTop = -tan(m_fFOV / 2);
+			*pfBottom = tan(m_fFOV / 2);
 			if (m_bIsSinglePanel == false)
 			{
 				*pfLeft = -tan(m_fFOV / 2);
@@ -297,29 +297,29 @@ public:
 			}
 		}
 		
-		rr = sqrt((fU - centerOffsetU) * (fU - centerOffsetU) + (fV - centerOffsetV) * (fV - centerOffsetV));
+		rr = sqrt((fU - centerOffsetU) * (fU - centerOffsetU) + (-(fV - centerOffsetV)) * (-(fV - centerOffsetV)));
 		rr2 = rr * rr;
 		rr4 = rr2 * rr2;
 		rr6 = rr2 * rr4;
-		theta = atan2(fU - centerOffsetU, fV - centerOffsetV);
+		theta = atan2(-(fV - centerOffsetV), fU - centerOffsetU);
 
 		r2_Red = rr * (1 + m_fDistortion_Red_K[0] * rr2 + m_fDistortion_Red_K[1] * rr4 + m_fDistortion_Red_K[2] * rr6);
 		r2_Green = rr * (1 + m_fDistortion_Green_K[0] * rr2 + m_fDistortion_Green_K[1] * rr4 + m_fDistortion_Green_K[2] * rr6);
 		r2_Blue = rr * (1 + m_fDistortion_Blue_K[0] * rr2 + m_fDistortion_Blue_K[1] * rr4 + m_fDistortion_Blue_K[2] * rr6);
 
-		hX_Red = sin(theta) * r2_Red * m_fViewportZoom;
-		hY_Red = cos(theta) * r2_Red * m_fViewportZoom;
-		hX_Green = sin(theta) * r2_Green * m_fViewportZoom;
-		hY_Green = cos(theta) * r2_Green * m_fViewportZoom;
-		hX_Blue = sin(theta) * r2_Blue * m_fViewportZoom;
-		hY_Blue = cos(theta) * r2_Blue * m_fViewportZoom;
+		hX_Red = cos(theta) * r2_Red * m_fViewportZoom;
+		hY_Red = sin(theta) * r2_Red * m_fViewportZoom * m_nRenderHeight / m_nRenderWidth;
+		hX_Green = cos(theta) * r2_Green * m_fViewportZoom;
+		hY_Green = sin(theta) * r2_Green * m_fViewportZoom * m_nRenderHeight / m_nRenderWidth;
+		hX_Blue = cos(theta) * r2_Blue * m_fViewportZoom;
+		hY_Blue = sin(theta) * r2_Blue * m_fViewportZoom * m_nRenderHeight / m_nRenderWidth;
 
 		coordinates.rfRed[0] = hX_Red + centerOffsetU;
-		coordinates.rfRed[1] = hY_Red + centerOffsetV;
+		coordinates.rfRed[1] = -hY_Red + centerOffsetV;
 		coordinates.rfGreen[0] = hX_Green + centerOffsetU;
-		coordinates.rfGreen[1] = hY_Green + centerOffsetV;
+		coordinates.rfGreen[1] = -hY_Green + centerOffsetV;
 		coordinates.rfBlue[0] = hX_Blue + centerOffsetU;
-		coordinates.rfBlue[1] = hY_Blue + centerOffsetV;
+		coordinates.rfBlue[1] = -hY_Blue + centerOffsetV;
 
 		return coordinates;
 	}
@@ -1078,4 +1078,6 @@ HMD_DLL_EXPORT void *HmdDriverFactory( const char *pInterfaceName, int *pReturnC
 
 	return NULL;
 }
+
+
 
