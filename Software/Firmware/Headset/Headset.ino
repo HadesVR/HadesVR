@@ -231,40 +231,15 @@ void setup() {
   {
     Serial.print("Could not connect to MPU9250: 0x");
     Serial.println(readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250), HEX);
-    while (true) {
-      //      digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(200);
-      //     digitalWrite(PC13, LOW);
-      delay(200);
-      //     digitalWrite(PC13, HIGH);
-      delay(1000);
-    }
+    while (true) 
+    {;}
   }
 
   if (!radio.isChipConnected())
   {
     Serial.println("NRF24L01 Module not detected!");
     while (true)
-    {
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(200);
-      setColor(0);
-      delay(200);
-      setColor(6);
-      delay(1000);
-    }
+    {;}
   }
   else{
     Serial.println("NRF24L01 Module up and running!");
@@ -285,9 +260,8 @@ void setup() {
   if (!digitalRead(CALPIN)) {                                        //enter calibration mode
     Serial.println("Magnetic calibration mode.");
     delay(1000);
-    //    digitalWrite(PC13, LOW);
+    
     magcalMPU9250(cal.magBias, cal.magScale);
-    //    digitalWrite(PC13, HIGH);
     Serial.print("magBias: "); Serial.print(cal.magBias[0], 7); Serial.print(","); Serial.print(cal.magBias[1], 7); Serial.print(","); Serial.println(cal.magBias[2], 7);
     Serial.print("magScale: "); Serial.print(cal.magScale[0], 7); Serial.print(","); Serial.print(cal.magScale[1], 7); Serial.print(","); Serial.println(cal.magScale[2], 7);
 
