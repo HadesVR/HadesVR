@@ -525,6 +525,8 @@ bool CdataHandler::connectToPSMOVE()
 	}
 	else {
 		DriverLog("[PsMoveData] PSMS not connected!");
+		HMDAccelEnable = false;
+		CtrlAccelEnable = false;
 	}
 	return bSuccess;
 
