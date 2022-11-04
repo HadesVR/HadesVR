@@ -14,9 +14,10 @@
 #include "Quaternion.hpp"
 #include "Vector3.hpp"
 #include "PSMoveService/PSMoveClient_CAPI.h"
-#include "hidapi/hidapi.h"
 #include "driverlog.h"
 #include "settingsAPIKeys.h"
+#include "DataTransport.hpp"
+#include "HIDTransport.hpp"
 
 using namespace ATL;
 using namespace std::chrono;
@@ -208,24 +209,26 @@ struct ControllerPacket
 
 class CdataHandler {
 public:
-	
+	CdataHandler(DataTransport& transport);
+	virtual ~CdataHandler() {}
+
 	DriverPose_t GetHMDPose();
 	DriverPose_t GetControllersPose(int ControllerIndex);
 	void GetControllerData(TController* RightController, TController* LeftController);
 
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	
-	void StartData(int32_t PID, int32_t VID);
+	void StartData();
 	void StopData();
 
 	void SetCentering();
 	void ReloadCalibration();
 
-	hid_device* hHID;
-	bool HIDConnected = false;
+	bool HeadsetConnected() { return dataTransport.IsConnected(); }
+
 	bool PSMConnected = false;
-	std::thread* pHIDthread = NULL;
 	std::thread* pPSMUpdatethread = NULL;
+	std::thread* pHIDthread = NULL;
 
 	int psmsUpdateRate = 60;
 	int psmsMillisecondPeriod;
@@ -243,6 +246,8 @@ private:
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
 	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
+
+	DataTransport& dataTransport;
 
 	Quaternion SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
 
@@ -270,8 +275,6 @@ private:
 	Vector3 CtrlRightConfigPositionOffset = Vector3::Zero();
 	Vector3 CtrlLeftConfigPositionOffset = Vector3::Zero();
 
-
-	bool HIDInit = false;
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;
 	bool CtrlAccelEnable = false;

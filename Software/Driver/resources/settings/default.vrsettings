@@ -4,7 +4,10 @@
 		"HID_PID" : 32822,
 		"PSMSTrackerFrequency" : 120,
 		"ControllerSmoothingK" : 100.0,
-		"HMDSmoothingK" : 75.0
+		"HMDSmoothingK" : 75.0,
+		"TransportMode" : "HID",
+		"UART_Port" : "COM4",
+		"UART_Baudrate" : 230400
    },
    "Display" : {
 		"Stereo" : true,

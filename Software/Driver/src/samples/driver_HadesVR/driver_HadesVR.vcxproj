@@ -16,7 +16,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -64,6 +64,10 @@
     <ClInclude Include="include\filters\V3Kalman.h" />
     <ClInclude Include="include\HandTracking.h" />
     <ClInclude Include="include\settingsAPIKeys.h" />
+    <ClInclude Include="include\DataTransport.hpp" />
+    <ClInclude Include="include\HIDTransport.hpp" />
+    <ClInclude Include="include\UARTTransport.hpp" />
+    <ClInclude Include="include\ringbuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dataHandler.cpp" />
@@ -74,6 +78,9 @@
     <ClCompile Include="src\filters\MadgwickOrientation.cpp" />
     <ClCompile Include="src\filters\V3Kalman.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
+    <ClCompile Include="src\HIDTransport.cpp" />
+    <ClCompile Include="src\ringbuffer.c" />
+    <ClCompile Include="src\UARTTransport.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
