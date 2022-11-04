@@ -16,7 +16,6 @@
 #include <SPI.h>
 #include "RF24.h"
 #include "RegisterMap.h"
-#include "HID.h"
 
 //==========================================================================================================
 //************************************ USER CONFIGURABLE STUFF HERE*****************************************
@@ -27,11 +26,104 @@
 #define EEPROM_CAL                          //comment this if your MCU doesn't support EEPROM.
 //#define SERIAL_DEBUG
 
+#define TRANSPORT_TYPE             1        //1 = HID (default), 2 = UART
+
+#define TRANSPORT_SERIAL_PORT      Serial   // Must_not be same as SERIAL_DEBUG (if that is enabled)
+#define TRANSPORT_SERIAL_BAUDRATE  230400
+
 //eeprom-less mcu stuff, you don't need to touch these if you do the eeprom calibration
 float magBias[3] = {0, 0, 0};
 float magScale[3] = {1, 1, 1};
 float gyroBias[3] = {0, 0, 0};
 float accelBias[3] = {0, 0, 0};
+
+//==========================================================================================================
+//************************************ DATA TRANSPORT LAYER ************************************************
+//==========================================================================================================
+
+class DataTransport {
+public:
+  virtual ~DataTransport() {}
+  virtual void setup() = 0;
+  virtual void sendPacket(const void* packet, int len);
+};
+
+#if TRANSPORT_TYPE == 1
+
+#include "HID.h"
+
+static const uint8_t USB_HID_Descriptor[] PROGMEM = {
+
+  0x06, 0x03, 0x00,   // USAGE_PAGE (vendor defined)
+  0x09, 0x00,         // USAGE (Undefined)
+  0xa1, 0x01,         // COLLECTION (Application)
+  0x15, 0x00,         //   LOGICAL_MINIMUM (0)
+  0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)
+  0x85, 0x01,         //   REPORT_ID (1)
+  0x75, 0x08,         //   REPORT_SIZE (16)
+
+  0x95, 0x3f,         //   REPORT_COUNT (1)
+
+  0x09, 0x00,         //   USAGE (Undefined)
+  0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
+  0xc0
+};
+
+class HIDTransport : public DataTransport {
+public:
+  void setup()
+  {
+    static HIDSubDescriptor node(USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
+    HID().AppendDescriptor(&node);
+  }
+
+  void sendPacket(const void* packet, int len)
+  {
+    HID().SendReport(1, packet, len);
+  }
+};
+
+#define TransportClass HIDTransport
+
+#elif TRANSPORT_TYPE == 2
+
+#define UART_MAGIC ((uint8_t)0xAA)
+
+class UARTTransport : public DataTransport {
+public:
+  UARTTransport() : port(TRANSPORT_SERIAL_PORT) {}
+
+  void setup()
+  {
+    port.begin(TRANSPORT_SERIAL_BAUDRATE);
+    cnt = 0;
+  }
+
+  void sendPacket(const void* packet, int len)
+  {
+    // TODO: Check len < 256
+    const uint8_t dataLen = (uint8_t)len;
+
+    // We simply send <magic:1><length:1><data:length> where magic=0xAA, length=len and data=packet
+    // Adding a CRC might be a good idea later
+    port.write((uint8_t)UART_MAGIC);
+    port.write(cnt++);
+    port.write(dataLen + 1);
+    port.write((uint8_t)0x01); // Dummy report number (not really used)
+    port.write((const uint8_t*)packet, dataLen);
+  }
+
+private:
+  uint8_t cnt;
+  HardwareSerial& port;
+};
+
+#define TransportClass UARTTransport
+
+#else
+#error "unsupported transport type: "
+#endif
+
 //==========================================================================================================
 
 const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
@@ -68,23 +160,6 @@ MFS MFSSEL = MFS::M16BITS;
 #ifdef EEPROM_CAL
 #include <EEPROM.h>
 #endif
-
-static const uint8_t USB_HID_Descriptor[] PROGMEM = {
-
-  0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
-  0x09, 0x00,         // USAGE (Undefined)
-  0xa1, 0x01,         // COLLECTION (Application)
-  0x15, 0x00,         //   LOGICAL_MINIMUM (0)
-  0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)
-  0x85, 0x01,         //   REPORT_ID (1)
-  0x75, 0x08,         //   REPORT_SIZE (16)
-
-  0x95, 0x3f,         //   REPORT_COUNT (1)
-
-  0x09, 0x00,         //   USAGE (Undefined)
-  0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
-  0xc0
-};
 
 struct HMDRAWPacket
 {
@@ -173,6 +248,7 @@ struct ControllerPacket
 
 static HMDRAWPacket HMDRawData;
 static ControllerPacket ContData;
+static TransportClass transport;
 
 bool newCtrlData = false;
 bool calDone;
@@ -183,8 +259,7 @@ void setup() {
 
   pinMode(CALPIN, INPUT_PULLUP);
 
-  static HIDSubDescriptor node (USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
-  HID().AppendDescriptor(&node);
+  transport.setup();
 
   aRes = getAres();
   gRes = getGres();
@@ -308,7 +383,7 @@ void loop() {
   HMDRawData.MagY = (short)(mx * 5);
   HMDRawData.MagZ = (short)(-mz * 5);
 
-  HID().SendReport(1, &HMDRawData, 63);
+  transport.sendPacket(&HMDRawData, 63);
 
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
@@ -326,7 +401,7 @@ void loop() {
 
 
   if (newCtrlData) {
-    HID().SendReport(1, &ContData, 63);
+    transport.sendPacket(&ContData, 63);
     newCtrlData = false;
   }
 }
@@ -435,14 +510,14 @@ void updateAccelGyro()
   MPU9250Data[6] = ((int16_t)rawData[12] << 8) | rawData[13] ;
 
   // Now we'll calculate the accleration value into actual g's
-  ax = (float)MPU9250Data[0] * aRes - cal.accelBias[0];              // get actual g value, this depends on scale being set
-  ay = (float)MPU9250Data[1] * aRes - cal.accelBias[1];
-  az = (float)MPU9250Data[2] * aRes - cal.accelBias[2];
+  ax = ((float)MPU9250Data[0] * aRes - cal.accelBias[0]);              // get actual g value, this depends on scale being set
+  ay = ((float)MPU9250Data[1] * aRes - cal.accelBias[1]);
+  az = ((float)MPU9250Data[2] * aRes - cal.accelBias[2]);
 
   // Calculate the gyro value into actual degrees per second
-  gx = (float)MPU9250Data[4] * gRes - cal.gyroBias[0];               // get actual gyro value, this depends on scale being set
-  gy = (float)MPU9250Data[5] * gRes - cal.gyroBias[1];
-  gz = (float)MPU9250Data[6] * gRes - cal.gyroBias[2];
+  gx = ((float)MPU9250Data[4] * gRes - cal.gyroBias[0]);               // get actual gyro value, this depends on scale being set
+  gy = ((float)MPU9250Data[5] * gRes - cal.gyroBias[1]);
+  gz = ((float)MPU9250Data[6] * gRes - cal.gyroBias[2]);
 }
 
 void updateMag()
