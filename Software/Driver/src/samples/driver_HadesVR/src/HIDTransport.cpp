@@ -13,8 +13,8 @@ int HIDTransport::Start()
 		return 1;
 	}
 
-	const unsigned short vid = (const unsigned short)vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32);
-	const unsigned short pid = (const unsigned short)vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32);
+	const unsigned short pid = (const unsigned short)vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32);
+	const unsigned short vid = (const unsigned short)vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32);
 	hHID = hid_open((unsigned short)vid, (unsigned short)pid, NULL);
 	if (!hHID) {
 		DriverLog("[HIDTransport] Unable to start data stream of device with pid=%d and vid=%d.\n", pid, vid);
