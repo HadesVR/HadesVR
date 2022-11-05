@@ -13,10 +13,10 @@ public:
 	UARTTransport();
 
 	// Inherited via DataTransport
-	virtual int Start() override;
-	virtual void Stop() override;
-	virtual bool IsConnected() override;
-	virtual int ReadPacket(uint8_t* buffer, size_t length) override;
+	int Start() override;
+	void Stop() override;
+	bool IsConnected() override;
+	int ReadPacket(uint8_t* buffer, size_t length) override;
 
 private:
 	bool connected;
