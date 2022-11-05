@@ -6,14 +6,14 @@ CdataHandler::CdataHandler(DataTransport& transport)
 }
 
 /**
-	 Reads HID data and separates the incoming data packet into HMD, controller or tracker data.
+	 Reads Transport data and separates the incoming data packet into HMD, controller or tracker data.
 */
-void CdataHandler::ReadHIDData()
+void CdataHandler::ReadTransportData()
 {
 	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
 	HMDRAWPacket* DataHMDRAW = (HMDRAWPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
-	DriverLog("[HID] ReadHIDData Thread created, HIDConnected Status: %d", dataTransport.IsConnected());
+	DriverLog("[DataTransport] Data transport Thread created, Status: %d", dataTransport.IsConnected());
 	while (dataTransport.IsConnected()) {
 		if (dataTransport.ReadPacket(packet_buffer, 64) > 0) {
 			switch (packet_buffer[1])
@@ -169,7 +169,7 @@ void CdataHandler::ReadHIDData()
 			}
 		}
 	}
-	DriverLog("[HID] Stopping to poll HID data");
+	DriverLog("[DataTransport] Stopping to poll HID data");
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max usb hid update rate is 1000hz.
 }
 

@@ -236,7 +236,7 @@ public:
 private:
 
     void ResetPos(bool hmdOnly);
-	void ReadHIDData();
+	void ReadTransportData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
 
@@ -303,7 +303,7 @@ private:
 	}
 
 	static void ReadHIDEnter(CdataHandler* ptr) {
-		ptr->ReadHIDData();
+		ptr->ReadTransportData();
 	}
 };
 
