@@ -14,6 +14,8 @@
 #include "dataHandler.h"
 #include "devices.hpp"
 #include "settingsAPIKeys.h"
+#include "HIDTransport.hpp"
+#include "UARTTransport.hpp"
 
 using namespace vr;
 using namespace std::chrono;
@@ -46,7 +48,8 @@ double DegToRad(double f) {
 class C_HMDDeviceDriver : public vr::ITrackedDeviceServerDriver, public vr::IVRDisplayComponent
 {
 public:
-	C_HMDDeviceDriver(  )
+	C_HMDDeviceDriver(CdataHandler& dh)
+		: dataHandler(dh)
 	{
 		HMDIndex_t = vr::k_unTrackedDeviceIndexInvalid;
 		m_ulPropertyContainer = vr::k_ulInvalidPropertyContainer;
@@ -326,7 +329,7 @@ public:
 
 	virtual DriverPose_t GetPose() 
 	{
-		return dH.GetHMDPose();
+		return dataHandler.GetHMDPose();
 	}
 	
 	HmdMatrix34_t CalcMatFromEuler(float a, float IPDOffset) {
@@ -362,6 +365,7 @@ public:
 	std::string GetSerialNumber() const { return m_sSerialNumber; }
 
 private:
+	CdataHandler& dataHandler;
 	vr::TrackedDeviceIndex_t HMDIndex_t;
 	vr::PropertyContainerHandle_t m_ulPropertyContainer;
 
@@ -410,7 +414,8 @@ class C_ControllerDriver : public vr::ITrackedDeviceServerDriver
 	vr::VRInputComponentHandle_t m_skeletonHandle;
 	int32_t ControllerIndex;
 public:
-	C_ControllerDriver()
+	C_ControllerDriver(CdataHandler& dh)
+		: dataHandler(dh)
 	{
 		Ctrl1Index_t = vr::k_unTrackedDeviceIndexInvalid;
 		Ctrl2Index_t = vr::k_unTrackedDeviceIndexInvalid;
@@ -454,7 +459,7 @@ public:
 			break;
 		}
 
-		initDevice(controllerMode, ControllerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle );
+		initDevice(dataHandler, controllerMode, ControllerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle );
 
 		return VRInitError_None;
 	}
@@ -496,7 +501,7 @@ public:
 
 	virtual DriverPose_t GetPose()
 	{
-		return dH.GetControllersPose(ControllerIndex);
+		return dataHandler.GetControllersPose(ControllerIndex);
 	}
 
 	void RunFrame()
@@ -516,11 +521,11 @@ public:
 			}
 			break;
 		}
-		dH.GetControllerData(&RightCtrl, &LeftCtrl);
+		dataHandler.GetControllerData(&RightCtrl, &LeftCtrl);
 
 		updateFingerTracking(controllerMode, ControllerIndex, m_skeletonHandle, m_handBones);
 
-		updateDevice(controllerMode, ControllerIndex);
+		updateDevice(dataHandler, controllerMode, ControllerIndex);
 	}
 
 	void UpdateDeviceBattery() 
@@ -549,6 +554,7 @@ public:
 	}
 
 private:
+	CdataHandler& dataHandler;
 	vr::TrackedDeviceIndex_t Ctrl1Index_t;
 	vr::TrackedDeviceIndex_t Ctrl2Index_t;
 	vr::PropertyContainerHandle_t m_ulPropertyContainer;
@@ -571,7 +577,8 @@ class C_TrackerDriver : public vr::ITrackedDeviceServerDriver
 	int32_t TrackerIndex;
 	vr::VRInputComponentHandle_t m_skeletonHandle;
 public:
-	C_TrackerDriver()
+	C_TrackerDriver(CdataHandler& dh)
+		: dataHandler(dh)
 	{
 		TrackerWaist_t = vr::k_unTrackedDeviceIndexInvalid;
 		TrackerLeftFoot_t = vr::k_unTrackedDeviceIndexInvalid;
@@ -608,7 +615,7 @@ public:
 			break;
 		}
 
-		initDevice(100, TrackerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle);
+		initDevice(dataHandler, 100, TrackerIndex, m_ulPropertyContainer, m_compHaptic, m_skeletonHandle);
 
 		return VRInitError_None;
 	}
@@ -760,6 +767,7 @@ public:
 	}
 
 private:
+	CdataHandler& dataHandler;
 	vr::TrackedDeviceIndex_t TrackerWaist_t;
 	vr::TrackedDeviceIndex_t TrackerLeftFoot_t;
 	vr::TrackedDeviceIndex_t TrackerRightFoot_t;
@@ -797,7 +805,10 @@ private:
 	bool m_bBatteryUpdateThreadAlive;
 	std::thread* m_ptBatteryUpdateThread;
 	bool ctrlsEnabled = false, HMDEnabled = false, trackersEnabled = false;
-	
+
+	DataTransport* dataTransport = nullptr;
+	CdataHandler* dataHandler = nullptr;
+
 	C_HMDDeviceDriver *m_pHmd = nullptr;
 	C_ControllerDriver *m_pControllerRight = nullptr;
 	C_ControllerDriver *m_pControllerLeft = nullptr;
@@ -834,11 +845,26 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 
 	if (controllerMode > 9) { controllerMode = 0; }
 
-	dH.StartData(vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32), vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32));
+	EVRSettingsError error;
+	char transportMode[32] = {0};
+	vr::VRSettings()->GetString(k_pch_Driver_Section, k_pch_TransportMode_String, transportMode, sizeof(transportMode), &error);
+	if (strcmp(transportMode, "UART") == 0) {
+		DriverLog("[Init] Using UART transport");
+		dataTransport = new UARTTransport();
+	}
+	else if (strcmp(transportMode, "HID") == 0) {
+		DriverLog("[Init] Using HID transport");
+		dataTransport = new HIDTransport();
+	}
+	else {
+		DriverLog("[Init] Got invalid data transport (%s), falling back to HID", transportMode);
+		dataTransport = new HIDTransport();
+	}
 
-	DriverLog("[DataStream] HID value PID = %d , VID = %d\n", vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_PID_Int32), vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_HID_VID_Int32));
+	dataHandler = new CdataHandler(*dataTransport);
+	dataHandler->StartData();
 
-	if (dH.HIDConnected)
+	if (dataHandler->HeadsetConnected())
 	{
 		if (HMDEnabled) {
 			HMDConnected = true;
@@ -860,33 +886,33 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 
 	if (HMDConnected) 
 	{
-		m_pHmd = new C_HMDDeviceDriver();
+		m_pHmd = new C_HMDDeviceDriver(*dataHandler);
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pHmd->GetSerialNumber().c_str(), vr::TrackedDeviceClass_HMD, m_pHmd);
 	}
 
 	if (ctrlsConnected) 
 	{
-		m_pControllerRight = new C_ControllerDriver();
+		m_pControllerRight = new C_ControllerDriver(*dataHandler);
 		m_pControllerRight->SetControllerIndex(1);
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pControllerRight->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pControllerRight);
 
 
-		m_pControllerLeft = new C_ControllerDriver();
+		m_pControllerLeft = new C_ControllerDriver(*dataHandler);
 		m_pControllerLeft->SetControllerIndex(2);
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pControllerLeft->GetSerialNumber().c_str(), vr::TrackedDeviceClass_Controller, m_pControllerLeft);
 	}
 
 	if (trackersConnected) 
 	{
-		m_pTrackerWaist = new C_TrackerDriver();
+		m_pTrackerWaist = new C_TrackerDriver(*dataHandler);
 		m_pTrackerWaist->SetTrackerIndex(1);
 		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerWaist->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerWaist);
 		if (trackerMode == 0) {
-			m_pTrackerLeftFoot = new C_TrackerDriver();
+			m_pTrackerLeftFoot = new C_TrackerDriver(*dataHandler);
 			m_pTrackerLeftFoot->SetTrackerIndex(2);
 			vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerLeftFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerLeftFoot);
 
-			m_pTrackerRightFoot = new C_TrackerDriver();
+			m_pTrackerRightFoot = new C_TrackerDriver(*dataHandler);
 			m_pTrackerRightFoot->SetTrackerIndex(3);
 			vr::VRServerDriverHost()->TrackedDeviceAdded(m_pTrackerRightFoot->GetSerialNumber().c_str(), vr::TrackedDeviceClass_GenericTracker, m_pTrackerRightFoot);
 		}
@@ -928,25 +954,6 @@ void CServerDriver_Sample::Cleanup()
 			m_pTrackerRightFoot = NULL;
 		}
 	}
-
-	if (dH.HIDConnected) {
-		dH.HIDConnected = false;
-		if (dH.pHIDthread) {
-			dH.pHIDthread->join();
-			delete dH.pHIDthread;
-			dH.pHIDthread = nullptr;
-			dH.StopData();
-		}
-	}
-	if (dH.PSMConnected) {
-		dH.PSMConnected = false;
-		PSM_Shutdown();
-		if (dH.pPSMUpdatethread) {
-			dH.pPSMUpdatethread->join();
-			delete dH.pPSMUpdatethread;
-			dH.pPSMUpdatethread = nullptr;
-		}
-	}
 	if (m_bBatteryUpdateThreadAlive) {
 		m_bBatteryUpdateThreadAlive = false;
 		if (m_ptBatteryUpdateThread) {
@@ -955,7 +962,11 @@ void CServerDriver_Sample::Cleanup()
 			m_ptBatteryUpdateThread = nullptr;
 		}
 	}
-
+	dataHandler->StopData();
+	delete dataHandler;
+	delete dataTransport;
+	dataHandler = nullptr;
+	dataTransport = nullptr;
 	CleanupDriverLog();
 }
 
@@ -991,7 +1002,7 @@ void CServerDriver_Sample::RunFrame()
 	}
 	if (trackersConnected) 
 	{
-		dH.GetTrackersData(&WaistTrk, &LeftTrk, &RightTrk);
+		dataHandler->GetTrackersData(&WaistTrk, &LeftTrk, &RightTrk);
 
 		if (m_pTrackerWaist) 
 		{

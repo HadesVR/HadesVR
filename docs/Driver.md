@@ -21,11 +21,24 @@ The driver configuration is divided into a couple sections for tidyness, these a
 ### "Driver" section where you'll find:
 |Parameter|Type    |Description|
 | ------  | ------ |------     |
-| HID_VID | int | The VID value of your HID device, in decimal numbers. |
-| HID_PID | int | The PID value of your HID device, in decimal numbers. |
+| TransportMode | string | Either HID or UART depending on how HMD is connected, see below. |
 | PSMSTrackerFrequency | int | The maximum update rate you have set on your psmoveservice trackers.|
 | ControllerSmoothingK | float | K constant of the controller position smoothing algorithm |
 | HMDSmoothingK | float | K constant of the HMD position smoothing algorithm |
+
+If `TransportMode` is set to `HID` (or left unset):
+
+|Parameter|Type    |Description|
+| ------  | ------ |------     |
+| HID_VID | int | The VID value of your HID device, in decimal numbers. |
+| HID_PID | int | The PID value of your HID device, in decimal numbers. |
+
+If `TransportMode` is set to `UART`:
+
+|Parameter|Type    |Description|
+| ------  | ------ |------     |
+| UART_Port | string | UART port name HMD is connected to, e.g. COM3. |
+| UART_Baudrate | int | Baudrate used for UART communication, e.g. 115200 or 230400. |
 
 ### "Display" section where you'll find:
 |Parameter|Type    |Description|

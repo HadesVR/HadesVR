@@ -1,18 +1,21 @@
 #include "dataHandler.h"
 
+CdataHandler::CdataHandler(DataTransport& transport)
+	: dataTransport(transport)
+{
+}
+
 /**
-	 Reads HID data and separates the incoming data packet into HMD, controller or tracker data.
+	 Reads Transport data and separates the incoming data packet into HMD, controller or tracker data.
 */
-void CdataHandler::ReadHIDData()
+void CdataHandler::ReadTransportData()
 {
 	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
 	HMDRAWPacket* DataHMDRAW = (HMDRAWPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
-	int r;
-	DriverLog("[HID] ReadHIDData Thread created, HIDConnected Status: %d", HIDConnected);
-	while (HIDConnected) {
-		r = hid_read(hHID, packet_buffer, 64); //Result should be greater than 0.
-		if (r > 0) {
+	DriverLog("[DataTransport] Data transport Thread created, Status: %d", dataTransport.IsConnected());
+	while (dataTransport.IsConnected()) {
+		if (dataTransport.ReadPacket(packet_buffer, 64) > 0) {
 			switch (packet_buffer[1])
 			{
 			case 1:		//HMD quaternion packet
@@ -43,7 +46,6 @@ void CdataHandler::ReadHIDData()
 				break;
 
 			case 2:		//Controller quaternion packet
-
 				RightCtrlData.TrackingData.Rotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
 				RightCtrlData.TrackingData.Rotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
 				RightCtrlData.TrackingData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
@@ -106,6 +108,7 @@ void CdataHandler::ReadHIDData()
 					HMDfilter.begin();
 					HMDfilter.setBeta(2.f);
 
+
 					if (readsFromInit < 2000) {
 						readsFromInit++;
 					}
@@ -166,6 +169,7 @@ void CdataHandler::ReadHIDData()
 			}
 		}
 	}
+	DriverLog("[DataTransport] Stopping to poll HID data");
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max usb hid update rate is 1000hz.
 }
 
@@ -179,7 +183,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 	pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 	pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 
-	if (HIDConnected) {
+	if (dataTransport.IsConnected()) {
 		pose.result = TrackingResult_Running_OK;
 		pose.poseIsValid = true;
 		pose.deviceIsConnected = true;
@@ -264,7 +268,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 {
 	DriverPose_t pose = { 0 };
 
-	if (HIDConnected) {
+	if (dataTransport.IsConnected()) {
 
 		if (receivedControllerData) {
 			pose.poseIsValid = true;
@@ -398,6 +402,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 		}
 		return pose;
 	}
+	return pose;
 }
 
 void CdataHandler::GetControllerData(TController* RightController, TController* LeftController) {
@@ -433,7 +438,7 @@ void CdataHandler::GetControllerData(TController* RightController, TController* 
 */
 void CdataHandler::GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker)
 {/*
-	if (HIDConnected) {
+	if (dataTransport->IsConnected()) {
 		Quaternion TRKWaistQuat = SetOffsetQuat(TrackerWaistData.Rotation, WaistTrackerOffset, Quaternion::Identity());
 		Quaternion TRKLeftQuat = SetOffsetQuat(TrackerLeftData.Rotation, LeftTrackerOffset, Quaternion::Identity());
 		Quaternion TRKRightQuat = SetOffsetQuat(TrackerRightData.Rotation, RightTrackerOffset, Quaternion::Identity());
@@ -611,23 +616,14 @@ void CdataHandler::PSMUpdate()
 	 Once it does it creates the ReadHID thread and grabs offset calibration data, filter beta, jitter rejection coefficient and PSMS update rate.
 	 Once done it attempts to connect to PSMoveService by calling connectToPSMOVE().
 */
-void CdataHandler::StartData(int32_t PID, int32_t VID)
+void CdataHandler::StartData()
 {
-	if (HIDInit == false) {
-		int result;
-		result = hid_init(); //Result should be 0.
-		if (result) {
-			DriverLog("[DataStream] HID init failed.");
-		}
-
-		hHID = hid_open((unsigned short)VID, (unsigned short)PID, NULL);
-		if (!hHID) {
-			DriverLog("[DataStream] Unable to start data stream of device with pid=%d and vid=%d.\n", PID, VID);
-			HIDConnected = false;
+	if (!dataTransport.IsConnected()) {
+		if (dataTransport.Start() != 0) {
+			DriverLog("[DataStream] Failed to initialize data transport");
 			return;
 		}
-		HIDInit = true;
-		HIDConnected = true;
+
 		pHIDthread = new std::thread(this->ReadHIDEnter, this);
 
 		//get config rotation offsets
@@ -707,8 +703,22 @@ void CdataHandler::StartData(int32_t PID, int32_t VID)
 
 void CdataHandler::StopData() 
 {
-	hid_close(hHID);
-	hid_exit();
-	HIDConnected = false;
-	HIDInit = false;
+	if (dataTransport.IsConnected()) {
+		dataTransport.Stop();
+		if (pHIDthread) {
+			pHIDthread->join();
+			delete pHIDthread;
+			pHIDthread = nullptr;
+		}
+	}
+
+	if (PSMConnected) {
+		PSMConnected = false;
+		PSM_Shutdown();
+		if (pPSMUpdatethread) {
+			pPSMUpdatethread->join();
+			delete pPSMUpdatethread;
+			pPSMUpdatethread = nullptr;
+		}
+	}
 }

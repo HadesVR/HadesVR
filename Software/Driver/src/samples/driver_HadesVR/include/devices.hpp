@@ -30,9 +30,7 @@ THMD HMD;
 TController RightCtrl, LeftCtrl;
 TTracker WaistTrk, LeftTrk, RightTrk;
 
-static CdataHandler dH;
-
-void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m_ulPropertyContainer, vr::VRInputComponentHandle_t &haptic, vr::VRInputComponentHandle_t& m_skeletonHandle)
+void initDevice(CdataHandler& dH, int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m_ulPropertyContainer, vr::VRInputComponentHandle_t &haptic, vr::VRInputComponentHandle_t& m_skeletonHandle)
 {
 	switch (DeviceType) 
 	{
@@ -288,7 +286,7 @@ void initDevice(int DeviceType, int DeviceIndex, vr::PropertyContainerHandle_t m
 	}
 }
 
-void updateDevice(int DeviceType, int DeviceIndex)
+void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 {
 	switch (DeviceType)
 	{
@@ -566,6 +564,7 @@ std::string getDeviceSerial(int type, int index) {
 		}
 		break;
 	}
+	return "Unknown";
 }
 
 

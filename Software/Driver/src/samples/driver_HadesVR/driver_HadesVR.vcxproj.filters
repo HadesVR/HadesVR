@@ -13,6 +13,9 @@
       <Filter>Filters</Filter>
     </ClCompile>
     <ClCompile Include="src\dataHandler_IMU.cpp" />
+    <ClCompile Include="src\HIDTransport.cpp" />
+    <ClCompile Include="src\UARTTransport.cpp" />
+    <ClCompile Include="src\ringbuffer.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />
@@ -25,6 +28,10 @@
     <ClInclude Include="include\filters\V3Kalman.h">
       <Filter>Filters</Filter>
     </ClInclude>
+    <ClInclude Include="include\DataTransport.hpp" />
+    <ClInclude Include="include\HIDTransport.hpp" />
+    <ClInclude Include="include\UARTTransport.hpp" />
+    <ClInclude Include="include\ringbuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Filters">
