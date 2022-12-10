@@ -2,9 +2,29 @@
 #include "RF24.h"
 #include "HID.h"
 
-static const uint8_t _hidReportDescriptor[] PROGMEM = {
+//#define SERIAL_DEBUG
+#define TRANSPORT_TYPE             1        //1 = HID (default), 2 = UART
+#define TRANSPORT_SERIAL_PORT      Serial   // Must_not be same as SERIAL_DEBUG (if that is enabled)
+#define TRANSPORT_SERIAL_BAUDRATE  230400
 
-  0x06, 0x03, 0x00,         // USAGE_PAGE (vendor defined)
+//==========================================================================================================
+//************************************ DATA TRANSPORT LAYER ************************************************
+//==========================================================================================================
+
+class DataTransport {
+  public:
+    virtual ~DataTransport() {}
+    virtual void setup() = 0;
+    virtual void sendPacket(const void* packet, int len);
+};
+
+#if TRANSPORT_TYPE == 1
+
+#include "HID.h"
+
+static const uint8_t USB_HID_Descriptor[] PROGMEM = {
+
+  0x06, 0x03, 0x00,   // USAGE_PAGE (vendor defined)
   0x09, 0x00,         // USAGE (Undefined)
   0xa1, 0x01,         // COLLECTION (Application)
   0x15, 0x00,         //   LOGICAL_MINIMUM (0)
@@ -17,61 +37,71 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
   0x09, 0x00,         //   USAGE (Undefined)
   0x81, 0x02,         //   INPUT (Data,Var,Abs) - to the host
   0xc0
-
 };
+
+class HIDTransport : public DataTransport {
+  public:
+    void setup()
+    {
+      static HIDSubDescriptor node(USB_HID_Descriptor, sizeof(USB_HID_Descriptor));
+      HID().AppendDescriptor(&node);
+    }
+
+    void sendPacket(const void* packet, int len)
+    {
+      HID().SendReport(1, packet, len);
+    }
+};
+
+#define TransportClass HIDTransport
+
+#elif TRANSPORT_TYPE == 2
+
+#define UART_MAGIC ((uint8_t)0xAA)
+
+class UARTTransport : public DataTransport {
+  public:
+    UARTTransport() : port(TRANSPORT_SERIAL_PORT) {}
+
+    void setup()
+    {
+      port.begin(TRANSPORT_SERIAL_BAUDRATE);
+      cnt = 0;
+    }
+
+    void sendPacket(const void* packet, int len)
+    {
+      // TODO: Check len < 256
+      const uint8_t dataLen = (uint8_t)len;
+
+      // We simply send <magic:1><length:1><data:length> where magic=0xAA, length=len and data=packet
+      // Adding a CRC might be a good idea later
+      port.write((uint8_t)UART_MAGIC);
+      port.write(cnt++);
+      port.write(dataLen + 1);
+      port.write((uint8_t)0x01); // Dummy report number (not really used)
+      port.write((const uint8_t*)packet, dataLen);
+    }
+
+  private:
+    uint8_t cnt;
+    HardwareSerial& port;
+};
+
+#define TransportClass UARTTransport
+
+#else
+#error "unsupported transport type: "
+#endif
+
+static TransportClass transport;
+
+//==========================================================================================================
 
 RF24 radio(9, 10);
 
 const uint64_t rightCtrlPipe = 0xF0F0F0F0E1LL;
 const uint64_t leftCtrlPipe = 0xF0F0F0F0D2LL;
-
-struct ctrlData {
-  float qW;
-  float qX;
-  float qY;
-  float qZ;
-  uint32_t BTN;
-  uint8_t  trigg;
-  int8_t  axisX;
-  int8_t  axisY;
-  int8_t  trackY;
-  uint8_t  vBAT;
-  uint8_t  fingerThumb;
-  uint8_t  fingerIndex;
-  uint8_t  fingerMiddle;
-  uint8_t  fingerRing;
-  uint8_t  fingerPinky;
-};
-
-ctrlData Ctrl1Data, Ctrl2Data;
-
-struct HMDPacket
-{
-  uint8_t  PacketID;
-  float HMDQuatW;
-  float HMDQuatX;
-  float HMDQuatY;
-  float HMDQuatZ;
-  
-  uint16_t tracker1_QuatW;
-  uint16_t tracker1_QuatX;
-  uint16_t tracker1_QuatY;
-  uint16_t tracker1_QuatZ;
-
-  uint16_t tracker2_QuatW;
-  uint16_t tracker2_QuatX;
-  uint16_t tracker2_QuatY;
-  uint16_t tracker2_QuatZ;
-
-  uint16_t tracker3_QuatW;
-  uint16_t tracker3_QuatX;
-  uint16_t tracker3_QuatY;
-  uint16_t tracker3_QuatZ;
-
-  uint8_t tracker1_vBat;
-  uint8_t tracker2_vBat;
-  uint8_t tracker3_vBat;
-};
 
 struct ControllerPacket
 {
@@ -109,12 +139,12 @@ struct ControllerPacket
   uint8_t Ctrl2_PINKY;
 };
 
-static HMDPacket HMDData;
 static ControllerPacket ContData;
 
 void setup() {
-  static HIDSubDescriptor node (_hidReportDescriptor, sizeof(_hidReportDescriptor));
-  HID().AppendDescriptor(&node);
+  //setup transport
+  transport.setup();
+  //setup rf
   radio.begin();
   radio.setPayloadSize(40);
   radio.openReadingPipe(2, leftCtrlPipe);
@@ -123,64 +153,37 @@ void setup() {
   radio.setDataRate(RF24_2MBPS);
   radio.setPALevel(RF24_PA_LOW);
   radio.startListening();
-  HMDData.PacketID = 1;
+  if (!radio.isChipConnected())
+  {
+#ifdef SERIAL_DEBUG
+    Serial.println("NRF24L01 Module not detected!");
+#endif
+    while (true) ;
+  }
+  else
+  {
+#ifdef SERIAL_DEBUG
+    Serial.println("NRF24L01 Module up and running!");
+#endif
+  }
   ContData.PacketID = 2;
 }
 
-
-
 void loop() {
   uint8_t pipenum;
+  bool newCtrlData = false;
 
-  HMDData.HMDQuatW = 8;
-  HMDData.HMDQuatX = 8;
-  HMDData.HMDQuatY = 8;
-  HMDData.HMDQuatZ = 8;
-  
-  HID().SendReport(1, &HMDData, 63);
-  
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
-      radio.read(&Ctrl1Data, sizeof(ctrlData));
+      radio.read(&ContData.Ctrl1_QuatW, 28);        //receive right controller data
+      newCtrlData = true;
     }
     if (pipenum == 2) {
-      radio.read(&Ctrl2Data, sizeof(ctrlData));
+      radio.read(&ContData.Ctrl2_QuatW, 28);        //receive left controller data
+      newCtrlData = true;
     }
   }
-
-  ContData.Ctrl1_QuatW    = Ctrl1Data.qW;         //there's more efficient ways of doing this
-  ContData.Ctrl1_QuatX    = Ctrl1Data.qY;         //but I need a small delay between hmd data and
-  ContData.Ctrl1_QuatY    = Ctrl1Data.qZ;         //Ctrl data so this will do just fine.
-  ContData.Ctrl1_QuatZ    = Ctrl1Data.qX;
-  ContData.Ctrl1_Buttons  = Ctrl1Data.BTN;
-  ContData.Ctrl1_Trigger  = Ctrl1Data.trigg;
-  ContData.Ctrl1_axisX    = Ctrl1Data.axisX;
-  ContData.Ctrl1_axisY    = Ctrl1Data.axisY;
-  ContData.Ctrl1_trackY   = Ctrl1Data.trackY;
-  ContData.Ctrl1_vBat     = Ctrl1Data.vBAT;
-
-  ContData.Ctrl1_THUMB    = Ctrl1Data.fingerThumb;
-  ContData.Ctrl1_INDEX    = Ctrl1Data.fingerIndex;
-  ContData.Ctrl1_MIDDLE   = Ctrl1Data.fingerMiddle;
-  ContData.Ctrl1_RING     = Ctrl1Data.fingerRing;
-  ContData.Ctrl1_PINKY    = Ctrl1Data.fingerPinky;
-  
-  ContData.Ctrl2_QuatW    = Ctrl2Data.qW;
-  ContData.Ctrl2_QuatX    = Ctrl2Data.qY;
-  ContData.Ctrl2_QuatY    = Ctrl2Data.qZ;
-  ContData.Ctrl2_QuatZ    = Ctrl2Data.qX;
-  ContData.Ctrl2_Buttons  = Ctrl2Data.BTN;
-  ContData.Ctrl2_Trigger  = Ctrl2Data.trigg;
-  ContData.Ctrl2_axisX    = Ctrl2Data.axisX;
-  ContData.Ctrl2_axisY    = Ctrl2Data.axisY;
-  ContData.Ctrl2_trackY   = Ctrl2Data.trackY;
-  ContData.Ctrl2_vBat     = Ctrl2Data.vBAT;
-
-  ContData.Ctrl2_THUMB    = Ctrl2Data.fingerThumb;
-  ContData.Ctrl2_INDEX    = Ctrl2Data.fingerIndex;
-  ContData.Ctrl2_MIDDLE   = Ctrl2Data.fingerMiddle;
-  ContData.Ctrl2_RING     = Ctrl2Data.fingerRing;
-  ContData.Ctrl2_PINKY    = Ctrl2Data.fingerPinky;
-  
-  HID().SendReport(1, &ContData, 63);
+  if (newCtrlData) {
+    transport.sendPacket(&ContData, 63);
+  }
 }
