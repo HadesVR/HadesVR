@@ -348,9 +348,9 @@ void loop()
 
   if (IMU.hasMagnetometer()) {
     IMU.getMag(&IMUMag);
-    HMDRawData.MagX = (short)(IMUMag.magY * 5);
-    HMDRawData.MagY = (short)(IMUMag.magX * 5);
-    HMDRawData.MagZ = (short)(-IMUMag.magZ * 5);
+    HMDRawData.MagX = (short)(IMUMag.magX * 5);
+    HMDRawData.MagY = (short)(IMUMag.magY * 5);
+    HMDRawData.MagZ = (short)(IMUMag.magZ * 5);
   }
   else {
     HMDRawData.MagX = (short)(0);
