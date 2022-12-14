@@ -168,9 +168,9 @@ void CdataHandler::ReadTransportData()
 				break;
 			}
 		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max USB HID update rate is 1000hz.
 	}
 	DriverLog("[DataTransport] Stopping to poll HID data");
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max usb hid update rate is 1000hz.
 }
 
 /**
