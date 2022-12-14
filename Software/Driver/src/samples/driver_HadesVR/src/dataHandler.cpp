@@ -624,7 +624,7 @@ void CdataHandler::StartData()
 			return;
 		}
 
-		pHIDthread = new std::thread(this->ReadHIDEnter, this);
+		pTransportthread = new std::thread(this->ReadTransportEnter, this);
 
 		//get config rotation offsets
 		HMDConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
@@ -705,10 +705,10 @@ void CdataHandler::StopData()
 {
 	if (dataTransport.IsConnected()) {
 		dataTransport.Stop();
-		if (pHIDthread) {
-			pHIDthread->join();
-			delete pHIDthread;
-			pHIDthread = nullptr;
+		if (pTransportthread) {
+			pTransportthread->join();
+			delete pTransportthread;
+			pTransportthread = nullptr;
 		}
 	}
 

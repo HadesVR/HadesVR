@@ -228,7 +228,7 @@ public:
 
 	bool PSMConnected = false;
 	std::thread* pPSMUpdatethread = NULL;
-	std::thread* pHIDthread = NULL;
+	std::thread* pTransportthread = NULL;
 
 	int psmsUpdateRate = 60;
 	int psmsMillisecondPeriod;
@@ -302,7 +302,7 @@ private:
 		ptr->PSMUpdate();
 	}
 
-	static void ReadHIDEnter(CdataHandler* ptr) {
+	static void ReadTransportEnter(CdataHandler* ptr) {
 		ptr->ReadTransportData();
 	}
 };
