@@ -72,7 +72,6 @@
   <ItemGroup>
     <ClCompile Include="src\dataHandler.cpp" />
     <ClCompile Include="src\dataHandler_IMU.cpp" />
-    <ClCompile Include="src\dataHandler_Calibration.cpp" />
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />
     <ClCompile Include="src\filters\MadgwickOrientation.cpp" />

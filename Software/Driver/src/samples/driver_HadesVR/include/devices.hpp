@@ -411,7 +411,7 @@ void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 
 		if ((LeftCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (RightCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (LeftCtrl.Trigger > 0.9f) && (RightCtrl.Trigger > 0.9f))
 		{
-			dH.SetCentering();
+			dH.SetCentering(false);
 		}
 		break;
 
@@ -466,7 +466,7 @@ void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 
 		if ((LeftCtrl.Buttons & HTC_ThumbstickClick) != 0 && (RightCtrl.Buttons & HTC_ThumbstickClick) != 0 && (LeftCtrl.Trigger > 0.9f) && (RightCtrl.Trigger > 0.9f))
 		{
-			dH.SetCentering();
+			dH.SetCentering(false);
 		}
 
 		break;

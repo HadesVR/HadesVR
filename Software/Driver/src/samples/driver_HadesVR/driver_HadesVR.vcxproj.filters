@@ -5,7 +5,6 @@
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
-    <ClCompile Include="src\dataHandler_Calibration.cpp" />
     <ClCompile Include="src\filters\MadgwickOrientation.cpp">
       <Filter>Filters</Filter>
     </ClCompile>

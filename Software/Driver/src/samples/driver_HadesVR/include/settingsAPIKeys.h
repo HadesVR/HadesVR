@@ -105,6 +105,12 @@ static const char* const k_pch_Tracker_Enable_Bool = "EnableTrackers";
 static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* const k_pch_Experimental_Section = "Experimental";
+
+static const char* const k_pch_TestThreadEnable_Bool = "EnableExperimental";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //general use
 static const char* const k_pch_Tracking_AccelEnable_Bool = "UseAccelerometers";
 static const char* const k_pch_Camera_Kalman_Meas_err_Float = "Camera_Kalman_Measurement_Uncertainty";

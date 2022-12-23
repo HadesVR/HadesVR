@@ -24,23 +24,32 @@ using namespace std::chrono;
 using namespace vr;
 
 typedef struct _TrackingData {
-	Vector3 Position;
-	Vector3 oldPosition = Vector3::Zero();
+	Vector3 AngularVelocity;
+	Vector3 AngularAccel;
 
-	Vector3 Velocity;
 	Vector3 Accel;
 	Vector3 oldAccel = Vector3::Zero();
 
-	Vector3 AngularVelocity;
-	Vector3 AngularAccel;
-	Vector3 oldAngularAccel = Vector3::Zero();
+	Vector3 Velocity;
+
+	Vector3 Position;
+	Vector3 oldPosition = Vector3::Zero();
+	Vector3 PositionOffset = Vector3::Zero();
 
 	Vector3 LastCameraPos = Vector3::Zero();
+	Vector3 TempIMUPos = Vector3::Zero();
+	Vector3 LastCameraVelocity = Vector3::Zero();
+
 	bool isTracked = false;
 	bool wasTracked = false;
 
-	Quaternion Rotation;
+	Quaternion RawRotation;
 	Quaternion CorrectedRotation;
+
+	Quaternion RotationConfigOffset = Quaternion::Identity();
+	Quaternion RotationUserOffset = Quaternion::Identity();
+	Quaternion RotationDriftOffset = Quaternion::Identity();
+
 	std::chrono::steady_clock::time_point lastIMUUpdate;
 	std::chrono::steady_clock::time_point lastCamUpdate;
 };
@@ -215,25 +224,28 @@ public:
 	DriverPose_t GetHMDPose();
 	DriverPose_t GetControllersPose(int ControllerIndex);
 	void GetControllerData(TController* RightController, TController* LeftController);
-
 	void GetTrackersData(TTracker* waistTracker, TTracker* leftTracker, TTracker* rightTracker);
 	
 	void StartData();
 	void StopData();
 
-	void SetCentering();
-	void ReloadCalibration();
+	void SetCentering(bool reset);
 
 	bool HeadsetConnected() { return dataTransport.IsConnected(); }
 
 	bool PSMConnected = false;
 	std::thread* pPSMUpdatethread = NULL;
 	std::thread* pTransportthread = NULL;
-
 	int psmsUpdateRate = 60;
 	int psmsMillisecondPeriod;
 
 private:
+	//for dev stuff
+	void TestThread();
+	std::thread* pTestThread = NULL;
+	static void TestThreadEnter(CdataHandler* ptr) {
+		ptr->TestThread();
+	}
 
     void ResetPos(bool hmdOnly);
 	void ReadTransportData();
@@ -259,21 +271,6 @@ private:
 	_TrackerData	TrackerRightData;
 	
 	uint8_t packet_buffer[64];
-
-	Quaternion HMDOffset = Quaternion::Identity();
-	Quaternion RightCtrlOffset = Quaternion::Identity();
-	Quaternion LeftCtrlOffset = Quaternion::Identity();
-	Quaternion WaistTrackerOffset = Quaternion::Identity();
-	Quaternion LeftTrackerOffset = Quaternion::Identity();
-	Quaternion RightTrackerOffset = Quaternion::Identity();
-
-	Quaternion HMDConfigRotationOffset = Quaternion::Identity();
-	Quaternion CtrlRightConfigRotationOffset = Quaternion::Identity();
-	Quaternion CtrlLeftConfigRotationOffset = Quaternion::Identity();	
-
-	Vector3 HMDConfigPositionOffset = Vector3::Zero();
-	Vector3 CtrlRightConfigPositionOffset = Vector3::Zero();
-	Vector3 CtrlLeftConfigPositionOffset = Vector3::Zero();
 
 	bool orientationFilterInit = false;
 	bool ctrl1Allocated = false, ctrl2Allocated = false, HMDAllocated = false;

@@ -19,10 +19,10 @@ void CdataHandler::ReadTransportData()
 			switch (packet_buffer[1])
 			{
 			case 1:		//HMD quaternion packet
-				HMDData.TrackingData.Rotation.W = DataHMDQuat->HMDQuatW;
-				HMDData.TrackingData.Rotation.X = DataHMDQuat->HMDQuatX;
-				HMDData.TrackingData.Rotation.Y = DataHMDQuat->HMDQuatY;
-				HMDData.TrackingData.Rotation.Z = DataHMDQuat->HMDQuatZ;
+				HMDData.TrackingData.RawRotation.W = DataHMDQuat->HMDQuatW;
+				HMDData.TrackingData.RawRotation.X = DataHMDQuat->HMDQuatX;
+				HMDData.TrackingData.RawRotation.Y = DataHMDQuat->HMDQuatY;
+				HMDData.TrackingData.RawRotation.Z = DataHMDQuat->HMDQuatZ;
 
 				HMDData.Data = DataHMDQuat->HMDData;
 
@@ -46,10 +46,10 @@ void CdataHandler::ReadTransportData()
 				break;
 
 			case 2:		//Controller quaternion packet
-				RightCtrlData.TrackingData.Rotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
-				RightCtrlData.TrackingData.Rotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
-				RightCtrlData.TrackingData.Rotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
-				RightCtrlData.TrackingData.Rotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
+				RightCtrlData.TrackingData.RawRotation.W = (float)(DataCtrl->Ctrl1_QuatW) / 32767.f;
+				RightCtrlData.TrackingData.RawRotation.X = (float)(DataCtrl->Ctrl1_QuatX) / 32767.f;
+				RightCtrlData.TrackingData.RawRotation.Y = (float)(DataCtrl->Ctrl1_QuatY) / 32767.f;
+				RightCtrlData.TrackingData.RawRotation.Z = (float)(DataCtrl->Ctrl1_QuatZ) / 32767.f;
 
 				RightCtrlData.TrackingData.Accel.X = (float)(DataCtrl->Ctrl1_AccelX) / 2048.f;
 				RightCtrlData.TrackingData.Accel.Y = (float)(DataCtrl->Ctrl1_AccelY) / 2048.f;
@@ -71,10 +71,10 @@ void CdataHandler::ReadTransportData()
 				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255.f;
 				
 
-				LeftCtrlData.TrackingData.Rotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
-				LeftCtrlData.TrackingData.Rotation.X = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
-				LeftCtrlData.TrackingData.Rotation.Y = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
-				LeftCtrlData.TrackingData.Rotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
+				LeftCtrlData.TrackingData.RawRotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
+				LeftCtrlData.TrackingData.RawRotation.X = (float)(DataCtrl->Ctrl2_QuatX) / 32767.f;
+				LeftCtrlData.TrackingData.RawRotation.Y = (float)(DataCtrl->Ctrl2_QuatY) / 32767.f;
+				LeftCtrlData.TrackingData.RawRotation.Z = (float)(DataCtrl->Ctrl2_QuatZ) / 32767.f;
 				
 				LeftCtrlData.TrackingData.Accel.X = (float)(DataCtrl->Ctrl2_AccelX) / 2048.f;
 				LeftCtrlData.TrackingData.Accel.Y = (float)(DataCtrl->Ctrl2_AccelY) / 2048.f;
@@ -140,7 +140,7 @@ void CdataHandler::ReadTransportData()
 					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
 
 				//Apply rotation to the HMD
-				HMDData.TrackingData.Rotation = HMDfilter.getQuat();
+				HMDData.TrackingData.RawRotation = HMDfilter.getQuat();
 
 				if (HMDAccelEnable) {
 					UpdateIMUPosition(HMDData.TrackingData, HMDKalman);
@@ -197,12 +197,12 @@ DriverPose_t CdataHandler::GetHMDPose()
 
 		HMDData.TrackingData.Position = HMDKalman.getEstimation();
 
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.TrackingData.Rotation, HMDOffset, HMDConfigRotationOffset);
+		Quaternion HMDQuat = SetOffsetQuat(HMDData.TrackingData.RawRotation, HMDData.TrackingData.RotationUserOffset, HMDData.TrackingData.RotationConfigOffset);
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
 		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDQuat.X, HMDQuat.Z, HMDQuat.Y, HMDQuat.W));
 
 		if (PSMConnected) {	//PSM POSITION
-			Vector3 pos = HMDData.TrackingData.Position + (HMDPosQuat * HMDConfigPositionOffset);
+			Vector3 pos = HMDData.TrackingData.Position + (HMDPosQuat * HMDData.TrackingData.PositionOffset);
 			pose.vecPosition[0] = pos.X;
 			pose.vecPosition[1] = pos.Z;
 			pose.vecPosition[2] = pos.Y;
@@ -213,7 +213,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 			pose.vecVelocity[2] = HMDData.TrackingData.Velocity.Y;
 		}
 		else {
-			Vector3 pos = Vector3(0, 0, 0.4) + HMDConfigPositionOffset;
+			Vector3 pos = Vector3(0, 0, 0.4) + HMDData.TrackingData.PositionOffset;
 			pose.vecPosition[0] = pos.X;
 			pose.vecPosition[1] = pos.Z;
 			pose.vecPosition[2] = pos.Y;
@@ -238,7 +238,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 
 	if ((GetAsyncKeyState(VK_F12) & 0x8000))
 	{
-		ReloadCalibration();
+		SetCentering(true);
 	}
 	if ((GetAsyncKeyState(VK_F11) & 0x8000))
 	{
@@ -255,7 +255,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000))
 	{
-		SetCentering();
+		SetCentering(false);
 	}
 
 	return pose;
@@ -302,7 +302,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				CtrlRightKalman.update();
 			}
 
-			RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.Rotation, RightCtrlOffset, CtrlRightConfigRotationOffset);
+			RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.RawRotation, RightCtrlData.TrackingData.RotationUserOffset, RightCtrlData.TrackingData.RotationConfigOffset);
 
 			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
 			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.CorrectedRotation.X,
@@ -314,11 +314,11 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 
 			if (PSMConnected) {		//PSM POSITION
 				// Apply position offset
-				RightCtrlData.TrackingData.Position = RightCtrlData.TrackingData.Position + (CtrlPosQuat * CtrlRightConfigPositionOffset);
+				RightCtrlData.TrackingData.Position = RightCtrlData.TrackingData.Position + (CtrlPosQuat * RightCtrlData.TrackingData.PositionOffset);
 			}
 			else {
 				// Apply position offset
-				RightCtrlData.TrackingData.Position = Vector3(0.1, -0.3, 0.2) + CtrlRightConfigPositionOffset;
+				RightCtrlData.TrackingData.Position = Vector3(0.1, -0.3, 0.2) + RightCtrlData.TrackingData.PositionOffset;
 			}
 
 			pose.vecPosition[0] = RightCtrlData.TrackingData.Position.X;
@@ -359,7 +359,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				CtrlLeftKalman.update();
 			}
 
-			LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.Rotation, LeftCtrlOffset, CtrlLeftConfigRotationOffset);
+			LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.RawRotation, LeftCtrlData.TrackingData.RotationUserOffset, LeftCtrlData.TrackingData.RotationConfigOffset);
 
 			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
 			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.CorrectedRotation.X,
@@ -371,11 +371,11 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 
 			if (PSMConnected) {		//PSM POSITION
 				// Apply position offset
-				LeftCtrlData.TrackingData.Position = LeftCtrlData.TrackingData.Position + (CtrlPosQuat * CtrlLeftConfigPositionOffset);
+				LeftCtrlData.TrackingData.Position = LeftCtrlData.TrackingData.Position + (CtrlPosQuat * LeftCtrlData.TrackingData.PositionOffset);
 			}
 			else {
 				// Apply position offset
-				LeftCtrlData.TrackingData.Position = Vector3(-0.1, -0.3, 0.2) + CtrlLeftConfigPositionOffset;
+				LeftCtrlData.TrackingData.Position = Vector3(-0.1, -0.3, 0.2) + LeftCtrlData.TrackingData.PositionOffset;
 			}
 
 			pose.vecPosition[0] = LeftCtrlData.TrackingData.Position.X;
@@ -627,28 +627,29 @@ void CdataHandler::StartData()
 		pTransportthread = new std::thread(this->ReadTransportEnter, this);
 
 		//get config rotation offsets
-		HMDConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
+		HMDData.TrackingData.RotationConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_RollOffset_Float) * M_PI / 180);
 		
-		CtrlRightConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_RollOffset_Float) * M_PI / 180);
-		CtrlLeftConfigRotationOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_RollOffset_Float) * M_PI / 180);
+		RightCtrlData.TrackingData.RotationConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_RollOffset_Float) * M_PI / 180);
+		LeftCtrlData.TrackingData.RotationConfigOffset = Quaternion::FromEuler(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_PitchOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YawOffset_Float) * M_PI / 180, vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_RollOffset_Float) * M_PI / 180);
 		
 		//get config position offsets
-		HMDConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_ZOffset_Float));
+		HMDData.TrackingData.PositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_ZOffset_Float));
 
-		CtrlRightConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_ZOffset_Float));
-		CtrlLeftConfigPositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_ZOffset_Float));
+		RightCtrlData.TrackingData.PositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerRight_ZOffset_Float));
+		LeftCtrlData.TrackingData.PositionOffset = Vector3(vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_XOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_YOffset_Float), vr::VRSettings()->GetFloat(k_pch_Controllers_Section, k_pch_ControllerLeft_ZOffset_Float));
 
 
 		//get calibration offsets
-		HMDOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float);
-		HMDOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float);
+		HMDData.TrackingData.RotationUserOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDW_Float);
+		HMDData.TrackingData.RotationUserOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_HMDY_Float);
 
-		RightCtrlOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTRightW_Float);
-		RightCtrlOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTRightY_Float);
+		RightCtrlData.TrackingData.RotationUserOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTRightW_Float);
+		RightCtrlData.TrackingData.RotationUserOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTRightY_Float);
 
-		LeftCtrlOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTLeftW_Float);
-		LeftCtrlOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTLeftY_Float);
+		LeftCtrlData.TrackingData.RotationUserOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTLeftW_Float);
+		LeftCtrlData.TrackingData.RotationUserOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_CONTLeftY_Float);
 
+		/*			TODO: IMPLEMENT
 		WaistTrackerOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistW_Float);
 		WaistTrackerOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKWaistY_Float);
 
@@ -657,7 +658,7 @@ void CdataHandler::StartData()
 
 		RightTrackerOffset.W = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightW_Float);
 		RightTrackerOffset.Y = vr::VRSettings()->GetFloat(k_pch_Calibration_Section, k_pch_Calibration_TRKRightY_Float);
-
+		*/
 		DriverLog("[Settings] Loaded Calibration settings");
 
 		//get psms update rate
@@ -720,5 +721,12 @@ void CdataHandler::StopData()
 			delete pPSMUpdatethread;
 			pPSMUpdatethread = nullptr;
 		}
+	}
+
+	//kill test thread
+	if (pTestThread) {
+		pTestThread->join();
+		delete pTestThread;
+		pTestThread = nullptr;
 	}
 }
