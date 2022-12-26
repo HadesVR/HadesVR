@@ -257,6 +257,7 @@ private:
 	void UpdateVelocity(_TrackingData& _data, bool _wasTracked);
 
 	void SetOffsetQuat(_TrackingData& _data);
+	void SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey);
 
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);

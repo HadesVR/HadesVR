@@ -61,7 +61,7 @@ void CdataHandler::UpdateVelocity(_TrackingData& _data, bool _wasTracked)
 	_data.oldPosition = _data.Position;
 }
 
-void setCalibOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey)
+void CdataHandler::SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey)
 {
 	std::string key_y = settingsKey;
 	std::string key_w = settingsKey;
@@ -90,23 +90,23 @@ void setCalibOffset(float DataW, float DataY, Quaternion& Offset, const char* se
 void CdataHandler::SetCentering(bool reset)
 {
 	if (reset) {
-		setCalibOffset(1.f, 0.f, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
-		setCalibOffset(1.f, 0.f, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
-		setCalibOffset(1.f, 0.f, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
+		SaveUserOffset(1.f, 0.f, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
+		SaveUserOffset(1.f, 0.f, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
+		SaveUserOffset(1.f, 0.f, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
 		return;
 	}
 	/// <summary>
 	/// HMD
 	/// </summary>
 
-	setCalibOffset(HMDData.TrackingData.RawRotation.W, HMDData.TrackingData.RawRotation.Y, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
+	SaveUserOffset(HMDData.TrackingData.RawRotation.W, HMDData.TrackingData.RawRotation.Y, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
 
 	/// <summary>
 	///				Controllers
 	/// </summary>
 
-	setCalibOffset(RightCtrlData.TrackingData.RawRotation.W, RightCtrlData.TrackingData.RawRotation.Y, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
-	setCalibOffset(LeftCtrlData.TrackingData.RawRotation.W, LeftCtrlData.TrackingData.RawRotation.Y, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
+	SaveUserOffset(RightCtrlData.TrackingData.RawRotation.W, RightCtrlData.TrackingData.RawRotation.Y, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
+	SaveUserOffset(LeftCtrlData.TrackingData.RawRotation.W, LeftCtrlData.TrackingData.RawRotation.Y, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
 
 	/// <summary>
 	///					Trackers
