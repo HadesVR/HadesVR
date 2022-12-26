@@ -108,7 +108,6 @@ void CdataHandler::ReadTransportData()
 					HMDfilter.begin();
 					HMDfilter.setBeta(2.f);
 
-
 					if (readsFromInit < 2000) {
 						readsFromInit++;
 					}
@@ -197,9 +196,9 @@ DriverPose_t CdataHandler::GetHMDPose()
 
 		HMDData.TrackingData.Position = HMDKalman.getEstimation();
 
-		Quaternion HMDQuat = SetOffsetQuat(HMDData.TrackingData.RawRotation, HMDData.TrackingData.RotationUserOffset, HMDData.TrackingData.RotationConfigOffset);
+		SetOffsetQuat(HMDData.TrackingData);
 		//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDQuat.X, HMDQuat.Z, HMDQuat.Y, HMDQuat.W));
+		Quaternion HMDPosQuat = Quaternion::Inverse(Quaternion(HMDData.TrackingData.OutputRotation.X, HMDData.TrackingData.OutputRotation.Z, HMDData.TrackingData.OutputRotation.Y, HMDData.TrackingData.OutputRotation.W));
 
 		if (PSMConnected) {	//PSM POSITION
 			Vector3 pos = HMDData.TrackingData.Position + (HMDPosQuat * HMDData.TrackingData.PositionOffset);
@@ -228,7 +227,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 		pose.vecAngularVelocity[1] = HMDData.TrackingData.AngularVelocity.Z;
 		pose.vecAngularVelocity[2] = HMDData.TrackingData.AngularVelocity.Y;
 	
-		pose.qRotation = HmdQuaternion_t{ HMDQuat.W,HMDQuat.X ,HMDQuat.Y ,HMDQuat.Z };
+		pose.qRotation = HmdQuaternion_t{ HMDData.TrackingData.OutputRotation.W,HMDData.TrackingData.OutputRotation.X ,HMDData.TrackingData.OutputRotation.Y ,HMDData.TrackingData.OutputRotation.Z };
 	}
 	else {
 		pose.poseIsValid = false;
@@ -236,10 +235,6 @@ DriverPose_t CdataHandler::GetHMDPose()
 		pose.deviceIsConnected = false;
 	}
 
-	if ((GetAsyncKeyState(VK_F12) & 0x8000))
-	{
-		SetCentering(true);
-	}
 	if ((GetAsyncKeyState(VK_F11) & 0x8000))
 	{
 		DriverLog("[Debug] current filter beta:%lf", HMDfilter.getBeta());
@@ -250,12 +245,16 @@ DriverPose_t CdataHandler::GetHMDPose()
 		DriverLog("[Debug] Left controller Accel: Ax:%f Ay:%f Az:%f  Vx:%fm/s Vy:%fm/s Vz:%fm/s", LeftCtrlData.TrackingData.Accel.X, LeftCtrlData.TrackingData.Accel.Y, LeftCtrlData.TrackingData.Accel.Z, LeftCtrlData.TrackingData.Velocity.X, LeftCtrlData.TrackingData.Velocity.Y, LeftCtrlData.TrackingData.Velocity.Z);
 		DriverLog("[Debug] HMD Accel: Ax:%f Ay:%f Az:%f HMD Velocity: Vx:%fm/s Vy:%fm/s Vz:%fm/s", HMDData.TrackingData.Accel.X, HMDData.TrackingData.Accel.Y, HMDData.TrackingData.Accel.Z, HMDData.TrackingData.Velocity.X, HMDData.TrackingData.Velocity.Y, HMDData.TrackingData.Velocity.Z);
 	}
-	if ((GetAsyncKeyState(VK_F9) & 0x8000) != 0) {
+	if ((GetAsyncKeyState(VK_F9) & 0x8000)) {
 		ResetPos(false);
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000))
 	{
 		SetCentering(false);
+	}
+	if ((GetAsyncKeyState(VK_F7) & 0x8000))
+	{
+		SetCentering(true);
 	}
 
 	return pose;
@@ -302,13 +301,13 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				CtrlRightKalman.update();
 			}
 
-			RightCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(RightCtrlData.TrackingData.RawRotation, RightCtrlData.TrackingData.RotationUserOffset, RightCtrlData.TrackingData.RotationConfigOffset);
+			SetOffsetQuat(RightCtrlData.TrackingData);
 
 			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.CorrectedRotation.X,
-																	RightCtrlData.TrackingData.CorrectedRotation.Z,
-																	RightCtrlData.TrackingData.CorrectedRotation.Y,
-																	RightCtrlData.TrackingData.CorrectedRotation.W));
+			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(RightCtrlData.TrackingData.OutputRotation.X,
+																	RightCtrlData.TrackingData.OutputRotation.Z,
+																	RightCtrlData.TrackingData.OutputRotation.Y,
+																	RightCtrlData.TrackingData.OutputRotation.W));
 
 			RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();
 
@@ -332,14 +331,14 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 
 			//Rotation first controller
 			//check if controller rotation is initialized and valid.
-			if (isnan(RightCtrlData.TrackingData.CorrectedRotation.W) || isnan(RightCtrlData.TrackingData.CorrectedRotation.X) || isnan(RightCtrlData.TrackingData.CorrectedRotation.Y) || isnan(RightCtrlData.TrackingData.CorrectedRotation.Z)) {
+			if (isnan(RightCtrlData.TrackingData.VectorRotation.W) || isnan(RightCtrlData.TrackingData.VectorRotation.X) || isnan(RightCtrlData.TrackingData.VectorRotation.Y) || isnan(RightCtrlData.TrackingData.VectorRotation.Z)) {
 				pose.poseIsValid = false;
 				pose.result = TrackingResult_Uninitialized;
 				pose.deviceIsConnected = false;
 				pose.qRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 			}
 			else {
-				pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.CorrectedRotation.W, RightCtrlData.TrackingData.CorrectedRotation.X, RightCtrlData.TrackingData.CorrectedRotation.Y, RightCtrlData.TrackingData.CorrectedRotation.Z };
+				pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.VectorRotation.W, RightCtrlData.TrackingData.VectorRotation.X, RightCtrlData.TrackingData.VectorRotation.Y, RightCtrlData.TrackingData.VectorRotation.Z };
 			}
 		}
 		else{
@@ -359,13 +358,13 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				CtrlLeftKalman.update();
 			}
 
-			LeftCtrlData.TrackingData.CorrectedRotation = SetOffsetQuat(LeftCtrlData.TrackingData.RawRotation, LeftCtrlData.TrackingData.RotationUserOffset, LeftCtrlData.TrackingData.RotationConfigOffset);
+			SetOffsetQuat(LeftCtrlData.TrackingData);
 
 			//swap components Z and Y because steamvr's coordinate system is stupid, then do the inverse.
-			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.CorrectedRotation.X,
-																	LeftCtrlData.TrackingData.CorrectedRotation.Z,
-																	LeftCtrlData.TrackingData.CorrectedRotation.Y,
-																	LeftCtrlData.TrackingData.CorrectedRotation.W));
+			Quaternion CtrlPosQuat = Quaternion::Inverse(Quaternion(LeftCtrlData.TrackingData.OutputRotation.X,
+																	LeftCtrlData.TrackingData.OutputRotation.Z,
+																	LeftCtrlData.TrackingData.OutputRotation.Y,
+																	LeftCtrlData.TrackingData.OutputRotation.W));
 
 			LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();
 
@@ -389,7 +388,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			
 			//Rotation second controller
 			//check if controller rotation is initialized and valid.
-			if (isnan(LeftCtrlData.TrackingData.CorrectedRotation.W) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.X) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.Y) || isnan(LeftCtrlData.TrackingData.CorrectedRotation.Z)) {
+			if (isnan(LeftCtrlData.TrackingData.VectorRotation.W) || isnan(LeftCtrlData.TrackingData.VectorRotation.X) || isnan(LeftCtrlData.TrackingData.VectorRotation.Y) || isnan(LeftCtrlData.TrackingData.VectorRotation.Z)) {
 				pose.poseIsValid = false;
 				pose.result = TrackingResult_Uninitialized;
 				pose.deviceIsConnected = false;
@@ -397,7 +396,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			}
 			else
 			{
-				pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.CorrectedRotation.W, LeftCtrlData.TrackingData.CorrectedRotation.X, LeftCtrlData.TrackingData.CorrectedRotation.Y, LeftCtrlData.TrackingData.CorrectedRotation.Z };
+				pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.VectorRotation.W, LeftCtrlData.TrackingData.VectorRotation.X, LeftCtrlData.TrackingData.VectorRotation.Y, LeftCtrlData.TrackingData.VectorRotation.Z };
 			}
 		}
 		return pose;

@@ -25,7 +25,7 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	lin_Acc = Vector3(lin_Acc.Y, lin_Acc.X, lin_Acc.Z);
 
 	//rotate vector to quaternion so it all matches up nicely
-	Quaternion pq = Quaternion::Inverse(Quaternion(_data.CorrectedRotation.X, _data.CorrectedRotation.Z, _data.CorrectedRotation.Y, _data.CorrectedRotation.W));
+	Quaternion pq = Quaternion::Inverse(Quaternion(_data.VectorRotation.X, _data.VectorRotation.Z, _data.VectorRotation.Y, _data.VectorRotation.W));
 	lin_Acc = (pq * lin_Acc);
 
 	//integrate to get velocity											
@@ -133,16 +133,17 @@ void CdataHandler::ResetPos(bool hmdOnly) {
 	HMDData.TrackingData.Velocity = Vector3::Zero();
 }
 
-Quaternion CdataHandler::SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset)
+void CdataHandler::SetOffsetQuat(_TrackingData& _data)
 {
-	if (offsetQuat.W == 0.f && offsetQuat.Y == 0.f) {  //Don't try to use an enpty offset quaternion 
-		offsetQuat.W = 1.f;
-		offsetQuat.Y = 0.f;
+	if (
+		_data.RotationUserOffset.W == 0.f && _data.RotationUserOffset.Y == 0.f) {  //Don't try to use an enpty offset quaternion 
+		_data.RotationUserOffset.W = 1.f;
+		_data.RotationUserOffset.Y = 0.f;
 	}
+	
+	Quaternion temp = Quaternion::Normalized(_data.RawRotation * _data.RotationDriftOffset);			//calculate temp quaternion by offsetting raw data by the drift correction offset
 
-	Quaternion inputCal = Quaternion::Normalized(offsetQuat * Input);
+	_data.VectorRotation = Quaternion::Normalized(temp * _data.RotationUserOffset);						//vectorrotation is the corrected rotation offset by the user offset
 
-	Quaternion Output = Quaternion::Normalized(inputCal * configOffset);
-
-	return Output;
+	_data.OutputRotation = Quaternion::Normalized(_data.VectorRotation * _data.RotationConfigOffset);	//final output rotation is the one calculated before offset by the config offset 
 }

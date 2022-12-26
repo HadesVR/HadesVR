@@ -24,17 +24,16 @@ using namespace std::chrono;
 using namespace vr;
 
 typedef struct _TrackingData {
-	Vector3 AngularVelocity;
-	Vector3 AngularAccel;
+	Vector3 AngularVelocity = Vector3::Zero();
+	Vector3 AngularAccel = Vector3::Zero();
 
-	Vector3 Accel;
+	Vector3 Accel = Vector3::Zero();
 	Vector3 oldAccel = Vector3::Zero();
 
-	Vector3 Velocity;
+	Vector3 Velocity = Vector3::Zero();
 
-	Vector3 Position;
+	Vector3 Position = Vector3::Zero();
 	Vector3 oldPosition = Vector3::Zero();
-	Vector3 PositionOffset = Vector3::Zero();
 
 	Vector3 LastCameraPos = Vector3::Zero();
 	Vector3 TempIMUPos = Vector3::Zero();
@@ -43,12 +42,15 @@ typedef struct _TrackingData {
 	bool isTracked = false;
 	bool wasTracked = false;
 
-	Quaternion RawRotation;
-	Quaternion CorrectedRotation;
+	Quaternion RawRotation = Quaternion::Identity();
+	Quaternion VectorRotation = Quaternion::Identity();
+	Quaternion OutputRotation = Quaternion::Identity();
 
-	Quaternion RotationConfigOffset = Quaternion::Identity();
-	Quaternion RotationUserOffset = Quaternion::Identity();
-	Quaternion RotationDriftOffset = Quaternion::Identity();
+	Quaternion RotationConfigOffset = Quaternion::Identity();			//offset in the config filer
+	Quaternion RotationUserOffset = Quaternion::Identity();				//offset when pressing f8
+	Quaternion RotationDriftOffset = Quaternion::Identity();			//drift offset (internal)
+
+	Vector3 PositionOffset = Vector3::Zero();
 
 	std::chrono::steady_clock::time_point lastIMUUpdate;
 	std::chrono::steady_clock::time_point lastCamUpdate;
@@ -58,7 +60,6 @@ typedef struct _HMDData
 {
 	_TrackingData TrackingData;
 	uint16_t Data;
-
 } THMD, * PHMD;
 
 typedef struct _ControllerData
@@ -255,13 +256,13 @@ private:
 	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
 	void UpdateVelocity(_TrackingData& _data, bool _wasTracked);
 
+	void SetOffsetQuat(_TrackingData& _data);
+
 	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
 	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
 	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
 
 	DataTransport& dataTransport;
-
-	Quaternion SetOffsetQuat(Quaternion Input, Quaternion offsetQuat, Quaternion configOffset);
 
 	_HMDData		HMDData;
 	_ControllerData RightCtrlData;
