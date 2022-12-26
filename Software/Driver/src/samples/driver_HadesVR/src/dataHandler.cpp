@@ -116,6 +116,9 @@ void CdataHandler::ReadTransportData()
 						if (PSMConnected) {
 							ResetPos(true);
 						}
+						else {
+							ResetPos(false);
+						}
 					}
 				}			
 
