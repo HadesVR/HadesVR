@@ -31,6 +31,12 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	//integrate to get velocity											
 	_data.Velocity += (lin_Acc * deltatime);
 	_data.Velocity *= 0.9;
+
+	if (Vector3::Magnitude(_data.Velocity) > 100.f) {		//something is very wrong
+		DriverLog("[Debug] Velocity reset on update because it's magnitude was over 100");
+		ResetPos(false);									//reset
+	}
+
 	//update angular velocity
 	_data.AngularVelocity += (_data.AngularAccel * deltatime);
 	_data.AngularVelocity *= 0.75;
