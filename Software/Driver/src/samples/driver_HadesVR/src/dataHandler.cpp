@@ -583,7 +583,7 @@ void CdataHandler::PSMUpdate()
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);																				//update filter
 				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();															//update position
 				UpdateVelocity(RightCtrlData.TrackingData, RightCtrlData.TrackingData.wasTracked, PSMSCtrlRightPos);							//update velocity
-				if (enableDriftCorrection) { UpdateDriftCorrection(RightCtrlData.TrackingData, PSMSCtrlRightPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, true); }
+				if (enableDriftCorrection) { UpdateDriftCorrection(RightCtrlData.TrackingData, PSMSCtrlRightPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
 				RightCtrlData.TrackingData.wasTracked = false;
 			}
