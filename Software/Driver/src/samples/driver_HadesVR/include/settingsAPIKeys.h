@@ -108,7 +108,11 @@ static const char* const k_pch_Tracker_Mode_Int32 = "TrackerMode";
 
 static const char* const k_pch_Experimental_Section = "Experimental";
 
-static const char* const k_pch_TestThreadEnable_Bool = "EnableExperimental";
+static const char* const k_pch_EnableCorrection_Bool = "EnableDriftCorrection";
+static const char* const k_pch_CorrectionLowerTreshold_Float = "CorrectionVelocityLowerTreshold";
+static const char* const k_pch_CorrectionUpperTreshold_Float = "CorrectionVelocityUpperTreshold";
+static const char* const k_pch_HMDCorrPercent_Float = "HMDCorrectionPercentage";
+static const char* const k_pch_ContCorrPercent_Float = "ControllerCorrectionPercentage";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //general use

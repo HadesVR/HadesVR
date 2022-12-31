@@ -35,9 +35,10 @@ typedef struct _TrackingData {
 	Vector3 Position = Vector3::Zero();
 	Vector3 oldPosition = Vector3::Zero();
 
-	Vector3 LastCameraPos = Vector3::Zero();
-	Vector3 TempIMUPos = Vector3::Zero();
-	Vector3 LastCameraVelocity = Vector3::Zero();
+	Vector3 LastCameraPos = Vector3::Zero();						//last camera position, unfiltered
+	Vector3 TempIMUPos = Vector3::Zero();							
+	Vector3 CameraVelocity = Vector3::Zero();					//camera velocity, unfiltered, no IMU involvement.
+	Vector3 LastCameraVelocity = Vector3::Zero();					//last camera velocity, unfiltered, no IMU involvement.
 
 	bool isTracked = false;
 	bool wasTracked = false;
@@ -248,20 +249,17 @@ private:
 		ptr->TestThread();
 	}
 
-    void ResetPos(bool hmdOnly);
+    void ResetPos(bool controllers, bool hmd);
 	void ReadTransportData();
 	bool connectToPSMOVE();
 	void PSMUpdate();
 
 	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
-	void UpdateVelocity(_TrackingData& _data, bool _wasTracked);
+	void UpdateVelocity(_TrackingData& _data, bool _wasTracked, Vector3 newCameraPos);
+	void UpdateDriftCorrection(_TrackingData& _data, Vector3 newCameraPos, float percent, float lowerTreshold, float upperTreshold, bool debug);
 
 	void SetOffsetQuat(_TrackingData& _data);
 	void SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey);
-
-	//void CalcAccelPosition(float quatW, float quatX, float quatY, float quatZ, float accelX, float accelY, float accelZ, PosData& pos); *** To be redone but properly.
-	//void CalcTrackedPos(_ControllerData& oldPos, Vector3 newPos, float smooth);
-	//void CalcTrackedPos(_HMDData& oldPos, Vector3 newPos, float smooth);
 
 	DataTransport& dataTransport;
 
@@ -293,6 +291,12 @@ private:
 	float maxFilterBeta = 0.30f;
 	double deltatime = 0;
 
+	bool enableDriftCorrection = false;
+	float corrVelocityLowerTreshold = 0.8f;
+	float corrVelocityUpperTreshold = 1.5f;
+	float hmdDriftCorr = 0.02f;
+	float contDriftCorr = 0.05f;
+	
 	V3Kalman HMDKalman;
 	V3Kalman CtrlLeftKalman;
 	V3Kalman CtrlRightKalman;

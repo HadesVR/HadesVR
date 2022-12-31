@@ -113,12 +113,7 @@ void CdataHandler::ReadTransportData()
 					}
 					if (readsFromInit >= 2000) {
 						orientationFilterInit = true;
-						if (PSMConnected) {
-							ResetPos(true);
-						}
-						else {
-							ResetPos(false);
-						}
+						ResetPos(true, true);
 					}
 				}			
 
@@ -249,7 +244,7 @@ DriverPose_t CdataHandler::GetHMDPose()
 		DriverLog("[Debug] HMD Accel: Ax:%f Ay:%f Az:%f HMD Velocity: Vx:%fm/s Vy:%fm/s Vz:%fm/s", HMDData.TrackingData.Accel.X, HMDData.TrackingData.Accel.Y, HMDData.TrackingData.Accel.Z, HMDData.TrackingData.Velocity.X, HMDData.TrackingData.Velocity.Y, HMDData.TrackingData.Velocity.Z);
 	}
 	if ((GetAsyncKeyState(VK_F9) & 0x8000)) {
-		ResetPos(false);
+		ResetPos(true, true);
 	}
 	if ((GetAsyncKeyState(VK_F8) & 0x8000))
 	{
@@ -259,7 +254,6 @@ DriverPose_t CdataHandler::GetHMDPose()
 	{
 		SetCentering(true);
 	}
-
 	return pose;
 }
 
@@ -293,7 +287,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				pose.result = TrackingResult_Running_OK;
 			}
 			else{
-				pose.result = TrackingResult_Fallback_RotationOnly;
+				pose.result = TrackingResult_Running_OutOfRange;
 			}
 
 			// if accelerometer position is enabled, update on IMU data, else update on camera data.
@@ -334,14 +328,14 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 
 			//Rotation first controller
 			//check if controller rotation is initialized and valid.
-			if (isnan(RightCtrlData.TrackingData.VectorRotation.W) || isnan(RightCtrlData.TrackingData.VectorRotation.X) || isnan(RightCtrlData.TrackingData.VectorRotation.Y) || isnan(RightCtrlData.TrackingData.VectorRotation.Z)) {
+			if (isnan(RightCtrlData.TrackingData.OutputRotation.W) || isnan(RightCtrlData.TrackingData.OutputRotation.X) || isnan(RightCtrlData.TrackingData.OutputRotation.Y) || isnan(RightCtrlData.TrackingData.OutputRotation.Z)) {
 				pose.poseIsValid = false;
 				pose.result = TrackingResult_Uninitialized;
 				pose.deviceIsConnected = false;
 				pose.qRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 			}
 			else {
-				pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.VectorRotation.W, RightCtrlData.TrackingData.VectorRotation.X, RightCtrlData.TrackingData.VectorRotation.Y, RightCtrlData.TrackingData.VectorRotation.Z };
+				pose.qRotation = HmdQuaternion_t{ RightCtrlData.TrackingData.OutputRotation.W, RightCtrlData.TrackingData.OutputRotation.X, RightCtrlData.TrackingData.OutputRotation.Y, RightCtrlData.TrackingData.OutputRotation.Z };
 			}
 		}
 		else{
@@ -350,7 +344,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 				pose.result = TrackingResult_Running_OK;
 			}
 			else {
-				pose.result = TrackingResult_Fallback_RotationOnly;
+				pose.result = TrackingResult_Running_OutOfRange;
 			}
 
 			// if accelerometer position is enabled, update on IMU data, else update on camera data.
@@ -391,7 +385,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			
 			//Rotation second controller
 			//check if controller rotation is initialized and valid.
-			if (isnan(LeftCtrlData.TrackingData.VectorRotation.W) || isnan(LeftCtrlData.TrackingData.VectorRotation.X) || isnan(LeftCtrlData.TrackingData.VectorRotation.Y) || isnan(LeftCtrlData.TrackingData.VectorRotation.Z)) {
+			if (isnan(LeftCtrlData.TrackingData.OutputRotation.W) || isnan(LeftCtrlData.TrackingData.OutputRotation.X) || isnan(LeftCtrlData.TrackingData.OutputRotation.Y) || isnan(LeftCtrlData.TrackingData.OutputRotation.Z)) {
 				pose.poseIsValid = false;
 				pose.result = TrackingResult_Uninitialized;
 				pose.deviceIsConnected = false;
@@ -399,7 +393,7 @@ DriverPose_t CdataHandler::GetControllersPose(int ControllerIndex)
 			}
 			else
 			{
-				pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.VectorRotation.W, LeftCtrlData.TrackingData.VectorRotation.X, LeftCtrlData.TrackingData.VectorRotation.Y, LeftCtrlData.TrackingData.VectorRotation.Z };
+				pose.qRotation = HmdQuaternion_t{ LeftCtrlData.TrackingData.OutputRotation.W, LeftCtrlData.TrackingData.OutputRotation.X, LeftCtrlData.TrackingData.OutputRotation.Y, LeftCtrlData.TrackingData.OutputRotation.Z };
 			}
 		}
 		return pose;
@@ -559,16 +553,19 @@ void CdataHandler::PSMUpdate()
 
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &HMDData.TrackingData.isTracked);
-			HMDData.TrackingData.wasTracked = !HMDData.TrackingData.isTracked;
+			if (HMDData.TrackingData.isTracked == true) {
+				HMDData.TrackingData.wasTracked = true;
+			}
 
 			Vector3 PSMSHMDPos = Vector3((float)psmHmdPos.x * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.z * k_fScalePSMoveAPIToMeters, (float)psmHmdPos.y * k_fScalePSMoveAPIToMeters);
 			if (PSMSHMDPos != HMDData.TrackingData.LastCameraPos || !HMDData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
-				HMDKalman.updateMeasCam(PSMSHMDPos);
-				HMDData.TrackingData.Position = HMDKalman.getEstimation();				//update position
-				UpdateVelocity(HMDData.TrackingData, HMDData.TrackingData.wasTracked);									//update velocity
+				HMDKalman.updateMeasCam(PSMSHMDPos);																	//update filter
+				HMDData.TrackingData.Position = HMDKalman.getEstimation();												//update position
+				UpdateVelocity(HMDData.TrackingData, HMDData.TrackingData.wasTracked, PSMSHMDPos);						//update velocity
+				if (enableDriftCorrection) { UpdateDriftCorrection(HMDData.TrackingData, PSMSHMDPos, hmdDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
 				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
-				HMDData.TrackingData.wasTracked = true;
+				HMDData.TrackingData.wasTracked = false;
 			}
 		}
 		if (ctrl1Allocated) {
@@ -576,17 +573,19 @@ void CdataHandler::PSMUpdate()
 
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[0], &RightCtrlData.TrackingData.isTracked);
-
-			RightCtrlData.TrackingData.wasTracked = !RightCtrlData.TrackingData.isTracked;
+			if (RightCtrlData.TrackingData.isTracked == true) {
+				RightCtrlData.TrackingData.wasTracked = true;
+			}
 
 			Vector3 PSMSCtrlRightPos = Vector3((float)psmCtrlRightPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlRightPos.y * k_fScalePSMoveAPIToMeters);
 			if (PSMSCtrlRightPos != RightCtrlData.TrackingData.LastCameraPos || !RightCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
 			{
-				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);
-				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();				//update position
-				UpdateVelocity(RightCtrlData.TrackingData, RightCtrlData.TrackingData.wasTracked);												//update velocity
+				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);																				//update filter
+				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();															//update position
+				UpdateVelocity(RightCtrlData.TrackingData, RightCtrlData.TrackingData.wasTracked, PSMSCtrlRightPos);							//update velocity
+				if (enableDriftCorrection) { UpdateDriftCorrection(RightCtrlData.TrackingData, PSMSCtrlRightPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, true); }
 				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
-				RightCtrlData.TrackingData.wasTracked = true;
+				RightCtrlData.TrackingData.wasTracked = false;
 			}
 		}
 		if (ctrl2Allocated) {
@@ -594,18 +593,19 @@ void CdataHandler::PSMUpdate()
 
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[1], &LeftCtrlData.TrackingData.isTracked);
-
-			LeftCtrlData.TrackingData.wasTracked = !LeftCtrlData.TrackingData.isTracked;
+			if (LeftCtrlData.TrackingData.isTracked == true) {
+				LeftCtrlData.TrackingData.wasTracked = true;
+			}
 
 			Vector3 PSMSCtrlLeftPos = Vector3((float)psmCtrlLeftPos.x * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.z * k_fScalePSMoveAPIToMeters, (float)psmCtrlLeftPos.y * k_fScalePSMoveAPIToMeters);
-
 			if (PSMSCtrlLeftPos != LeftCtrlData.TrackingData.LastCameraPos || !LeftCtrlData.TrackingData.isTracked)			//if position isn't old or if it's not being tracked
-			{	
-				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);
-				LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();				//update position
-				UpdateVelocity(LeftCtrlData.TrackingData, LeftCtrlData.TrackingData.wasTracked);												//update velocity
+			{
+				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);																					//update filter
+				LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();															//update position
+				UpdateVelocity(LeftCtrlData.TrackingData, LeftCtrlData.TrackingData.wasTracked, PSMSCtrlLeftPos);								//update velocity
+				if (enableDriftCorrection) { UpdateDriftCorrection(LeftCtrlData.TrackingData, PSMSCtrlLeftPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
 				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
-				LeftCtrlData.TrackingData.wasTracked = true;
+				LeftCtrlData.TrackingData.wasTracked = false;																					//set to false once done calculating stuff for next cycle
 			}
 		}
 		//no need to update this faster than we can capture the images.
@@ -664,12 +664,19 @@ void CdataHandler::StartData()
 		DriverLog("[Settings] Loaded Calibration settings");
 
 		//get psms update rate
-		psmsUpdateRate = 2 * (vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32));//poll at twice the rate of camera refresh.
+		psmsUpdateRate = (vr::VRSettings()->GetInt32(k_pch_Driver_Section, k_pch_PSMS_UPDATE_RATE_Int32)); //poll at the rate of camera refresh.
 		psmsMillisecondPeriod = (int)((1.f / psmsUpdateRate) * 1000.f);
 		DriverLog("[Settings] PSMS polling rate is hz: %i, with a period of %i milliseconds.", psmsUpdateRate, psmsMillisecondPeriod);
 		
 		minFilterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_MinFilterBeta_Float);
 		maxFilterBeta = vr::VRSettings()->GetFloat(k_pch_HMD_Section, k_pch_HMD_MaxFilterBeta_Float);
+
+		//drift correction stuff.
+		enableDriftCorrection = vr::VRSettings()->GetBool(k_pch_Experimental_Section, k_pch_EnableCorrection_Bool);
+		corrVelocityLowerTreshold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_CorrectionLowerTreshold_Float);
+		corrVelocityUpperTreshold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_CorrectionUpperTreshold_Float);
+		hmdDriftCorr = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_HMDCorrPercent_Float);
+		contDriftCorr = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_ContCorrPercent_Float);
 
 		//use accelerometers?
 		CtrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Tracking_AccelEnable_Bool);
@@ -698,7 +705,7 @@ void CdataHandler::StartData()
 		HMDKalman.setSettings(HMD_CamK_measErr, HMD_CamK_estmErr, HMD_CamK_ProcNoise, HMD_IMUK_measErr, HMD_IMUK_estmErr, HMD_IMUK_ProcNoise);
 
 		//set initial states for controllers and hmd.
-		ResetPos(false);
+		ResetPos(true, true);
 		//Attempt to connect to psmoveservice
 		connectToPSMOVE();
 	}

@@ -1,20 +1,21 @@
 {
    	"Driver" : {
+		"TransportMode" : "HID",
 		"HID_VID" : 9025,
 		"HID_PID" : 32822,
-		"PSMSTrackerFrequency" : 75,
-		"ControllerSmoothingK" : 75.0,
-		"HMDSmoothingK" : 40.0,
-		"TransportMode" : "HID",
-		"UART_Port" : "COM4",
-		"UART_Baudrate" : 230400
+		"UART_Port" : "COM73",
+		"UART_Baudrate" : 230400,
+		"PSMSTrackerFrequency" : 60,		
+		"EnableDirectMode" : false,
+		"EDID_VID" : 6225,
+		"EDID_PID" : 13104
    },
    "Display" : {
 		"Stereo" : false,
 		"IsDisplayOnDesktop" : true,
 		"IsDisplayReal" : true,
-		"DistanceBetweenEyes" : 0.062,
-		"IPD" : 0.062,
+		"IsSinglePanel" : true,
+		"IPD" : 0.061,
 		"FOV" : 101,
 		"windowWidth" : 1920,
 		"windowHeight" : 1080,
@@ -25,50 +26,88 @@
 		"windowY" : 0,		
 		"ScreenOffsetX" : 0,
 		"ScreenOffsetY" : 0,
-		"ZoomWidth" : 0.80,
-		"ZoomHeight" : 0.80,
-		"DistortionK1" : 0.91,
-		"DistortionK2" : 0.93,
-		"secondsFromVsyncToPhotons" : 0.004999999888241291
+		"ViewportZoom" : 1.5,
+		"DistanceBetweenLenses" : 0.061,
+		"DistanceBetweenViews" : 0.061,
+		"DisplayWidth" : 0.122,
+		"DisplayCantAngle" : 0.0,
+		"secondsFromVsyncToPhotons" : 0.013888888
+   },
+   "Distortion" : {
+   		"Red_K1" : 0.91,
+		"Red_K2" : 0.71,
+		"Red_K3" : 0.11,
+		
+		"Green_K1" : 0.91,
+		"Green_K2" : 0.93,
+		"Green_K3" : 0.00,
+		
+		"Blue_K1" : 0.91,
+		"Blue_K2" : 1.09,
+		"Blue_K3" : 0.42
    },
    "HMD" : {
    		"serialNumber" : "HADES",
+		"modelNumber" : "HADES",
 		"EnableHMD" : true,
-		"FilterBeta" : 0.025,
+		"MinFilterBeta" : 0.01,
+		"MaxFilterBeta" : 0.35,
+		"UseAccelerometers" : true,
+		
+		"Camera_Kalman_Measurement_Uncertainty" : 5.0,
+		"Camera_Kalman_Estimation_Uncertainty" : 1.5,
+		"Camera_Kalman_Process_Noise" : 10.0,
+		
+		"IMU_Kalman_Measurement_Uncertainty" : 2.0,
+		"IMU_Kalman_Estimation_Uncertainty" : 5.0,
+		"IMU_Kalman_Process_Noise" : 8.0,
 		
 		"HMDYawOffset" : 0.0,
 		"HMDPitchOffset" : 0.0,
 		"HMDRollOffset" : 0.0,
 		
 		"HMDXOffset" : 0.0,
-		"HMDYOffset" : 0.1,
-		"HMDZOffset" : 0.04
+		"HMDYOffset" : 0.0,
+		"HMDZOffset" : 0.0
    },
    "Controllers" : {
    		"EnableControllers" : true,
 		"ControllerMode" : 0,
+		"UseAccelerometers" : true,
+	
+		"Camera_Kalman_Measurement_Uncertainty" : 2.0,
+		"Camera_Kalman_Estimation_Uncertainty" : 1.5,
+		"Camera_Kalman_Process_Noise" : 2.25,
 		
-		"UseControllerAccelerometers" : false,
-		
+		"IMU_Kalman_Measurement_Uncertainty" : 2.0,
+		"IMU_Kalman_Estimation_Uncertainty" : 5.0,
+		"IMU_Kalman_Process_Noise" : 80.0,
+
 		"CTRLRightYawOffset" : 0.0,
-		"CTRLRightPitchOffset" : 25.0,
+		"CTRLRightPitchOffset" : 32.0,
 		"CTRLRightRollOffset" : 0.0,
 		
-		"CTRLRightXOffset" : 0.048,
-		"CTRLRightYOffset" : 0.0,
-		"CTRLRightZOffset" : 0.0,
+		"CTRLRightXOffset" : 0.05,
+		"CTRLRightYOffset" : -0.035,
+		"CTRLRightZOffset" : 0.025,
 		
 		"CTRLLeftYawOffset" : 0.0,
-		"CTRLLeftPitchOffset" : 25.0,
+		"CTRLLeftPitchOffset" : 32.0,
 		"CTRLLeftRollOffset" : 0.0,
 		
-		"CTRLLeftXOffset" : -0.048,
-		"CTRLLeftYOffset" : 0.0,
-		"CTRLLeftZOffset" : 0.0
-		
+		"CTRLLeftXOffset" : -0.05,
+		"CTRLLeftYOffset" : -0.035,
+		"CTRLLeftZOffset" : 0.025
    },
    "Trackers" :{
    		"EnableTrackers" : false,
 		"TrackerMode" : 0
+   },
+   "Experimental" :{
+   		"EnableDriftCorrection" : false,
+		"CorrectionVelocityLowerTreshold" : 1.0,
+		"CorrectionVelocityUpperTreshold" : 1.5,
+		"HMDCorrectionPercentage" : 0.,
+		"ControllerCorrectionPercentage" : 0.1
    }
 }

@@ -32,9 +32,9 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	_data.Velocity += (lin_Acc * deltatime);
 	_data.Velocity *= 0.9;
 
-	if (Vector3::Magnitude(_data.Velocity) > 100.f) {		//something is very wrong
-		DriverLog("[Debug] Velocity reset on update because it's magnitude was over 100");
-		ResetPos(false);									//reset
+	if (Vector3::Magnitude(_data.Velocity) > 100.f && orientationFilterInit == true) {		//something is very wrong
+		DriverLog("[Warning] Velocity reset on update because it's magnitude was over 100");
+		ResetPos(true, false);									//reset
 	}
 
 	//update angular velocity
@@ -47,24 +47,54 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	//update filter
 	_k.updateMeasIMU(instant_pos);
 
+	//update temp position for drift correction stuff
+	_data.TempIMUPos += instant_pos;
+
 	//update old accel
 	_data.oldAccel = _data.Accel;
 }
 
-void CdataHandler::UpdateVelocity(_TrackingData& _data, bool _wasTracked)
+void CdataHandler::UpdateVelocity(_TrackingData& _data, bool _wasTracked, Vector3 newCameraPos)
 {
 	//get deltatime
 	auto now = std::chrono::high_resolution_clock::now();
 	deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - _data.lastCamUpdate).count() / 1000000.0f;
 	_data.lastCamUpdate = now;	
-
 	//update velocity
-	if (_wasTracked) 
+	if (_wasTracked)  //don't update velocity on new camera tracking point.
 	{
-	_data.Velocity = (_data.Position - _data.oldPosition) / deltatime; //don't update velocity on new camera tracking point.
+		_data.Velocity = (((_data.Position - _data.oldPosition) / deltatime));			 //update real velocity (IMU fused, filtered)
+		_data.LastCameraVelocity = _data.CameraVelocity;																	 //update previous camera only velocity
+		_data.CameraVelocity = (newCameraPos - _data.LastCameraPos) / deltatime;											 //update current camera only velocity
+	}
+	else {
+		_data.Velocity = Vector3::Zero();											 //No velocity when not tracked
+		_data.LastCameraVelocity = Vector3::Zero();							         //No velocity when not tracked
+		_data.CameraVelocity = Vector3::Zero();								         //No velocity when not tracked
 	}
 	//update position
 	_data.oldPosition = _data.Position;
+}
+
+void CdataHandler::UpdateDriftCorrection(_TrackingData& _data, Vector3 newCameraPos, float percent, float lowerTreshold, float upperTreshold, bool debug)
+{
+	float vm = Vector3::Magnitude(_data.Velocity);
+	if (vm >= lowerTreshold && vm <= upperTreshold && Vector3::Magnitude(_data.CameraVelocity) != 0.f && Vector3::Magnitude(_data.TempIMUPos) >= vm / psmsUpdateRate)
+	{
+		Quaternion Result;
+		Vector3 instantCamVelocity = (_data.CameraVelocity - _data.LastCameraVelocity);				
+		//////////////////////////////////////////////////////////////////////////////////
+		double  VectorsDot = Vector3::Dot(instantCamVelocity, _data.TempIMUPos);		//
+		Vector3 VectorsCross = Vector3::Cross(instantCamVelocity, _data.TempIMUPos);	//
+																					    //
+		Result.W = _data.RotationDriftOffset.W + (VectorsDot + 1.f * percent);			//		This is disgusting		
+		Result.Y = _data.RotationDriftOffset.Y + (VectorsCross.Y * percent);			//		
+																						//
+		_data.RotationDriftOffset = Quaternion::Normalized(Result);						//
+		//////////////////////////////////////////////////////////////////////////////////
+		if (debug) DriverLog("[Debug] Drift correction - Velocity: %f, imumag:%f, cammag:%f", vm / 60, Vector3::Magnitude(_data.TempIMUPos), Vector3::Magnitude(_data.CameraVelocity));
+		_data.TempIMUPos = Vector3::Zero();
+	}
 }
 
 void CdataHandler::SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey)
@@ -124,8 +154,8 @@ void CdataHandler::SetCentering(bool reset)
 	*/
 }
 
-void CdataHandler::ResetPos(bool hmdOnly) {
-	if (!hmdOnly) {
+void CdataHandler::ResetPos(bool controllers, bool hmd) {
+	if (controllers) {
 		RightCtrlData.TrackingData.Position = Vector3::Zero();
 		RightCtrlData.TrackingData.oldPosition = Vector3::Zero();
 		RightCtrlData.TrackingData.Velocity = Vector3::Zero();
@@ -134,9 +164,11 @@ void CdataHandler::ResetPos(bool hmdOnly) {
 		LeftCtrlData.TrackingData.oldPosition = Vector3::Zero();
 		LeftCtrlData.TrackingData.Velocity = Vector3::Zero();
 	}
-	HMDData.TrackingData.Position = Vector3::Zero();
-	HMDData.TrackingData.oldPosition = Vector3::Zero();
-	HMDData.TrackingData.Velocity = Vector3::Zero();
+	if (hmd) {
+		HMDData.TrackingData.Position = Vector3::Zero();
+		HMDData.TrackingData.oldPosition = Vector3::Zero();
+		HMDData.TrackingData.Velocity = Vector3::Zero();
+	}
 }
 
 void CdataHandler::SetOffsetQuat(_TrackingData& _data)
@@ -146,10 +178,7 @@ void CdataHandler::SetOffsetQuat(_TrackingData& _data)
 		_data.RotationUserOffset.W = 1.f;
 		_data.RotationUserOffset.Y = 0.f;
 	}
-	
-	Quaternion temp = Quaternion::Normalized(_data.RawRotation * _data.RotationDriftOffset);			//calculate temp quaternion by offsetting raw data by the drift correction offset
-
-	_data.VectorRotation = Quaternion::Normalized(temp * _data.RotationUserOffset);						//vectorrotation is the corrected rotation offset by the user offset
-
-	_data.OutputRotation = Quaternion::Normalized(_data.VectorRotation * _data.RotationConfigOffset);	//final output rotation is the one calculated before offset by the config offset 
+	_data.VectorRotation = Quaternion::Normalized(_data.RawRotation * _data.RotationDriftOffset);			//calculate temp quaternion by offsetting raw data by the drift correction offset
+	Quaternion temp = Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * _data.RotationConfigOffset);
+	_data.OutputRotation = Quaternion::Normalized(temp * _data.VectorRotation);	//final output rotation is the one calculated before offset by the config offset 
 }
