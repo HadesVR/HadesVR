@@ -550,9 +550,9 @@ void CdataHandler::PSMUpdate()
 		deltatime = std::chrono::duration_cast<std::chrono::microseconds>(now - lastPSMSUpdate).count() / 1000000.0f;
 		lastPSMSUpdate = now;
 
-		if (HMDAllocated) {
-			HMDData.TrackingData.isTracked = false;
+		//TODO: refactor
 
+		if (HMDAllocated) {
 			PSM_GetHmdPosition(hmdList.hmd_id[0], &psmHmdPos);
 			PSM_GetIsHmdTracking(hmdList.hmd_id[0], &HMDData.TrackingData.isTracked);
 			if (HMDData.TrackingData.isTracked == true) {
@@ -571,8 +571,6 @@ void CdataHandler::PSMUpdate()
 			}
 		}
 		if (ctrl1Allocated) {
-			RightCtrlData.TrackingData.isTracked = false;
-
 			PSM_GetControllerPosition(controllerList.controller_id[0], &psmCtrlRightPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[0], &RightCtrlData.TrackingData.isTracked);
 			if (RightCtrlData.TrackingData.isTracked == true) {
@@ -591,8 +589,6 @@ void CdataHandler::PSMUpdate()
 			}
 		}
 		if (ctrl2Allocated) {
-			LeftCtrlData.TrackingData.isTracked = false;
-
 			PSM_GetControllerPosition(controllerList.controller_id[1], &psmCtrlLeftPos);
 			PSM_GetIsControllerTracking(controllerList.controller_id[1], &LeftCtrlData.TrackingData.isTracked);
 			if (LeftCtrlData.TrackingData.isTracked == true) {
