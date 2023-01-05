@@ -69,6 +69,7 @@ void CdataHandler::ReadTransportData()
 				RightCtrlData.FingMiddl = (float)(DataCtrl->Ctrl1_MIDDLE) / 255.f;
 				RightCtrlData.FingRing = (float)(DataCtrl->Ctrl1_RING) / 255.f;
 				RightCtrlData.FingPinky = (float)(DataCtrl->Ctrl1_PINKY) / 255.f;
+				RightCtrlData.GripStrength = (float)(DataCtrl->Ctrl1_AnalogGrip) / 255.f;
 				
 
 				LeftCtrlData.TrackingData.RawRotation.W = (float)(DataCtrl->Ctrl2_QuatW) / 32767.f;
@@ -94,6 +95,7 @@ void CdataHandler::ReadTransportData()
 				LeftCtrlData.FingMiddl = (float)(DataCtrl->Ctrl2_MIDDLE) / 255.f;
 				LeftCtrlData.FingRing = (float)(DataCtrl->Ctrl2_RING) / 255.f;
 				LeftCtrlData.FingPinky = (float)(DataCtrl->Ctrl2_PINKY) / 255.f;
+				LeftCtrlData.GripStrength = (float)(DataCtrl->Ctrl2_AnalogGrip) / 255.f;
 
 				receivedControllerData = true;
 

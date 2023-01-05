@@ -325,25 +325,8 @@ void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 			else {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[5], 0.f, 0); //Trackpad force
 			}
-
-			if (RightCtrl.FingMiddl != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 0.5f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 0.5f, 0); //grip value
-
-				if (RightCtrl.FingRing != 0) {
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 0.75f, 2); //grip force
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 0.75f, 2); //grip value
-
-					if (RightCtrl.FingPinky != 0) {
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 1.f, 5); //grip force
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 1.f, 5); //grip value
-					}
-				}
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], 0.f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], 0.f, 0); //grip value
-			}
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[10], RightCtrl.GripStrength, 0); //grip force
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlRight[11], (RightCtrl.GripStrength >= 0.75f), 0); //grip value
 		}
 		else
 		{
@@ -388,25 +371,8 @@ void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 			else {
 				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[6], 0.f, 0); //Index
 			}
-
-			if (LeftCtrl.FingMiddl != 0) {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 0.5f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 0.5f, 0); //grip value
-
-				if (LeftCtrl.FingRing != 0) {
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 0.75f, 2); //grip force
-					vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 0.75f, 2); //grip value
-
-					if (LeftCtrl.FingPinky != 0) {
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 1.f, 5); //grip force
-						vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 1.f, 5); //grip value
-					}
-				}
-			}
-			else {
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], 0.f, 0); //grip force
-				vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], 0.f, 0); //grip value
-			}
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[10], LeftCtrl.GripStrength, 0); //grip force
+			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], (LeftCtrl.GripStrength >= 0.75f), 0); //grip value
 		}
 
 		if ((LeftCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (RightCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (LeftCtrl.Trigger > 0.9f) && (RightCtrl.Trigger > 0.9f))

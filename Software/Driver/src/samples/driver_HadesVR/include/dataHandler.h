@@ -78,6 +78,7 @@ typedef struct _ControllerData
 	float	FingMiddl;
 	float	FingRing;
 	float	FingPinky;
+	float	GripStrength;
 	uint16_t Data;
 } TController, * PController;
 
@@ -193,6 +194,7 @@ struct ControllerPacket
 	uint8_t Ctrl1_MIDDLE;
 	uint8_t Ctrl1_RING;
 	uint8_t Ctrl1_PINKY;
+	uint8_t Ctrl1_AnalogGrip;
 	uint16_t Ctrl1_Data;
 
 	int16_t Ctrl2_QuatW;
@@ -213,8 +215,9 @@ struct ControllerPacket
 	uint8_t Ctrl2_MIDDLE;
 	uint8_t Ctrl2_RING;
 	uint8_t Ctrl2_PINKY;
+	uint8_t Ctrl2_AnalogGrip;
 	uint16_t Ctrl2_Data;
-	uint8_t Padding[6];
+	uint8_t Padding[4];
 };
 #pragma pack(pop)
 

@@ -199,6 +199,7 @@ struct ControllerPacket
   uint8_t Ctrl1_MIDDLE;
   uint8_t Ctrl1_RING;
   uint8_t Ctrl1_PINKY;
+  uint8_t Ctrl1_AnalogGrip;
   uint16_t Ctrl1_Data;
 
   int16_t Ctrl2_QuatW;
@@ -219,6 +220,7 @@ struct ControllerPacket
   uint8_t Ctrl2_MIDDLE;
   uint8_t Ctrl2_RING;
   uint8_t Ctrl2_PINKY;
+  uint8_t Ctrl2_AnalogGrip;
   uint16_t Ctrl2_Data;
 };
 
@@ -325,11 +327,11 @@ void loop()
   uint8_t pipenum;
   if (radio.available(&pipenum)) {                  //thanks SimLeek for this idea!
     if (pipenum == 1) {
-      radio.read(&ContData.Ctrl1_QuatW, 28);        //receive right controller data
+      radio.read(&ContData.Ctrl1_QuatW, 29);        //receive right controller data
       newCtrlData = true;
     }
     if (pipenum == 2) {
-      radio.read(&ContData.Ctrl2_QuatW, 28);        //receive left controller data
+      radio.read(&ContData.Ctrl2_QuatW, 29);        //receive left controller data
       newCtrlData = true;
     }
     if (pipenum == 3) {
