@@ -81,20 +81,42 @@ void CdataHandler::UpdateDriftCorrection(_TrackingData& _data, Vector3 newCamera
 	float vm = Vector3::Magnitude(_data.Velocity);
 	if (vm >= lowerTreshold && vm <= upperTreshold && Vector3::Magnitude(_data.CameraVelocity) != 0.f && Vector3::Magnitude(_data.TempIMUPos) >= vm / psmsUpdateRate)
 	{
+		Quaternion Offset;
 		Quaternion Result;
+		float Scale = percent;
 		Vector3 instantCamVelocity = (_data.CameraVelocity - _data.LastCameraVelocity);				
+
+		double  VectorsDot = Vector3::Dot(instantCamVelocity, _data.TempIMUPos);		
+		Vector3 VectorsCross = Vector3::Cross(instantCamVelocity, _data.TempIMUPos);
+
 		//////////////////////////////////////////////////////////////////////////////////
-		double  VectorsDot = Vector3::Dot(instantCamVelocity, _data.TempIMUPos);		//
-		Vector3 VectorsCross = Vector3::Cross(instantCamVelocity, _data.TempIMUPos);	//
-																					    //
-		Result.W = _data.RotationDriftOffset.W + (VectorsDot + 1.f * percent);			//		This is disgusting		
-		Result.Y = _data.RotationDriftOffset.Y + (VectorsCross.Y * percent);			//		
+		Result.W = (VectorsDot + 1.f);													//
+		Result.X = (VectorsCross.X);													//
+		Result.Y = (VectorsCross.Y);													//
+		Result.Z = (VectorsCross.Z);													//
+		Result = Quaternion::Normalized(Result);										//
 																						//
-		_data.RotationDriftOffset = Quaternion::Normalized(Result);						//
-		//////////////////////////////////////////////////////////////////////////////////
-		if (debug) DriverLog("[Debug] Drift correction - Velocity: %f, imumag:%f, cammag:%f", vm / 60, Vector3::Magnitude(_data.TempIMUPos), Vector3::Magnitude(_data.CameraVelocity));
-		_data.TempIMUPos = Vector3::Zero();
+		if (fabsf(Result.Y) < 0.017f)	//don't update if if under 2 degrees of error	//
+		{																				//
+			_data.TempIMUPos = Vector3::Zero();											//
+			return;																		//
+		}																				//
+		if (fabsf(Result.Y) > 0.131f)   //if error is > 15 degrees, update completely	//
+		{																				//
+			Scale = 1.f;																//
+			if (debug) DriverLog("[Debug] Drift correction: Off by over 15 degrees!!!");//
+		}																				//
+		Offset.W = _data.RotationDriftOffset.W + (VectorsDot + 1.f * Scale);			//		This is disgusting		
+		Offset.X = _data.RotationDriftOffset.X + (VectorsCross.X * Scale);				//
+		Offset.Y = _data.RotationDriftOffset.Y + (VectorsCross.Y * Scale);				//		We don't belive in doing things properly over here.
+		Offset.Z = _data.RotationDriftOffset.Z + (VectorsCross.Z * Scale);				//
+		_data.RotationDriftOffset = Quaternion::Normalized(Offset);						//
+		//////////////////////////////////////////////////////////////////////////////////		
+		Vector3 vecRes = Quaternion::ToEuler(Result);									
+		if (debug) DriverLog("[Debug] Drift correction: qW: %f,qX: %f,qY: %f,qZ: %f, vX: %f,vY: %f,vZ: %f", Result.W, Result.X, Result.Y, Result.Z, vecRes.X, vecRes.Y, vecRes.Z);
 	}
+	_data.TempIMUPos = Vector3::Zero();
+	//if (debug) DriverLog("[Debug] Drift correction: Velocity: %f, imumag:%f, cammag:%f", vm / 60, Vector3::Magnitude(_data.TempIMUPos), Vector3::Magnitude(_data.CameraVelocity));
 }
 
 void CdataHandler::SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey)
@@ -179,6 +201,6 @@ void CdataHandler::SetOffsetQuat(_TrackingData& _data)
 		_data.RotationUserOffset.Y = 0.f;
 	}
 	_data.VectorRotation = Quaternion::Normalized(_data.RawRotation * _data.RotationDriftOffset);			//calculate temp quaternion by offsetting raw data by the drift correction offset
-	Quaternion temp = Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * _data.RotationConfigOffset);
-	_data.OutputRotation = Quaternion::Normalized(temp * _data.VectorRotation);	//final output rotation is the one calculated before offset by the config offset 
-}
+	Quaternion temp = Quaternion::Normalized(_data.VectorRotation * _data.RotationConfigOffset);			//temp is the vector offset rotated by the config offset
+	_data.OutputRotation = Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * temp);	//final output rotation is the one calculated before offse rotated by the user offset 
+} 
