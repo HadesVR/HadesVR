@@ -26,31 +26,26 @@
 #define SERIAL_DEBUG
 #define IMU_ADDRESS     0x68                // You can find it out by using the IMUIdentifier example
 MPU9250 IMU;                                // IMU type
-#define CALPIN              5               //pin to start mag calibration at power on
+#define CALPIN              4               //pin to start mag calibration at power on
 
-#define APin                4
-#define BPin                3
-#define SysPin              5
-#define FingerIndexPin      1
-#define FingerMiddlePin     6
-#define FingerRingPin       7
-#define FingerPinkyPin      8
-#define TrackpadPin         A0
+#define SysPin              4
+#define MenuPin             3
+#define GripPin             6
 #define JoyXPin             A1
 #define JoyYPin             A2
 #define JoyClickPin         2
 #define TriggerPin          A3
-#define VbatPin             A6
+#define VbatPin             A0
 
 #define BatLevelMax         968             //you need to find all of these values on your own
 #define JoyXMin             237             //check on the utils folder for sketches and instructions
 #define JoyXMax             935             //that help on getting these values
 #define JoyYMin             190             //YOU NEED TO DO THIS FOR BOTH CONTROLLERS
 #define JoyYMax             900             //if you use these values without changing them you MAY
-#define JoyXDeadZoneMin     490             //get stick drift
-#define JoyXDeadZoneMax     620
-#define JoyYDeadZoneMin     420
-#define JoyYDeadZoneMax     620
+#define JoyXDeadZoneMin     515             //get stick drift
+#define JoyXDeadZoneMax     590
+#define JoyYDeadZoneMin     440
+#define JoyYDeadZoneMax     600
 //==========================================================================================================
 
 
@@ -62,14 +57,11 @@ calData calib =
   {1, 1, 1},              //Mag Scale
 };
 
-#define IB_AClick           0x0001
-#define IB_ATouch           0x0002
-#define IB_BClick           0x0004
-#define IB_BTouch           0x0008
-#define IB_SYSClick         0x0010
-#define IB_ThumbStickClick  0x0020
-#define IB_TrackpadTouch    0x0040
-#define IB_ThumbStickTouch  0x0080
+#define HTC_SysClick        0x0001
+#define HTC_MenuClick       0x0002
+#define HTC_ThumbstickClick 0x0004
+#define HTC_GripClick       0x0008
+#define HTC_ThumbstickTouch 0x0010
 //==========================================================================================================
 //************************************* Data packet stuff *************************************************
 //==========================================================================================================
@@ -126,9 +118,9 @@ float rot = 0.f;
 
 void setup() {
 
-  pinMode(APin, INPUT_PULLUP);
-  pinMode(BPin, INPUT_PULLUP);
   pinMode(SysPin, INPUT_PULLUP);
+  pinMode(MenuPin, INPUT_PULLUP);
+  pinMode(GripPin, INPUT_PULLUP);
   pinMode(JoyClickPin, INPUT_PULLUP);
   pinMode(TriggerPin, INPUT_PULLUP);
 
@@ -174,7 +166,7 @@ void setup() {
     }
   }
   if (!digitalRead(CALPIN)) {
-    if (!digitalRead(BPin)) {
+    if (!digitalRead(MenuPin)) {
       Serial.println("Accelerometer and gyroscope calibration mode.");
       Serial.println("Keep IMU completely still on flat and level surface.");
       delay(8000);
@@ -214,18 +206,9 @@ void setup() {
   data.fingerMiddle = 0;
   data.fingerRing = 0;
   data.fingerPinky = 0;
-  data.Data = 0x4B3;
+  data.Data = 0xFF;
 
   filter.begin(MadgwickBeta);
-  /*
-    data.Data |= 0x03;  //non diy index controller identifier
-    data.Data |= 0x10;  //controller reports accelerometer values
-    data.Data |= 0x20;  //controller does support hand tracking
-    //data.Data |= 0x40;  //handtracking type is analog
-    data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
-    data.Data |= 0x400; //controller reports battery %
-  */
-
 }
 
 void loop() {
@@ -247,108 +230,37 @@ void loop() {
   rot *= 0.97f;
   filter.changeBeta(rot * (1.5 - 0.1) / 64000 + 0.1);
 
-  joyTouch = false;
   int btn = 0;
-  tracky = analogRead(TrackpadPin);
-  if (tracky > 560) {
-    trackoutput = 1;
-    btn |= IB_TrackpadTouch;
-  }
-  if (tracky < 300 && tracky > 100) {
-    trackoutput = 0;
-    btn |= IB_TrackpadTouch;
-  }
-  if (tracky == 0) {
-    trackoutput = -1;
-    btn |= IB_TrackpadTouch;
-  }
-  if (tracky < 550 && tracky > 400) {
-    trackoutput = 0;
-  }
 
   axisX = analogRead(JoyXPin);
   axisY = analogRead(JoyYPin);
 
   if (axisX > JoyXDeadZoneMax || axisX < JoyXDeadZoneMin) {
-    if (axisX > JoyXMax) {
-      axisX = JoyXMax;
-    }
-    if (axisX < JoyXMin) {
-      axisX = JoyXMin;
-    }
     data.axisX = -map(axisX, JoyXMin, JoyXMax, -127, 127);
-    btn |= IB_ThumbStickTouch;
-    joyTouch = true;
   } else {
     data.axisX = 0;
   }
 
   if (axisY > JoyYDeadZoneMax || axisY < JoyYDeadZoneMin) {
-    if (axisY > JoyYMax) {
-      axisY = JoyYMax;
-    }
-    if (axisY < JoyYMin) {
-      axisY = JoyYMin;
-    }
     data.axisY = map(axisY, JoyYMin, JoyYMax, -127, 127);
-    btn |= IB_ThumbStickTouch;
-    joyTouch = true;
+    btn |= HTC_ThumbstickTouch;
   } else {
     data.axisY = 0;
   }
 
+  data.trigg = (map(analogRead(TriggerPin), 1024, 0, 0, 255));
 
-  if (analogRead(TriggerPin) < 1000) {
-    data.trigg = map(analogRead(TriggerPin), 1024, 0, 0, 255);
-    data.fingerIndex = map(analogRead(TriggerPin), 1024, 0, 0, 255);
-  }
-  else {
-    data.trigg = 0;
-    data.fingerIndex = 0;
-  }
-
-
-  if (!digitalRead(APin)) {
-    btn |= IB_AClick;
-    btn |= IB_ATouch;
-  }
-  if (!digitalRead(BPin)) {
-    btn |= IB_BClick;
-    btn |= IB_BTouch;
-  }
   if (!digitalRead(SysPin)) {
-    btn |= IB_SYSClick;
+    btn |= HTC_SysClick;
+  }
+  if (!digitalRead(MenuPin)) {
+    btn |= HTC_MenuClick;
   }
   if (!digitalRead(JoyClickPin)) {
-    btn |= IB_ThumbStickClick;
+    btn |= HTC_ThumbstickClick;
   }
-  //  if (digitalRead(FingerIndexPin)) {
-  //    data.fingerIndex = 255;
-  //  }
-  //  else {
-  //    data.fingerIndex = 0;
-  //  }
-  data.gripForce = 0;
-  if (digitalRead(FingerMiddlePin)) {
-    data.fingerMiddle = 255;
-    data.gripForce += 128;
-  }
-  else {
-    data.fingerMiddle = 0;
-  }
-  if (digitalRead(FingerRingPin)) {
-    data.fingerRing = 255;
-     data.gripForce += 64;
-  }
-  else {
-    data.fingerRing = 0;
-  }
-  if (digitalRead(FingerPinkyPin)) {
-    data.fingerPinky = 255;
-     data.gripForce += 63;
-  }
-  else {
-    data.fingerPinky = 0;
+  if (digitalRead(GripPin)) {
+    btn |= HTC_GripClick;
   }
 
 
