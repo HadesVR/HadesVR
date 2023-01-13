@@ -23,7 +23,7 @@
 //************************************ USER CONFIGURABLE STUFF HERE*****************************************
 //==========================================================================================================
 
-#define SERIAL_DEBUG
+//#define SERIAL_DEBUG
 #define IMU_ADDRESS     0x68                // You can find it out by using the IMUIdentifier example
 MPU9250 IMU;                                // IMU type
 #define CALPIN              4               //pin to start mag calibration at power on
