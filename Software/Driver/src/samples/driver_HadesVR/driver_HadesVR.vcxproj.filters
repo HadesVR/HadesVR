@@ -15,6 +15,9 @@
     <ClCompile Include="src\HIDTransport.cpp" />
     <ClCompile Include="src\UARTTransport.cpp" />
     <ClCompile Include="src\ringbuffer.c" />
+    <ClCompile Include="src\filters\SimpleKalman.cpp">
+      <Filter>Filters</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dataHandler.h" />
@@ -31,6 +34,9 @@
     <ClInclude Include="include\HIDTransport.hpp" />
     <ClInclude Include="include\UARTTransport.hpp" />
     <ClInclude Include="include\ringbuffer.h" />
+    <ClInclude Include="include\filters\SimpleKalman.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Filters">

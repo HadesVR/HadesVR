@@ -61,6 +61,7 @@
     <ClInclude Include="include\dataHandler.h" />
     <ClInclude Include="include\devices.hpp" />
     <ClInclude Include="include\filters\MadgwickOrientation.h" />
+    <ClInclude Include="include\filters\SimpleKalman.h" />
     <ClInclude Include="include\filters\V3Kalman.h" />
     <ClInclude Include="include\HandTracking.h" />
     <ClInclude Include="include\settingsAPIKeys.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="src\driverlog.cpp" />
     <ClCompile Include="src\driver_main.cpp" />
     <ClCompile Include="src\filters\MadgwickOrientation.cpp" />
+    <ClCompile Include="src\filters\SimpleKalman.cpp" />
     <ClCompile Include="src\filters\V3Kalman.cpp" />
     <ClCompile Include="src\HandTracking.cpp" />
     <ClCompile Include="src\HIDTransport.cpp" />
