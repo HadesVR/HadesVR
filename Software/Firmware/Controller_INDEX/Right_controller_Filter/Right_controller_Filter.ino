@@ -25,7 +25,7 @@
 
 //#define SERIAL_DEBUG
 #define IMU_ADDRESS     0x68                // You can find it out by using the IMUIdentifier example
-MP9250 IMU;                                // IMU type
+MPU9250 IMU;                                // IMU type
 #define CALPIN              5               //pin to start mag calibration at power on
 
 #define APin                4
@@ -225,7 +225,13 @@ void setup() {
     data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
     data.Data |= 0x400; //controller reports battery %
   */
-
+  err = IMU.init(calib, IMU_ADDRESS);
+  if (err != 0)
+  {
+    Serial.print("IMU ERROR: ");
+    Serial.println(err);
+    while (true);
+  }
 }
 
 void loop() {
@@ -372,7 +378,13 @@ void loop() {
   Serial.print(",AY: ");
   Serial.print(IMUAccel.accelY);
   Serial.print(",AZ: ");
-  Serial.println(IMUAccel.accelZ);
+  Serial.print(IMUAccel.accelZ);
+  Serial.print(",GX: ");
+  Serial.print(IMUGyro.gyroX);
+  Serial.print(",GY: ");
+  Serial.print(IMUGyro.gyroY);
+  Serial.print(",GZ: ");
+  Serial.println(IMUGyro.gyroZ);
 }
 void printCalibration()
 {

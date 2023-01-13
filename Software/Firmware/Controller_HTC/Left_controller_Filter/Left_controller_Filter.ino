@@ -209,6 +209,14 @@ void setup() {
   data.Data = 0xFF;
 
   filter.begin(MadgwickBeta);
+
+  int err = IMU.init(calib, IMU_ADDRESS);
+  if (err != 0)
+  {
+    Serial.print("IMU ERROR: ");
+    Serial.println(err);
+    while (true);
+  }
 }
 
 void loop() {
