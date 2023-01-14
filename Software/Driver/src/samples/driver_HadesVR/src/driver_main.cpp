@@ -30,6 +30,8 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
+static const char* const DriverVersion = "1.40";
+
 #define SUCCESS 0
 #define FAILURE 1
 
@@ -812,8 +814,13 @@ CServerDriver_Sample g_serverDriverNull;
 
 EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 {
+	
 	VR_INIT_SERVER_DRIVER_CONTEXT( pDriverContext );
 	InitDriverLog( vr::VRDriverLog() );
+
+	DriverLog("=========================================================================");
+	DriverLog("========================= HadesVR Version %s ==========================", DriverVersion);
+	DriverLog("=========================================================================");
 
 	//this is stupid
 	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_Enable_Bool);
