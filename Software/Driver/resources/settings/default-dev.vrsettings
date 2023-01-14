@@ -104,10 +104,12 @@
 		"TrackerMode" : 0
    },
    "Experimental" :{
-   		"EnableDriftCorrection" : false,
-		"CorrectionVelocityLowerTreshold" : 1.0,
-		"CorrectionVelocityUpperTreshold" : 1.5,
-		"HMDCorrectionPercentage" : 0.,
-		"ControllerCorrectionPercentage" : 0.1
-   }
+      	"EnableDriftCorrection" : false,
+		"LowerVelocityTreshold" : 2.0,
+		"UpperVelocityTreshold" : 5.0,
+		"Measurement_Uncertainty" : 5.0,
+		"Estimation_Uncertainty" : 1.25,
+		"HMD_Process_Noise" : 0.0,
+		"Controller_Process_Noise" : 2.0
+	}
 }
