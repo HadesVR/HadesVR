@@ -225,7 +225,7 @@ void setup() {
     data.Data |= 0x80;  //controller color is blue (80 for blue 100 for green 200 for red)
     data.Data |= 0x400; //controller reports battery %
   */
-  int err = IMU.init(calib, IMU_ADDRESS);
+  err = IMU.init(calib, IMU_ADDRESS);
   if (err != 0)
   {
     Serial.print("IMU ERROR: ");

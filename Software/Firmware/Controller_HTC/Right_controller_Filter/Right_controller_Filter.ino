@@ -210,7 +210,7 @@ void setup() {
 
   filter.begin(MadgwickBeta);
   
-  int err = IMU.init(calib, IMU_ADDRESS);
+  err = IMU.init(calib, IMU_ADDRESS);
   if (err != 0)
   {
     Serial.print("IMU ERROR: ");
