@@ -23,8 +23,9 @@ The driver configuration is divided into a couple sections for tidyness, these a
 | ------  | ------ |------     |
 | TransportMode | string | Either HID or UART depending on how HMD is connected, see below. |
 | PSMSTrackerFrequency | int | The maximum update rate you have set on your psmoveservice trackers.|
-| ControllerSmoothingK | float | K constant of the controller position smoothing algorithm |
-| HMDSmoothingK | float | K constant of the HMD position smoothing algorithm |
+| EnableDirectMode | bool | Enable direct mode? (Experimental, sort of broken. default value is 'false'.|
+| EDID_VID | int | EDID VID for direct mode.|
+| EDID_PID | int | EDID PID for direct mode.|
 
 If `TransportMode` is set to `HID` (or left unset):
 
@@ -46,51 +47,95 @@ If `TransportMode` is set to `UART`:
 | Stereo  | bool | Enables or disables Stereo display mode, keep enabled unless you're a cyclops.     |
 | IsDisplayOnDesktop  | bool | This makes it so a warning telling you your display isn't in fullscreen mode pops up when your window focus isn't on the VR viewport.     |
 | IsDisplayReal  | bool | ------     |
-| DistanceBetweenEyes  | float | Same as IPD, the distance between your eyes in meters.     |
+| IsSinglePanel  | bool | Set to true if using a single panel display.     |
 | IPD  | float | IPD setting, in meters.     |
 | FOV  | float | FOV setting, in degrees.    |
 | windowWidth  | int | Resolution Width of your VR screen     |
 | windowHeight  | int | Resolution Height of your VR screen     |
 | renderWidth  | int | The width (per eye) of the desired render resolution.     |
-| renderHeight  | int |The height of the desired render resolution.     |
+| renderHeight  | int |The height (per eye) of the desired render resolution.     |
 | displayFrequency  | float | Here goes the refresh rate of your display.     |
 | windowX  | int | Here goes the Width resolution of your main screen.     |
 | windowY  | int | Don't touch this one.     |
 | ScreenOffsetX  | int | Viewport X offset.     |
 | ScreenOffsetY  | int | Viewport Y offset.     |
-| ZoomWidth  | float | Viewport Zoom width.     |
-| ZoomHeight  | float | Viewport Zoom height.     |
-| DistortionK1  | float | k1 distortion coefficient.     |
-| DistortionK2  | float | k2 distortion coefficient.     |
+| ViewportZoom  | float | Viewport Zoom, lower means higher zoom.     |
+| DistanceBetweenLenses  | float | This is the physical distance between the two lenses, in meters     |
+| DistanceBetweenViews  | float | Distance between views, in meters. This should be set as same as IPD in single panel mode and 0 in dual panel mode.     |
+| DisplayWidth  | float | Physical width of the display, in meters     |
+| DisplayCantAngle  | float | Cant angle in degrees of the displays (Experimental, slightly broken, things don't render properly at the edges of the views).     |
 | secondsFromVsyncToPhotons  | float | ------     |
+
+### "Distortion" section where you'll find:
+|Parameter|Type    |Description|
+| ------  | ------ |------     |
+| Red_K1,K2,K3  | float | Red distortion coefficients     |
+| Green_K1,K2,K3  | float | Green distortion coefficients|
+| Blue_K1,K2,K3 |float| Blue distortion coefficients |
 
 ### "HMD" section where you'll find:
 |Parameter|Type    |Description|
 | ------  | ------ |------     |
 | serialNumber  | string | The serial number of the HMD     |
-| EnableHMD  | bool | Enables or disables the HMD part of the driver.|
-| FilterBeta |float| Beta value of the madgwick filter, by default 0.05, smaller values will result in less jitter but will decrease the speed of the drift correction part of the filter. |
+| modelNumber  | string | The model of the HMD     |
+| EnableHMD  | bool | Enables or disables the HMD part of the driver |
+| MinFilterBeta | float | Minimum filter beta of the rotation filter |
+| MaxFilterBeta | float | Maximum filter beta of the rotation filter |
+| UseAccelerometers | bool | Enables the use of the IMU's accelerometer for position smoothing |
+| Camera_Kalman_Measurement_Uncertainty | float | Camera measurement uncertainty of the Kalman position filter |
+| Camera_Kalman_Estimation_Uncertainty | float | Camera estimation uncertainty of the Kalman position filter |
+| Camera_Kalman_Process_Noise | float | Camera process noise of the Kalman position filter |
+| IMU_Kalman_Measurement_Uncertainty | float | IMU measurement uncertainty of the Kalman position filter |
+| IMU_Kalman_Estimation_Uncertainty | float | IMU estimation uncertainty of the Kalman position filter |
+| IMU_Kalman_Process_Noise | float | IMU process noise of the Kalman position filter |
 |HMDYawOffset|float| Yaw offset of the HMD in degrees|
 |HMDPitchOffset|float| Pitch offset of the HMD in degrees|
 |HMDRollOffset|float| Roll offset of the HMD in degres|
+|HMDXOffset|float| X offset of the HMD in meters|
+|HMDYOffset|float| Y offset of the HMD in meters|
+|HMDZOffset|float| Z offset of the HMD in meters|
 
 ### "Controllers" section where you'll find:
 |Parameter|Type    |Description|
 | ------  | ------ |------     |
 | EnableControllers  | bool | Variable to enable or disable controllers.     |
 | ControllerMode  | int | Sets the controller type, 0 being Knuckles controllers and 1 being wand controllers.     |
+| UseAccelerometers | bool | Enables the use of the IMU's accelerometer for position smoothing |
+| Camera_Kalman_Measurement_Uncertainty | float | Camera measurement uncertainty of the Kalman position filter |
+| Camera_Kalman_Estimation_Uncertainty | float | Camera estimation uncertainty of the Kalman position filter |
+| Camera_Kalman_Process_Noise | float | Camera process noise of the Kalman position filter |
+| IMU_Kalman_Measurement_Uncertainty | float | IMU measurement uncertainty of the Kalman position filter |
+| IMU_Kalman_Estimation_Uncertainty | float | IMU estimation uncertainty of the Kalman position filter |
+| IMU_Kalman_Process_Noise | float | IMU process noise of the Kalman position filter |
 |CTRLRightYawOffset | float | Yaw offset of the Right controller in degrees|
 |CTRLRightPitchOffset | float | Pitch offset of the Right controller in degrees|
 |CTRLRightRollOffset | float | Roll offset of the Right controller in degrees|
+|CTRLRightXOffset|float| X offset of the Right controller in meters|
+|CTRLRightYOffset|float| Y offset of the Right controller in meters|
+|CTRLRightZOffset|float| Z offset of the Right controller in meters|
 |CTRLLeftYawOffset | float | Yaw offset of the Left controller in degrees|
 |CTRLLeftPitchOffset | float | Pitch offset of the Left controller in degrees|
 |CTRLLeftRollOffset | float | Roll offset of the Left controller in degrees|
+|CTRLLeftXOffset|float| X offset of the Left controller in meters|
+|CTRLLeftYOffset|float| Y offset of the Left controller in meters|
+|CTRLLeftZOffset|float| Z offset of the Left controller in meters|
 
 ### "Trackers" section where you'll find:
 |Parameter|Type    |Description|
 | ------  | ------ |------     |
 |EnableTrackers| bool| Enables or disables trackers (still work in progress, trackers do nothing as of right now.)
 |TrackerMode| int | 0 meaning full body, 1 meaning waist tracking. |
+
+### "Experimental" section where you'll find:
+|Parameter|Type    |Description|
+| ------  | ------ |------     |
+|EnableDriftCorrection| bool| Enables or disables experimental drift correction
+|LowerVelocityTreshold| float | The lower threshold of velocity in m/s in which the driver will attempt to correct for drift |
+|UpperVelocityTreshold| float | The upper threshold of velocity in m/s in which the driver will attempt to correct for drift |
+|Measurement_Uncertainty| float | Kalman filter measurement uncertainty for the smoothing filter used in drift correction. |
+|Estimation_Uncertainty| float | Kalman filter estimation uncertainty for the smoothing filter used in drift correction. |
+|HMD_Process_Noise| float | Kalman filter process noise for the smoothing filter used in drift correction on the HMD. 0 disables it |
+|Controller_Process_Noise| float | Kalman filter process noise for the smoothing filter used in drift correction on the Controllers. 0 disables it |
 
 # HID configuration
 To configure the driver you will need the VID and PID values from the board you're using. The easiest way of getting them is going to the Arduino IDE, clicking on tools and clicking on get board info with the receiver plugged in:

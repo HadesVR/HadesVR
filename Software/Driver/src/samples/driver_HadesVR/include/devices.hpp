@@ -375,7 +375,7 @@ void updateDevice(CdataHandler& dH, int DeviceType, int DeviceIndex)
 			vr::VRDriverInput()->UpdateScalarComponent(HAnalogCtrlLeft[11], (LeftCtrl.GripStrength >= 0.75f), 0); //grip value
 		}
 
-		if ((LeftCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (RightCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (LeftCtrl.Trigger > 0.9f) && (RightCtrl.Trigger > 0.9f))
+		if ((RightCtrl.Buttons & INDEX_ThumbStickClick) != 0 && (RightCtrl.Trigger > 0.9f))
 		{
 			dH.SetCentering(false);
 		}
