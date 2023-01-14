@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "filters/V3Kalman.h"
+#include "filters/SimpleKalman.h"
 #include "filters/MadgwickOrientation.h"
 #include "Quaternion.hpp"
 #include "Vector3.hpp"
@@ -31,12 +32,12 @@ typedef struct _TrackingData {
 	Vector3 oldAccel = Vector3::Zero();
 
 	Vector3 Velocity = Vector3::Zero();
+	Vector3 IMUVelocity = Vector3::Zero();
 
 	Vector3 Position = Vector3::Zero();
 	Vector3 oldPosition = Vector3::Zero();
 
 	Vector3 LastCameraPos = Vector3::Zero();						//last camera position, unfiltered
-	Vector3 TempIMUPos = Vector3::Zero();							
 	Vector3 CameraVelocity = Vector3::Zero();					//camera velocity, unfiltered, no IMU involvement.
 	Vector3 LastCameraVelocity = Vector3::Zero();					//last camera velocity, unfiltered, no IMU involvement.
 
@@ -47,9 +48,11 @@ typedef struct _TrackingData {
 	Quaternion VectorRotation = Quaternion::Identity();
 	Quaternion OutputRotation = Quaternion::Identity();
 
-	Quaternion RotationConfigOffset = Quaternion::Identity();			//offset in the config filer
+	Quaternion RotationConfigOffset = Quaternion::Identity();			//offset in the config file
 	Quaternion RotationUserOffset = Quaternion::Identity();				//offset when pressing f8
-	Quaternion RotationDriftOffset = Quaternion::Identity();			//drift offset (internal)
+	
+	SimpleKalman DriftKalman;
+	double RotationYawDriftOffset = 0.0;								//drift offset (internal)
 
 	Vector3 PositionOffset = Vector3::Zero();
 
@@ -259,10 +262,11 @@ private:
 
 	void UpdateIMUPosition(_TrackingData& _data, V3Kalman& k);
 	void UpdateVelocity(_TrackingData& _data, bool _wasTracked, Vector3 newCameraPos);
-	void UpdateDriftCorrection(_TrackingData& _data, Vector3 newCameraPos, float percent, float lowerTreshold, float upperTreshold, bool debug);
+	void UpdateDriftCorrection(_TrackingData& _data, float lowerTreshold, float upperTreshold, bool debug);
 
 	void SetOffsetQuat(_TrackingData& _data);
 	void SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey);
+	Quaternion shortestRotation(const Vector3& a, const Vector3& b);
 
 	DataTransport& dataTransport;
 
@@ -295,10 +299,12 @@ private:
 	double deltatime = 0;
 
 	bool enableDriftCorrection = false;
-	float corrVelocityLowerTreshold = 0.8f;
-	float corrVelocityUpperTreshold = 1.5f;
-	float hmdDriftCorr = 0.02f;
-	float contDriftCorr = 0.05f;
+	float driftLowVelThresold = 1.2f;
+	float driftHighVelThresold = 1.2f;
+	float driftMeasurementUncertainty = 4.0f;
+	float driftEstimationUncertainty = 2.0f;
+	float driftHMDP_N = 0.5f;
+	float driftContP_N = 2.00f;
 	
 	V3Kalman HMDKalman;
 	V3Kalman CtrlLeftKalman;

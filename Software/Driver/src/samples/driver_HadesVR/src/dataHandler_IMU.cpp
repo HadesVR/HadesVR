@@ -24,6 +24,9 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	//swap axis
 	lin_Acc = Vector3(lin_Acc.Y, lin_Acc.X, lin_Acc.Z);
 
+	//update IMU velocity for drift correction stuff
+	_data.IMUVelocity += (lin_Acc * deltatime);
+
 	//rotate vector to quaternion so it all matches up nicely
 	Quaternion pq = Quaternion::Inverse(Quaternion(_data.VectorRotation.X, _data.VectorRotation.Z, _data.VectorRotation.Y, _data.VectorRotation.W));
 	lin_Acc = (pq * lin_Acc);
@@ -47,9 +50,6 @@ void CdataHandler::UpdateIMUPosition(_TrackingData& _data, V3Kalman& _k)
 	//update filter
 	_k.updateMeasIMU(instant_pos);
 
-	//update temp position for drift correction stuff
-	_data.TempIMUPos += instant_pos;
-
 	//update old accel
 	_data.oldAccel = _data.Accel;
 }
@@ -64,59 +64,23 @@ void CdataHandler::UpdateVelocity(_TrackingData& _data, bool _wasTracked, Vector
 	if (_wasTracked)  //don't update velocity on new camera tracking point.
 	{
 		_data.Velocity = (((_data.Position - _data.oldPosition) / deltatime));			 //update real velocity (IMU fused, filtered)
-		_data.LastCameraVelocity = _data.CameraVelocity;																	 //update previous camera only velocity
-		_data.CameraVelocity = (newCameraPos - _data.LastCameraPos) / deltatime;											 //update current camera only velocity
+		_data.LastCameraVelocity = _data.CameraVelocity;								 //update previous camera only velocity
+		if (_data.LastCameraPos != Vector3::Zero()) {
+			_data.CameraVelocity = (newCameraPos - _data.LastCameraPos) / deltatime;	 //update current camera only velocity
+		}
+		else {
+			_data.CameraVelocity = Vector3::Zero();
+		}
+		_data.LastCameraPos = newCameraPos;
 	}
 	else {
 		_data.Velocity = Vector3::Zero();											 //No velocity when not tracked
 		_data.LastCameraVelocity = Vector3::Zero();							         //No velocity when not tracked
 		_data.CameraVelocity = Vector3::Zero();								         //No velocity when not tracked
+		_data.LastCameraPos = Vector3::Zero();
 	}
 	//update position
 	_data.oldPosition = _data.Position;
-}
-
-void CdataHandler::UpdateDriftCorrection(_TrackingData& _data, Vector3 newCameraPos, float percent, float lowerTreshold, float upperTreshold, bool debug)
-{
-	float vm = Vector3::Magnitude(_data.Velocity);
-	if (vm >= lowerTreshold && vm <= upperTreshold && Vector3::Magnitude(_data.CameraVelocity) != 0.f && Vector3::Magnitude(_data.TempIMUPos) >= vm / psmsUpdateRate)
-	{
-		Quaternion Offset;
-		Quaternion Result;
-		float Scale = percent;
-		Vector3 instantCamVelocity = (_data.CameraVelocity - _data.LastCameraVelocity);				
-
-		double  VectorsDot = Vector3::Dot(instantCamVelocity, _data.TempIMUPos);		
-		Vector3 VectorsCross = Vector3::Cross(instantCamVelocity, _data.TempIMUPos);
-
-		//////////////////////////////////////////////////////////////////////////////////
-		Result.W = (VectorsDot + 1.f);													//
-		Result.X = (VectorsCross.X);													//
-		Result.Y = (VectorsCross.Y);													//
-		Result.Z = (VectorsCross.Z);													//
-		Result = Quaternion::Normalized(Result);										//
-																						//
-		if (fabsf(Result.Y) < 0.017f)	//don't update if if under 2 degrees of error	//
-		{																				//
-			_data.TempIMUPos = Vector3::Zero();											//
-			return;																		//
-		}																				//
-		if (fabsf(Result.Y) > 0.131f)   //if error is > 15 degrees, update completely	//
-		{																				//
-			Scale = 1.f;																//
-			if (debug) DriverLog("[Debug] Drift correction: Off by over 15 degrees!!!");//
-		}																				//
-		Offset.W = _data.RotationDriftOffset.W + (VectorsDot + 1.f * Scale);			//		This is disgusting		
-		Offset.X = _data.RotationDriftOffset.X + (VectorsCross.X * Scale);				//
-		Offset.Y = _data.RotationDriftOffset.Y + (VectorsCross.Y * Scale);				//		We don't belive in doing things properly over here.
-		Offset.Z = _data.RotationDriftOffset.Z + (VectorsCross.Z * Scale);				//
-		_data.RotationDriftOffset = Quaternion::Normalized(Offset);						//
-		//////////////////////////////////////////////////////////////////////////////////		
-		Vector3 vecRes = Quaternion::ToEuler(Result);									
-		if (debug) DriverLog("[Debug] Drift correction: qW: %f,qX: %f,qY: %f,qZ: %f, vX: %f,vY: %f,vZ: %f", Result.W, Result.X, Result.Y, Result.Z, vecRes.X, vecRes.Y, vecRes.Z);
-	}
-	_data.TempIMUPos = Vector3::Zero();
-	//if (debug) DriverLog("[Debug] Drift correction: Velocity: %f, imumag:%f, cammag:%f", vm / 60, Vector3::Magnitude(_data.TempIMUPos), Vector3::Magnitude(_data.CameraVelocity));
 }
 
 void CdataHandler::SaveUserOffset(float DataW, float DataY, Quaternion& Offset, const char* settingsKey)
@@ -153,27 +117,14 @@ void CdataHandler::SetCentering(bool reset)
 		SaveUserOffset(1.f, 0.f, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
 		return;
 	}
-	/// <summary>
+	Quaternion HmdQuat = Quaternion::Normalized(Quaternion::FromEuler(0, HMDData.TrackingData.RotationYawDriftOffset, 0) * HMDData.TrackingData.RawRotation);
+	Quaternion RightCont = Quaternion::Normalized(Quaternion::FromEuler(0, RightCtrlData.TrackingData.RotationYawDriftOffset, 0) * RightCtrlData.TrackingData.RawRotation);
+	Quaternion LeftCont = Quaternion::Normalized(Quaternion::FromEuler(0, LeftCtrlData.TrackingData.RotationYawDriftOffset, 0) * LeftCtrlData.TrackingData.RawRotation);
 	/// HMD
-	/// </summary>
-
-	SaveUserOffset(HMDData.TrackingData.RawRotation.W, HMDData.TrackingData.RawRotation.Y, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
-
-	/// <summary>
-	///				Controllers
-	/// </summary>
-
-	SaveUserOffset(RightCtrlData.TrackingData.RawRotation.W, RightCtrlData.TrackingData.RawRotation.Y, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
-	SaveUserOffset(LeftCtrlData.TrackingData.RawRotation.W, LeftCtrlData.TrackingData.RawRotation.Y, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
-
-	/// <summary>
-	///					Trackers
-	/// </summary>
-	/* TODO: IMPLEMENT
-	setCalibOffset(TrackerWaistData.Rotation.W, TrackerWaistData.Rotation.Y, WaistTrackerOffset, k_pch_Calibration_TRKWaist);
-	setCalibOffset(TrackerLeftData.Rotation.W, TrackerLeftData.Rotation.Y, LeftTrackerOffset, k_pch_Calibration_TRKLeft);
-	setCalibOffset(TrackerRightData.Rotation.W, TrackerRightData.Rotation.Y, RightTrackerOffset, k_pch_Calibration_TRKRight);
-	*/
+	SaveUserOffset(HmdQuat.W, HmdQuat.Y, HMDData.TrackingData.RotationUserOffset, k_pch_Calibration_HMD);
+	///	Controllers
+	SaveUserOffset(RightCont.W, RightCont.Y, RightCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTRight);
+	SaveUserOffset(LeftCont.W, LeftCont.Y, LeftCtrlData.TrackingData.RotationUserOffset, k_pch_Calibration_CONTLeft);
 }
 
 void CdataHandler::ResetPos(bool controllers, bool hmd) {
@@ -195,12 +146,54 @@ void CdataHandler::ResetPos(bool controllers, bool hmd) {
 
 void CdataHandler::SetOffsetQuat(_TrackingData& _data)
 {
-	if (
-		_data.RotationUserOffset.W == 0.f && _data.RotationUserOffset.Y == 0.f) {  //Don't try to use an enpty offset quaternion 
-		_data.RotationUserOffset.W = 1.f;
-		_data.RotationUserOffset.Y = 0.f;
+	if (_data.RotationUserOffset.W == 0.f && _data.RotationUserOffset.Y == 0.f) {  //Don't try to use an enpty offset quaternion 
+		_data.RotationUserOffset = Quaternion::Identity();
 	}
-	_data.VectorRotation = Quaternion::Normalized(_data.RawRotation * _data.RotationDriftOffset);			//calculate temp quaternion by offsetting raw data by the drift correction offset
-	Quaternion temp = Quaternion::Normalized(_data.VectorRotation * _data.RotationConfigOffset);			//temp is the vector offset rotated by the config offset
-	_data.OutputRotation = Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * temp);	//final output rotation is the one calculated before offse rotated by the user offset 
-} 
+	Quaternion temp = Quaternion::Normalized(Quaternion::FromEuler(0, _data.RotationYawDriftOffset, 0) * _data.RawRotation);			//calculate temp quaternion by offsetting raw data by the drift correction offset
+	_data.VectorRotation = Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * temp);
+	_data.OutputRotation = Quaternion::Normalized(Quaternion::Normalized(_data.VectorRotation * _data.RotationConfigOffset));	//final output rotation is the one calculated before offse rotated by the config offset 
+}
+
+void CdataHandler::UpdateDriftCorrection(_TrackingData& _data, float lowerTreshold, float upperTreshold, bool debug)
+{
+	if (_data.DriftKalman.getPN() == 0.f || _data.Velocity == Vector3::Zero() || _data.IMUVelocity == Vector3::Zero() || _data.CameraVelocity == Vector3::Zero()) {
+		_data.IMUVelocity = Vector3::Zero();
+		return;
+	}
+	float vm = sqrtf(_data.Velocity.X * _data.Velocity.X + _data.Velocity.Y * _data.Velocity.Y);								//don't care about Z axis.
+	float im = sqrtf(_data.IMUVelocity.X * _data.IMUVelocity.X + _data.IMUVelocity.Y * _data.IMUVelocity.Y);
+
+	if (vm >= lowerTreshold && vm <= upperTreshold && im >= vm / psmsUpdateRate)
+	{
+		Quaternion localRotation = Quaternion::Inverse(Quaternion::Normalized(Quaternion::Normalized(_data.RotationUserOffset) * _data.RawRotation));
+		Quaternion offset = shortestRotation(Vector3::Normalized(localRotation * Vector3(_data.IMUVelocity.Y, _data.IMUVelocity.X, _data.IMUVelocity.Z)), Vector3::Normalized(_data.CameraVelocity / psmsUpdateRate));		//this implementation is a bit yucky
+		Vector3 rot = Quaternion::ToEuler(offset);																																//however, it works.
+		if (fabsf(_data.RotationYawDriftOffset - rot.Y) > 2.5f)
+		{
+			rot.Y += M_PI;
+		}
+		_data.RotationYawDriftOffset = _data.DriftKalman.update(rot.Y);
+		//_data.RotationYawDriftOffset = rot.Y;
+		if (debug) DriverLog("[Debug] Drift correction: Final correction: %f, Noisy boi correction: %f", _data.RotationYawDriftOffset * 180.0 / M_PI, rot.Y * 180.0 / M_PI);
+	}
+	_data.IMUVelocity = Vector3::Zero();
+}
+// Returns the quaternion rotation that rotates vector `a` to vector `b`, Thanks chatGPT
+Quaternion CdataHandler::shortestRotation(const Vector3& a, const Vector3& b) {
+	// Compute the dot product between `a` and `b`
+	double dotProduct = Vector3::Dot(a,b);
+	// If the dot product is <0, invert one of the components.
+	if (dotProduct < 0) {
+		return shortestRotation(-a, b);
+	}
+	// Compute the cross product between `a` and `b`
+	Vector3 crossProduct = Vector3::Cross(a, b);
+	// Compute the w component of the quaternion
+	double w = sqrt(Vector3::Magnitude(a) * Vector3::Magnitude(b)) + dotProduct;
+	// Construct Quaternion
+	Quaternion o = Quaternion(crossProduct.X, crossProduct.Y, crossProduct.Z, w);
+	// Normalize the quaternion
+	o = Quaternion::Normalized(o);
+	// Return the normalized quaternion
+	return o;
+}

@@ -167,7 +167,7 @@ void CdataHandler::ReadTransportData()
 				break;
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max USB HID update rate is 1000hz.
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));	//max USB HID update rate is 1000hz.
 	}
 	DriverLog("[DataTransport] Stopping to poll HID data");
 }
@@ -565,8 +565,7 @@ void CdataHandler::PSMUpdate()
 				HMDKalman.updateMeasCam(PSMSHMDPos);																	//update filter
 				HMDData.TrackingData.Position = HMDKalman.getEstimation();												//update position
 				UpdateVelocity(HMDData.TrackingData, HMDData.TrackingData.wasTracked, PSMSHMDPos);						//update velocity
-				if (enableDriftCorrection) { UpdateDriftCorrection(HMDData.TrackingData, PSMSHMDPos, hmdDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
-				HMDData.TrackingData.LastCameraPos = PSMSHMDPos;
+				if (enableDriftCorrection) { UpdateDriftCorrection(HMDData.TrackingData, driftLowVelThresold, driftHighVelThresold, false); }
 				HMDData.TrackingData.wasTracked = false;
 			}
 		}
@@ -583,8 +582,7 @@ void CdataHandler::PSMUpdate()
 				CtrlRightKalman.updateMeasCam(PSMSCtrlRightPos);																				//update filter
 				RightCtrlData.TrackingData.Position = CtrlRightKalman.getEstimation();															//update position
 				UpdateVelocity(RightCtrlData.TrackingData, RightCtrlData.TrackingData.wasTracked, PSMSCtrlRightPos);							//update velocity
-				if (enableDriftCorrection) { UpdateDriftCorrection(RightCtrlData.TrackingData, PSMSCtrlRightPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
-				RightCtrlData.TrackingData.LastCameraPos = PSMSCtrlRightPos;
+				if (enableDriftCorrection) { UpdateDriftCorrection(RightCtrlData.TrackingData, driftLowVelThresold, driftHighVelThresold, false); }
 				RightCtrlData.TrackingData.wasTracked = false;
 			}
 		}
@@ -601,8 +599,7 @@ void CdataHandler::PSMUpdate()
 				CtrlLeftKalman.updateMeasCam(PSMSCtrlLeftPos);																					//update filter
 				LeftCtrlData.TrackingData.Position = CtrlLeftKalman.getEstimation();															//update position
 				UpdateVelocity(LeftCtrlData.TrackingData, LeftCtrlData.TrackingData.wasTracked, PSMSCtrlLeftPos);								//update velocity
-				if (enableDriftCorrection) { UpdateDriftCorrection(LeftCtrlData.TrackingData, PSMSCtrlLeftPos, contDriftCorr, corrVelocityLowerTreshold, corrVelocityUpperTreshold, false); }
-				LeftCtrlData.TrackingData.LastCameraPos = PSMSCtrlLeftPos;
+				if (enableDriftCorrection) { UpdateDriftCorrection(LeftCtrlData.TrackingData, driftLowVelThresold, driftHighVelThresold, false); }
 				LeftCtrlData.TrackingData.wasTracked = false;																					//set to false once done calculating stuff for next cycle
 			}
 		}
@@ -671,10 +668,19 @@ void CdataHandler::StartData()
 
 		//drift correction stuff.
 		enableDriftCorrection = vr::VRSettings()->GetBool(k_pch_Experimental_Section, k_pch_EnableCorrection_Bool);
-		corrVelocityLowerTreshold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_CorrectionLowerTreshold_Float);
-		corrVelocityUpperTreshold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_CorrectionUpperTreshold_Float);
-		hmdDriftCorr = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_HMDCorrPercent_Float);
-		contDriftCorr = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_ContCorrPercent_Float);
+		driftMeasurementUncertainty = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_MeasurementUncertainty_Float);
+		driftEstimationUncertainty = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_EstimationUncertainty_Float);
+		driftHMDP_N = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_HMDP_Noise_Float);
+		driftContP_N = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_ContP_Noise_Float);
+		driftLowVelThresold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_LowVelThreshold_Float);
+		driftHighVelThresold = vr::VRSettings()->GetFloat(k_pch_Experimental_Section, k_pch_Drift_HighVelThreshold_Float);
+		//load up filters
+		if (enableDriftCorrection) {
+			HMDData.TrackingData.DriftKalman.setSettings(driftMeasurementUncertainty, driftEstimationUncertainty, driftHMDP_N);
+			RightCtrlData.TrackingData.DriftKalman.setSettings(driftMeasurementUncertainty, driftEstimationUncertainty, driftContP_N);
+			LeftCtrlData.TrackingData.DriftKalman.setSettings(driftMeasurementUncertainty, driftEstimationUncertainty, driftContP_N);
+		}
+
 
 		//use accelerometers?
 		CtrlAccelEnable = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Tracking_AccelEnable_Bool);
