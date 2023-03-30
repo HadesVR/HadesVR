@@ -117,7 +117,8 @@ float rot = 0.f;
 //==========================================================================================================
 
 void setup() {
-
+  Wire.begin();
+  Wire.setClock(400000); //400khz clock
   pinMode(SysPin, INPUT_PULLUP);
   pinMode(MenuPin, INPUT_PULLUP);
   pinMode(GripPin, INPUT_PULLUP);

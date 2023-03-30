@@ -156,26 +156,7 @@ struct HMDRAWPacket
 
   uint16_t HMDData;
 
-  int16_t tracker1_QuatW;
-  int16_t tracker1_QuatX;
-  int16_t tracker1_QuatY;
-  int16_t tracker1_QuatZ;
-  uint8_t tracker1_vBat;
-  uint8_t tracker1_data;
-
-  int16_t tracker2_QuatW;
-  int16_t tracker2_QuatX;
-  int16_t tracker2_QuatY;
-  int16_t tracker2_QuatZ;
-  uint8_t tracker2_vBat;
-  uint8_t tracker2_data;
-
-  int16_t tracker3_QuatW;
-  int16_t tracker3_QuatX;
-  int16_t tracker3_QuatY;
-  int16_t tracker3_QuatZ;
-  uint8_t tracker3_vBat;
-  uint8_t tracker3_data;
+  uint8_t Padding[30];
 
 };
 struct ControllerPacket
@@ -247,6 +228,8 @@ MagData IMUMag;
 //==========================================================================================================
 
 void setup() {
+  Wire.begin();
+  Wire.setClock(400000); //400khz clock
   pinMode(CALPIN, INPUT_PULLUP);
   //setup transport
   transport.setup();
