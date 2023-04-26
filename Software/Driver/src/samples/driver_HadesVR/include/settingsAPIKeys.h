@@ -26,6 +26,8 @@ static const char* const k_pch_Sample_DisplayOnDesktop = "IsDisplayOnDesktop";
 static const char* const k_pch_Sample_DisplayReal = "IsDisplayReal";
 static const char* const k_pch_Sample_DebugMode_Bool = "DebugMode";
 static const char* const k_pch_Sample_DisplayAngle_Float = "DisplayCantAngle";
+static const char* const k_pch_Sample_EyeRightRollAngle_Float = "RightEyeRollAngle";
+static const char* const k_pch_Sample_EyeLeftRollAngle_Float = "LeftEyeRollAngle";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
