@@ -325,24 +325,25 @@ public:
 
 		//Don't ask...
 		float M_PIF = 3.14159265358979323846f;
-		
+		centerOffsetV += m_viewportUVOffset;
+		//I am so sorry 
 		if (eEye == Eye_Left) {
 			float a = cos(abs(m_eyeLeftRollAngle)) + sin(abs(m_eyeLeftRollAngle)) * -1;		//This is *probably* fine
 			coordinates.rfRed[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = (cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfRed[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f;
 			coordinates.rfGreen[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = (cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfGreen[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f;
 			coordinates.rfBlue[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = (cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfBlue[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f;
 		}
 		else {
 			float a = cos(abs(m_eyeRightRollAngle)) + sin(abs(m_eyeRightRollAngle)) * -1;
 			coordinates.rfRed[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = (cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfRed[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f;
 			coordinates.rfGreen[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = (cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfGreen[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f;
 			coordinates.rfBlue[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = (cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f) + m_viewportUVOffset;
+			coordinates.rfBlue[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f;
 		}
 		return coordinates;	
 	}
