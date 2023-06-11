@@ -30,12 +30,13 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-static const char* const DriverVersion = "BETA_1.41_5";
+static const char* const DriverVersion = "BETA_1.41_6";
 
 #define SUCCESS 0
 #define FAILURE 1
 
 bool HMDConnected = false, ctrlsConnected = false, trackersConnected = false;
+bool headlessMode = false;
 
 int controllerMode, trackerMode;
 
@@ -348,8 +349,21 @@ public:
 		return coordinates;	
 	}
 
-	virtual DriverPose_t GetPose() 
+	virtual DriverPose_t GetPose()
 	{
+		if (headlessMode) {
+			DriverPose_t pose = { 0 };
+			pose.poseIsValid = true;
+			pose.deviceIsConnected = true;
+			pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+			pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+			pose.qRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+			pose.vecPosition[0] = 0;
+			pose.vecPosition[1] = 0;
+			pose.vecPosition[2] = 0;
+			pose.result = TrackingResult_Running_OK;
+			return pose;
+		}
 		return dataHandler.GetHMDPose();
 	}
 	
@@ -846,12 +860,21 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	DriverLog("=========================================================================");
 
 	//this is stupid
+	headlessMode = vr::VRSettings()->GetBool(k_pch_Driver_Section, k_pch_headlessMode_Bool);
 	ctrlsEnabled = vr::VRSettings()->GetBool(k_pch_Controllers_Section, k_pch_Controller_Enable_Bool);
 	controllerMode = vr::VRSettings()->GetInt32(k_pch_Controllers_Section, k_pch_Controller_Mode_Int32);
 
 	HMDEnabled = vr::VRSettings()->GetBool(k_pch_HMD_Section, k_pch_HMD_Enable_Bool);
 	trackersEnabled = vr::VRSettings()->GetInt32(k_pch_Tracker_Section, k_pch_Tracker_Enable_Bool);
 	trackerMode = vr::VRSettings()->GetInt32(k_pch_Tracker_Section, k_pch_Tracker_Mode_Int32);
+
+	if (headlessMode) {
+		DriverLog("[Init] Headless mode enabled. ignoring all data.");
+		HMDConnected = true;
+		m_pHmd = new C_HMDDeviceDriver(*dataHandler);
+		vr::VRServerDriverHost()->TrackedDeviceAdded(m_pHmd->GetSerialNumber().c_str(), vr::TrackedDeviceClass_HMD, m_pHmd);
+		return VRInitError_None;
+	}
 
 	if (trackersEnabled) {
 		DriverLog("[TRACKERS] Trackers enabled!");
@@ -866,7 +889,7 @@ EVRInitError CServerDriver_Sample::Init( vr::IVRDriverContext *pDriverContext )
 	if (controllerMode > 9) { controllerMode = 0; }
 
 	EVRSettingsError error;
-	char transportMode[32] = {0};
+	char transportMode[32] = { 0 };
 	vr::VRSettings()->GetString(k_pch_Driver_Section, k_pch_TransportMode_String, transportMode, sizeof(transportMode), &error);
 	if (strcmp(transportMode, "UART") == 0) {
 		DriverLog("[Init] Using UART transport");

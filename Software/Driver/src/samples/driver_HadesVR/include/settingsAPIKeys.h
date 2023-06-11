@@ -55,6 +55,7 @@ static const char* const k_pch_DirectMode_EDID_PID_Int32 = "EDID_PID";
 static const char* const k_pch_DirectMode_EDID_VID_Int32 = "EDID_VID";
 static const char* const k_pch_DirectModeEnable_Bool = "EnableDirectMode";
 
+static const char* const k_pch_headlessMode_Bool = "HeadlessMode";
 static const char* const k_pch_TransportMode_String = "TransportMode";
 static const char* const k_pch_UART_Port = "UART_Port";
 static const char* const k_pch_UART_Baudrate = "UART_Baudrate";
