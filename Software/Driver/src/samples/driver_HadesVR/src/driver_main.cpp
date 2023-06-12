@@ -330,21 +330,40 @@ public:
 		//I am so sorry 
 		if (eEye == Eye_Left) {
 			float a = cos(abs(m_eyeLeftRollAngle)) + sin(abs(m_eyeLeftRollAngle)) * -1;		//This is *probably* fine
-			coordinates.rfRed[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfGreen[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfBlue[0] = cos(m_eyeLeftRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = cos(m_eyeLeftRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeLeftRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f;
+			//image mirroring stuff.
+			float b = 1;
+			if (vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Mirror_Bool)) {
+				b = a;
+				if (abs(m_eyeLeftRollAngle) < .1f) {
+					b = -b;
+				}
+			}
+			float cospi = cos(m_eyeLeftRollAngle + M_PIF);
+			float sinpi = sin(m_eyeLeftRollAngle + M_PIF);
+			coordinates.rfRed[0] = cospi * (b * -hX_Red + centerOffsetU - 0.5f) + sinpi * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfRed[1] = cospi * (a * hY_Red + centerOffsetV - 0.5f) + sinpi * (b * -hX_Red + centerOffsetU - 0.5f) + 0.5f;
+			coordinates.rfGreen[0] = cospi * (b * -hX_Green + centerOffsetU - 0.5f) + sinpi * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfGreen[1] = cospi * (a * hY_Green + centerOffsetV - 0.5f) + sinpi * (b * -hX_Green + centerOffsetU - 0.5f) + 0.5f;
+			coordinates.rfBlue[0] = cospi * (b *-hX_Blue + centerOffsetU - 0.5f) + sinpi * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfBlue[1] = cospi * (a * hY_Blue + centerOffsetV - 0.5f) + sinpi * (b * -hX_Blue + centerOffsetU - 0.5f) + 0.5f;
 		}
 		else {
 			float a = cos(abs(m_eyeRightRollAngle)) + sin(abs(m_eyeRightRollAngle)) * -1;
-			coordinates.rfRed[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Red + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Red + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfGreen[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Green + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Green + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfBlue[0] = cos(m_eyeRightRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = cos(m_eyeRightRollAngle + M_PIF) * (a * hY_Blue + centerOffsetV - 0.5f) + sin(m_eyeRightRollAngle + M_PIF) * (-hX_Blue + centerOffsetU - 0.5f) + 0.5f;
+			float b = 1;
+			if (vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Mirror_Bool)) {
+				b = a;
+				if (abs(m_eyeRightRollAngle) < .1f) {
+					b = -b;
+				}
+			}
+			float cospi = cos(m_eyeRightRollAngle + M_PIF);
+			float sinpi = sin(m_eyeRightRollAngle + M_PIF);
+			coordinates.rfRed[0] = cospi * (b * -hX_Red + centerOffsetU - 0.5f) + sinpi * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfRed[1] = cospi * (a * hY_Red + centerOffsetV - 0.5f) + sinpi * (b * -hX_Red + centerOffsetU - 0.5f) + 0.5f;
+			coordinates.rfGreen[0] = cospi * (b * -hX_Green + centerOffsetU - 0.5f) + sinpi * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfGreen[1] = cospi * (a * hY_Green + centerOffsetV - 0.5f) + sinpi * (b * -hX_Green + centerOffsetU - 0.5f) + 0.5f;
+			coordinates.rfBlue[0] = cospi * (b * -hX_Blue + centerOffsetU - 0.5f) + sinpi * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
+			coordinates.rfBlue[1] = cospi * (a * hY_Blue + centerOffsetV - 0.5f) + sinpi * (b * -hX_Blue + centerOffsetU - 0.5f) + 0.5f;
 		}
 		return coordinates;	
 	}
