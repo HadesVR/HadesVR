@@ -181,6 +181,9 @@ DriverPose_t CdataHandler::GetHMDPose()
 
 	pose.qWorldFromDriverRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
 	pose.qDriverFromHeadRotation = HmdQuaternion_t{ 1, 0, 0, 0 };
+	pose.shouldApplyHeadModel = true;
+	pose.poseTimeOffset = 0;
+	pose.willDriftInYaw = false;
 
 	if (dataTransport.IsConnected()) {
 		pose.result = TrackingResult_Running_OK;
