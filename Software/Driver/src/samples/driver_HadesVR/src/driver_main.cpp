@@ -30,7 +30,7 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-static const char* const DriverVersion = "BETA_1.41_6";
+static const char* const DriverVersion = "1.5.1";
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -59,6 +59,7 @@ public:
 
 		//DriverLog( "Using settings values\n" );
 		m_flIPD = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_IPD_Float);
+		m_feyeReliefMeters = vr::VRSettings()->GetFloat(k_pch_Display_Section, k_pch_Sample_EyeReliefMeters_Float);
 
 		char buf[1024];
 		vr::VRSettings()->GetString(k_pch_HMD_Section, k_pch_HMD_SerialNumber_String, buf, sizeof( buf ) );
@@ -117,9 +118,9 @@ public:
 	{	
 		HMDIndex_t = unObjectId;
 		m_ulPropertyContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer( HMDIndex_t );
+
 		//general
-		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, vr::Prop_TrackingSystemName_String, "PSMoveServiceEx");
-		vr::VRProperties()->SetStringProperty( m_ulPropertyContainer, Prop_ModelNumber_String, m_sModelNumber.c_str() );
+		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_ModelNumber_String, m_sModelNumber.c_str());
 		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_RenderModelName_String, m_sModelNumber.c_str());
 		vr::VRProperties()->SetStringProperty(m_ulPropertyContainer, Prop_SerialNumber_String, "000000");
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_WillDriftInYaw_Bool, false);
@@ -144,15 +145,13 @@ public:
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_ReportsTimeSinceVSync_Bool, false);
 		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, Prop_SecondsFromVsyncToPhotons_Float, m_flSecondsFromVsyncToPhotons);
 		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, Prop_DisplayFrequency_Float, m_flDisplayFrequency);
-		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserIpdMeters_Float, m_flIPD );
+		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, Prop_UserIpdMeters_Float, m_flIPD);
 		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, Prop_CurrentUniverseId_Uint64, 2);
 		vr::VRProperties()->SetUint64Property(m_ulPropertyContainer, Prop_DisplayFirmwareVersion_Uint64, 1);
-		vr::VRProperties()->SetFloatProperty( m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, 0.1f);
+		vr::VRProperties()->SetFloatProperty(m_ulPropertyContainer, Prop_UserHeadToEyeDepthMeters_Float, m_feyeReliefMeters);
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, vr::Prop_DisplayAllowNightMode_Bool, true);
 		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_ExpectedControllerCount_Int32, 2);
 		vr::VRProperties()->SetInt32Property(m_ulPropertyContainer, Prop_HmdTrackingStyle_Int32, HmdTrackingStyle_OutsideInCameras);
-
-
 
 		//Debug mode activate Windowed Mode (borderless fullscreen), lock to 30 FPS 
 		vr::VRProperties()->SetBoolProperty(m_ulPropertyContainer, Prop_DisplayDebugMode_Bool, m_bDebugMode);
@@ -461,6 +460,7 @@ private:
 	float m_flSecondsFromVsyncToPhotons;
 	float m_flDisplayFrequency;
 	float m_flIPD;
+	float m_feyeReliefMeters = 0.f;
 	float m_fViewportZoom;
 	float m_fFOV;
 	float m_displayCantAngle = 0.f;

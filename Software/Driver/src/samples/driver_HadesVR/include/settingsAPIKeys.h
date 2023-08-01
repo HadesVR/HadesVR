@@ -15,6 +15,7 @@ static const char* const k_pch_Sample_DisplayFrequency_Float = "displayFrequency
 static const char* const k_pch_Sample_ViewportZoom_Float = "ViewportZoom";
 static const char* const k_pch_Sample_FOV_Float = "FOV";
 static const char* const k_pch_Sample_IPD_Float = "IPD";
+static const char* const k_pch_Sample_EyeReliefMeters_Float = "EyeReliefMeters";
 static const char* const k_pch_Sample_DistanceBetweenLenses_Float = "DistanceBetweenLenses";
 static const char* const k_pch_Sample_DistanceBetweenViews_Float = "DistanceBetweenViews";
 static const char* const k_pch_Sample_DisplayWidth_Float = "DisplayWidth";
