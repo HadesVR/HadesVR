@@ -30,7 +30,7 @@ using namespace std::chrono;
 #error "Unsupported Platform."
 #endif
 
-static const char* const DriverVersion = "1.5.1";
+static const char* const DriverVersion = "1.5.2";
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -174,15 +174,11 @@ public:
 		DriverLog("[HMD] Seconds from Vsync to Photons: %f\n", m_flSecondsFromVsyncToPhotons);
 		DriverLog("[HMD] Display Frequency: %f\n", m_flDisplayFrequency);
 		DriverLog("[HMD] IPD: %f\n", m_flIPD);
-		//Apply display cant angle (yaw)
-		if(m_displayCantAngle != 0.f)
-		{
-			vr::VRServerDriverHost()->SetDisplayEyeToHead(HMDIndex_t, CalcMatFromEuler(m_displayCantAngle, -(m_flIPD / 2)), CalcMatFromEuler(-m_displayCantAngle, m_flIPD / 2));
-			DriverLog("[HMD] Display cant angle is %f, calculating new eye to head matrices...", m_displayCantAngle);
-		}
-		else {
-			DriverLog("Display cant angle is %f, using standard eye to head matrices...", m_displayCantAngle);
-		}
+
+		//Apply display angles
+		vr::VRServerDriverHost()->SetDisplayEyeToHead(HMDIndex_t, CalcMatFromEuler(m_displayCantAngle, 0, m_eyeLeftRollAngle, -(m_flIPD / 2)), CalcMatFromEuler(-m_displayCantAngle, 0, m_eyeRightRollAngle, m_flIPD / 2));
+		DriverLog("[HMD] Display cant angle is %f, calculating new eye to head matrices...", m_displayCantAngle);
+
 		
 		return VRInitError_None;
 	}
@@ -341,7 +337,7 @@ public:
 				centerOffsetU = 0.5f * (0.25 * m_fDisplayWidth - centerDifference) / (0.25 * m_fDisplayWidth);
 			}
 		}
-		
+
 		rr = sqrt((fU - centerOffsetU) * (fU - centerOffsetU) + (-(fV - centerOffsetV)) * (-(fV - centerOffsetV)));
 		rr2 = rr * rr;
 		rr4 = rr2 * rr2;
@@ -359,48 +355,14 @@ public:
 		hX_Blue = cos(theta) * r2_Blue * m_fViewportZoom;
 		hY_Blue = sin(theta) * r2_Blue * m_fViewportZoom * m_nRenderHeight / m_nRenderWidth;
 
-		//Don't ask...
-		float M_PIF = 3.14159265358979323846f;
-		centerOffsetV += m_viewportUVOffset;
-		//I am so sorry 
-		if (eEye == Eye_Left) {
-			float a = cos(abs(m_eyeLeftRollAngle)) + sin(abs(m_eyeLeftRollAngle)) * -1;		//This is *probably* fine
-			//image mirroring stuff.
-			float b = 1;
-			if (vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Mirror_Bool)) {
-				b = a;
-				if (abs(m_eyeLeftRollAngle) < .1f) {
-					b = -b;
-				}
-			}
-			float cospi = cos(m_eyeLeftRollAngle + M_PIF);
-			float sinpi = sin(m_eyeLeftRollAngle + M_PIF);
-			coordinates.rfRed[0] = cospi * (b * -hX_Red + centerOffsetU - 0.5f) + sinpi * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = cospi * (a * hY_Red + centerOffsetV - 0.5f) + sinpi * (b * -hX_Red + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfGreen[0] = cospi * (b * -hX_Green + centerOffsetU - 0.5f) + sinpi * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = cospi * (a * hY_Green + centerOffsetV - 0.5f) + sinpi * (b * -hX_Green + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfBlue[0] = cospi * (b *-hX_Blue + centerOffsetU - 0.5f) + sinpi * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = cospi * (a * hY_Blue + centerOffsetV - 0.5f) + sinpi * (b * -hX_Blue + centerOffsetU - 0.5f) + 0.5f;
-		}
-		else {
-			float a = cos(abs(m_eyeRightRollAngle)) + sin(abs(m_eyeRightRollAngle)) * -1;
-			float b = 1;
-			if (vr::VRSettings()->GetBool(k_pch_Display_Section, k_pch_Sample_Mirror_Bool)) {
-				b = a;
-				if (abs(m_eyeRightRollAngle) < .1f) {
-					b = -b;
-				}
-			}
-			float cospi = cos(m_eyeRightRollAngle + M_PIF);
-			float sinpi = sin(m_eyeRightRollAngle + M_PIF);
-			coordinates.rfRed[0] = cospi * (b * -hX_Red + centerOffsetU - 0.5f) + sinpi * (a * hY_Red + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfRed[1] = cospi * (a * hY_Red + centerOffsetV - 0.5f) + sinpi * (b * -hX_Red + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfGreen[0] = cospi * (b * -hX_Green + centerOffsetU - 0.5f) + sinpi * (a * hY_Green + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfGreen[1] = cospi * (a * hY_Green + centerOffsetV - 0.5f) + sinpi * (b * -hX_Green + centerOffsetU - 0.5f) + 0.5f;
-			coordinates.rfBlue[0] = cospi * (b * -hX_Blue + centerOffsetU - 0.5f) + sinpi * (a * hY_Blue + centerOffsetV - 0.5f) + 0.5f;
-			coordinates.rfBlue[1] = cospi * (a * hY_Blue + centerOffsetV - 0.5f) + sinpi * (b * -hX_Blue + centerOffsetU - 0.5f) + 0.5f;
-		}
-		return coordinates;	
+		coordinates.rfRed[0] = hX_Red + centerOffsetU;
+		coordinates.rfRed[1] = -hY_Red + centerOffsetV;
+		coordinates.rfGreen[0] = hX_Green + centerOffsetU;
+		coordinates.rfGreen[1] = -hY_Green + centerOffsetV;
+		coordinates.rfBlue[0] = hX_Blue + centerOffsetU;
+		coordinates.rfBlue[1] = -hY_Blue + centerOffsetV;
+
+		return coordinates;
 	}
 
 	virtual DriverPose_t GetPose()
@@ -421,12 +383,12 @@ public:
 		return dataHandler.GetHMDPose();
 	}
 	
-	HmdMatrix34_t CalcMatFromEuler(float a, float IPDOffset) {
+	HmdMatrix34_t CalcMatFromEuler(float yaw, float pitch, float roll, float IPDOffset) {
 		HmdMatrix34_t mat;
 
-		mat.m[0][0] = cos(a);	mat.m[0][1] = 0;	mat.m[0][2] = sin(a);	mat.m[0][3] = IPDOffset;
-		mat.m[1][0] = 0;		mat.m[1][1] = 1;	mat.m[1][2] = 0;		mat.m[1][3] = 0;
-		mat.m[2][0] = -sin(a);	mat.m[2][1] = 0;	mat.m[2][2] = cos(a);	mat.m[2][3] = 0;
+		mat.m[0][0] = cos(pitch) * cos(roll);		mat.m[0][1] = sin(yaw) * sin(pitch) * cos(roll) - cos(yaw) * sin(roll);	mat.m[0][2] = cos(yaw) * sin(pitch) * cos(roll) + sin(yaw) * sin(roll);	mat.m[0][3] = IPDOffset;
+		mat.m[1][0] = cos(pitch) * sin(roll);		mat.m[1][1] = sin(yaw) * sin(pitch) * sin(roll) + cos(yaw) * cos(roll);	mat.m[1][2] = cos(yaw) * sin(pitch) * sin(roll) - sin(yaw) * cos(roll);	mat.m[1][3] = 0;
+		mat.m[2][0] = -sin(pitch);					mat.m[2][1] = sin(yaw) * cos(pitch);									mat.m[2][2] = cos(yaw) * cos(pitch);									mat.m[2][3] = 0;
 		return mat;
 	}
 
