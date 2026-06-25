@@ -18,6 +18,10 @@ This driver also uses [PSMoveServiceEX](https://github.com/Timocop/PSMoveService
 
 For more information on *everything*, check out the [docs](docs/DocsIndex.md)!
 
+Experimental inside-out tracking MVP scaffolding notes are documented in
+[docs/InsideOutRoadmap.md](docs/InsideOutRoadmap.md) and
+[Software/Tools/tracking_service/README.md](Software/Tools/tracking_service/README.md).
+
 ![1](docs/img/Headset.png)
 
 # How does it work and what can it do?
@@ -31,7 +35,7 @@ You can use the setup in:
 
 ## What it can and cannot do:
 * This driver can emulate Wand and Index controllers.
-* This setup cannot do Inside out tracking.
+* This setup cannot do inside-out tracking. This working tree only adds isolated MVP scaffolding for future camera-based tracking experiments.
 * This driver cannot do Full body tracking ~~**yet**~~.
 * Yes this thing plays beatsaber though I'm not sure how viable it is for expert+ diff since I suck at it.
 

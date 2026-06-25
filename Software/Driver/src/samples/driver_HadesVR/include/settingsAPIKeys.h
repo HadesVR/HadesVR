@@ -65,6 +65,7 @@ static const char* const k_pch_DirectModeEnable_Bool = "EnableDirectMode";
 
 static const char* const k_pch_headlessMode_Bool = "HeadlessMode";
 static const char* const k_pch_TransportMode_String = "TransportMode";
+static const char* const k_pch_PoseProvider_String = "PoseProvider";
 static const char* const k_pch_UART_Port = "UART_Port";
 static const char* const k_pch_UART_Baudrate = "UART_Baudrate";
 

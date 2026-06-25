@@ -128,7 +128,7 @@ int UARTTransport::ReadPacket(uint8_t* outBuf, size_t length)
         // Handle frame if we have all data is there
         uint8_t dataSize = 0u;
         ring_buffer_peek(&ringbuffer, &dataSize, FRAME_DATA_SIZE_INDEX);
-        if (totalSize >= (FRAME_MAGIC + dataSize)) {
+        if (totalSize >= (FRAME_HEADER_SIZE + dataSize)) {
             // Some logic to log if we miss frames (for debugging performance issues)
             const uint8_t expectedSeqno = (lastSeqno + 1) & UINT8_MAX;
             uint8_t currentSeqno;

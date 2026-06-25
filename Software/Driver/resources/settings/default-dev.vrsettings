@@ -1,6 +1,7 @@
 {
    	"Driver" : {
 		"TransportMode" : "HID",
+		"PoseProvider" : "ExternalTrackingProvider",
 		"HID_VID" : 9025,
 		"HID_PID" : 32822,
 		"UART_Port" : "COM30",

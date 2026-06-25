@@ -1,0 +1,54 @@
+{
+  "provider": "UsbStereoCameraProvider",
+  "sensor_family": "OV9281_OR_OV9282_MONO_GLOBAL_SHUTTER",
+  "backend": "DSHOW",
+  "width": 1280,
+  "height": 800,
+  "fps": 100,
+  "fourcc": "MJPG",
+  "force_grayscale": true,
+  "buffer_size": 1,
+  "sync": {
+    "mode": "software_grab_retrieve",
+    "future_modes": [
+      "hardware_trigger",
+      "external_timestamp",
+      "software_frame_match"
+    ]
+  },
+  "requirements": {
+    "global_shutter": true,
+    "minimum_fps": 60,
+    "target_fps": 100,
+    "minimum_resolution": [640, 480],
+    "recommended_resolution": [1280, 800],
+    "mono": true,
+    "lens_mount": "M12",
+    "target_horizontal_fov_deg": 100,
+    "uvc_video_capture": true
+  },
+  "cameras": {
+    "left": {
+      "id": 0,
+      "width": 1280,
+      "height": 800,
+      "fps": 100,
+      "exposure": -6,
+      "gain": 0,
+      "auto_exposure": 0.25,
+      "autofocus": 0,
+      "auto_white_balance": 0
+    },
+    "right": {
+      "id": 1,
+      "width": 1280,
+      "height": 800,
+      "fps": 100,
+      "exposure": -6,
+      "gain": 0,
+      "auto_exposure": 0.25,
+      "autofocus": 0,
+      "auto_white_balance": 0
+    }
+  }
+}

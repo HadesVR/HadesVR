@@ -175,6 +175,34 @@ struct HMDRAWPacket
 	uint8_t Padding[12];
 };
 
+struct HMDIMUPacket
+{
+	uint8_t HIDID;
+	uint8_t PacketID;
+	uint8_t Version;
+	uint16_t Sequence;
+	uint32_t TimestampUs;
+
+	int16_t AccX;
+	int16_t AccY;
+	int16_t AccZ;
+
+	int16_t GyroX;
+	int16_t GyroY;
+	int16_t GyroZ;
+
+	int16_t MagX;
+	int16_t MagY;
+	int16_t MagZ;
+
+	int16_t Temperature;
+	uint16_t HMDData;
+	uint16_t SamplePeriodUs;
+	uint8_t ImuStatus;
+
+	uint8_t Reserved[30];
+};
+
 struct ControllerPacket
 {
 	uint8_t HIDID;			
@@ -255,8 +283,12 @@ private:
 		ptr->TestThread();
 	}
 
-    void ResetPos(bool controllers, bool hmd);
+	void ResetPos(bool controllers, bool hmd);
 	void ReadTransportData();
+	void UpdateHMDRawIMU(int16_t accX, int16_t accY, int16_t accZ,
+		int16_t gyroX, int16_t gyroY, int16_t gyroZ,
+		int16_t magX, int16_t magY, int16_t magZ,
+		uint16_t hmdData);
 	bool connectToPSMOVE();
 	void PSMUpdate();
 

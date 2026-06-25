@@ -55,7 +55,7 @@ void Madgwick::update(float gx, float gy, float gz, float ax, float ay, float az
 		return;
 	}
 	
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::steady_clock::now();
 	delta_t = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
 	lastUpdate = now;
 
@@ -161,7 +161,7 @@ void Madgwick::updateIMU(float gx, float gy, float gz, float ax, float ay, float
 	gy *= 0.0174533f;
 	gz *= 0.0174533f;
 	
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::steady_clock::now();
 	delta_t = std::chrono::duration_cast<std::chrono::microseconds>(now - lastUpdate).count() / 1000000.0f;
 	lastUpdate = now;
 

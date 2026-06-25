@@ -1,8 +1,56 @@
 #include "dataHandler.h"
+#include <cstring>
 
 CdataHandler::CdataHandler(DataTransport& transport)
 	: dataTransport(transport)
 {
+}
+
+void CdataHandler::UpdateHMDRawIMU(int16_t accX, int16_t accY, int16_t accZ,
+	int16_t gyroX, int16_t gyroY, int16_t gyroZ,
+	int16_t magX, int16_t magY, int16_t magZ,
+	uint16_t hmdData)
+{
+	if (!orientationFilterInit) {
+		if (readsFromInit == 0) {
+			HMDfilter.begin();
+			HMDfilter.setBeta(2.f);
+		}
+
+		if (readsFromInit < 2000) {
+			readsFromInit++;
+		}
+		if (readsFromInit >= 2000) {
+			orientationFilterInit = true;
+			ResetPos(true, true);
+		}
+	}
+
+	if (readsFromInit >= 2000) {
+		float Av = Vector3::Magnitude(HMDData.TrackingData.AngularVelocity);
+		if (Av > 10.f) Av = 10.f;
+		HMDfilter.setBeta(Av * (maxFilterBeta - minFilterBeta) / 10 + minFilterBeta);
+	}
+
+	HMDData.TrackingData.Accel.X = (float)accX / 2048.f;
+	HMDData.TrackingData.Accel.Y = (float)accY / 2048.f;
+	HMDData.TrackingData.Accel.Z = (float)accZ / 2048.f;
+
+	HMDData.TrackingData.AngularAccel.X = (float)gyroY / 16.f;
+	HMDData.TrackingData.AngularAccel.Y = (float)gyroX / 16.f;
+	HMDData.TrackingData.AngularAccel.Z = (float)gyroZ / 16.f;
+
+	HMDfilter.update((float)gyroX / 16.f, (float)gyroY / 16.f, (float)gyroZ / 16.f,
+		(float)accX / 2048.f, (float)accY / 2048.f, (float)accZ / 2048.f,
+		(float)magX / 5.f, (float)magY / 5.f, (float)magZ / 5.f);
+
+	HMDData.TrackingData.RawRotation = HMDfilter.getQuat();
+
+	if (HMDAccelEnable) {
+		UpdateIMUPosition(HMDData.TrackingData, HMDKalman);
+	}
+
+	HMDData.Data = hmdData;
 }
 
 /**
@@ -12,6 +60,7 @@ void CdataHandler::ReadTransportData()
 {
 	HMDQuaternionPacket* DataHMDQuat = (HMDQuaternionPacket*)packet_buffer;
 	HMDRAWPacket* DataHMDRAW = (HMDRAWPacket*)packet_buffer;
+	HMDIMUPacket* DataHMDIMU = (HMDIMUPacket*)packet_buffer;
 	ControllerPacket* DataCtrl = (ControllerPacket*)packet_buffer;
 	DriverLog("[DataTransport] Data transport Thread created, Status: %d", dataTransport.IsConnected());
 	while (dataTransport.IsConnected()) {
@@ -106,46 +155,10 @@ void CdataHandler::ReadTransportData()
 				break;
 
 			case 3:		//hmd IMU packet
-				if (!orientationFilterInit) {		//init filter
-					HMDfilter.begin();
-					HMDfilter.setBeta(2.f);
-
-					if (readsFromInit < 2000) {
-						readsFromInit++;
-					}
-					if (readsFromInit >= 2000) {
-						orientationFilterInit = true;
-						ResetPos(true, true);
-					}
-				}			
-
-				if (readsFromInit >= 2000) {
-					float Av = Vector3::Magnitude(HMDData.TrackingData.AngularVelocity);
-					if (Av > 10.f) Av = 10.f;
-					HMDfilter.setBeta(Av * (maxFilterBeta - minFilterBeta) / 10 + minFilterBeta);
-				}
-
-				HMDData.TrackingData.Accel.X = (float)(DataHMDRAW->AccX) / 2048;
-				HMDData.TrackingData.Accel.Y = (float)(DataHMDRAW->AccY) / 2048;
-				HMDData.TrackingData.Accel.Z = (float)(DataHMDRAW->AccZ) / 2048;
-
-				HMDData.TrackingData.AngularAccel.X = (float)(DataHMDRAW->GyroY) / 16;
-				HMDData.TrackingData.AngularAccel.Y = (float)(DataHMDRAW->GyroX) / 16;
-				HMDData.TrackingData.AngularAccel.Z = (float)(DataHMDRAW->GyroZ) / 16;
-
-				//get data and scale it properly. Then update the filter.
-				HMDfilter.update((float)(DataHMDRAW->GyroX / 16), (float)(DataHMDRAW->GyroY / 16), (float)(DataHMDRAW->GyroZ / 16), 
-					(float)(DataHMDRAW->AccX) / 2048, (float)(DataHMDRAW->AccY) / 2048, (float)(DataHMDRAW->AccZ) / 2048,
-					(float)(DataHMDRAW->MagX / 5), (float)(DataHMDRAW->MagY / 5), (float)(DataHMDRAW->MagZ / 5));
-
-				//Apply rotation to the HMD
-				HMDData.TrackingData.RawRotation = HMDfilter.getQuat();
-
-				if (HMDAccelEnable) {
-					UpdateIMUPosition(HMDData.TrackingData, HMDKalman);
-				}
-
-				HMDData.Data = DataHMDRAW->HMDData;
+				UpdateHMDRawIMU(DataHMDRAW->AccX, DataHMDRAW->AccY, DataHMDRAW->AccZ,
+					DataHMDRAW->GyroX, DataHMDRAW->GyroY, DataHMDRAW->GyroZ,
+					DataHMDRAW->MagX, DataHMDRAW->MagY, DataHMDRAW->MagZ,
+					DataHMDRAW->HMDData);
 
 				TrackerWaistData.Rotation.W = (float)(DataHMDRAW->tracker1_QuatW) / 32767;
 				TrackerWaistData.Rotation.X = (float)(DataHMDRAW->tracker1_QuatX) / 32767;
@@ -164,6 +177,13 @@ void CdataHandler::ReadTransportData()
 				TrackerRightData.Rotation.Y = (float)(DataHMDRAW->tracker3_QuatY) / 32767;
 				TrackerRightData.Rotation.Z = (float)(DataHMDRAW->tracker3_QuatZ) / 32767;
 				TrackerRightData.vBat = (float)(DataHMDRAW->tracker3_vBat) / 255;
+				break;
+
+			case 4:		//timestamped HMD IMU packet
+				UpdateHMDRawIMU(DataHMDIMU->AccX, DataHMDIMU->AccY, DataHMDIMU->AccZ,
+					DataHMDIMU->GyroX, DataHMDIMU->GyroY, DataHMDIMU->GyroZ,
+					DataHMDIMU->MagX, DataHMDIMU->MagY, DataHMDIMU->MagZ,
+					DataHMDIMU->HMDData);
 				break;
 			}
 		}
@@ -614,7 +634,7 @@ void CdataHandler::PSMUpdate()
 /**
 	 Checks for the headset to be connected and if it is it starts an HID connection with it.
 	 Once it does it creates the ReadHID thread and grabs offset calibration data, filter beta, jitter rejection coefficient and PSMS update rate.
-	 Once done it attempts to connect to PSMoveService by calling connectToPSMOVE().
+	 Once done it starts the configured pose provider.
 */
 void CdataHandler::StartData()
 {
@@ -713,8 +733,33 @@ void CdataHandler::StartData()
 
 		//set initial states for controllers and hmd.
 		ResetPos(true, true);
-		//Attempt to connect to psmoveservice
-		connectToPSMOVE();
+
+		char poseProvider[32] = { 0 };
+		vr::EVRSettingsError poseProviderError;
+		vr::VRSettings()->GetString(k_pch_Driver_Section, k_pch_PoseProvider_String, poseProvider, sizeof(poseProvider), &poseProviderError);
+		if (poseProviderError != vr::VRSettingsError_None ||
+			strcmp(poseProvider, "ExternalTrackingProvider") == 0 ||
+			strcmp(poseProvider, "PSMove") == 0) {
+			connectToPSMOVE();
+		}
+		else if (strcmp(poseProvider, "InsideOutTrackingProvider") == 0) {
+			DriverLog("[PoseProvider] InsideOutTrackingProvider selected. Using fixed 3DoF fallback until tracking-service IPC is connected.");
+			PSMConnected = false;
+			HMDAccelEnable = false;
+			CtrlAccelEnable = false;
+		}
+		else if (strcmp(poseProvider, "None") == 0) {
+			DriverLog("[PoseProvider] Disabled. Using fixed 3DoF fallback position.");
+			PSMConnected = false;
+			HMDAccelEnable = false;
+			CtrlAccelEnable = false;
+		}
+		else {
+			DriverLog("[PoseProvider] Unknown provider %s. Using fixed 3DoF fallback position.", poseProvider);
+			PSMConnected = false;
+			HMDAccelEnable = false;
+			CtrlAccelEnable = false;
+		}
 	}
 }
 
