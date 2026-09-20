@@ -1,0 +1,36 @@
+name: Sync and Push
+
+on:
+  schedule:
+    - cron: '0 0 * * *' 
+  workflow_dispatch:
+
+env:
+  UPSTREAM_REPO: "HadesVR/HadesVR"
+
+jobs:
+  sync-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
+          fetch-depth: 0
+
+      - name: Sync and Push
+        run: |
+          UPSTREAM_OWNER=$(echo "${{ env.UPSTREAM_REPO }}" | cut -d'/' -f1)
+          UPSTREAM_PROJECT=$(echo "${{ env.UPSTREAM_REPO }}" | cut -d'/' -f2)
+          
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          
+          git remote add upstream https://github.com/$UPSTREAM_OWNER/$UPSTREAM_PROJECT.git
+          git fetch upstream '--prune'
+          git push origin 'refs/remotes/upstream/*:refs/heads/*' --force   
+          
+          # Push to Private Repo             
+          # Format: https://username:token@domain.com/path/to/repo.git
+          PRIV_REPO_URL="https://${{ secrets.PRIV_REPO_USER }}:${{ secrets.PRIV_REPO_TOKEN }}@${{ secrets.PRIV_REPO_ADDR }}/${{ secrets.PRIV_REPO_USER }}/$UPSTREAM_PROJECT.git"
+          git push $PRIV_REPO_URL --all
